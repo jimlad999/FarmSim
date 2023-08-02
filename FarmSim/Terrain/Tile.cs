@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FarmSim.Terrain;
+﻿namespace FarmSim.Terrain;
 
 class Tile
 {
+    public static Tile Null = new Tile("void");
+
+    public string Tileset { get; init; }
+
+    public Tile(string tileset)
+    {
+        Tileset = tileset;
+    }
 }

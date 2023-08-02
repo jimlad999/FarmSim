@@ -27,6 +27,15 @@ enum Tags
     Fertilizer,
     Dye,
 
+    //category
+    Meat,
+    Plant,
+    Drink,
+    Rock,
+    Ore,
+    Gem,
+    Fuel,
+
     //descriptions
     Spiky,
     Furry,
