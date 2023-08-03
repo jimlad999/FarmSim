@@ -9,14 +9,14 @@ namespace FarmSim.Rendering;
 internal class ViewportManager
 {
     private const float MaxZoom = 1f;
-    private const float MinZoom = 1f / 16f;
+    private const float MinZoom = 1f / 32f;
     private readonly ControllerManager _controllerManager;
     private double _x;
     private double _y;
     private double _width;
     private double _height;
 
-    public float Zoom { get; private set; } = 1;
+    public float Zoom { get; private set; } = 1f;
     public Viewport Viewport { get; private set; }
     public int ScrollSpeed { get; set; } = 500;
 
@@ -92,12 +92,17 @@ internal class ViewportManager
 
     public static ViewportManager CenteredOnZeroZero(ControllerManager controllerManager, GraphicsDeviceManager graphics)
     {
+        var width = (int)(graphics.PreferredBackBufferWidth / MinZoom);
+        var height = (int)(graphics.PreferredBackBufferHeight / MinZoom);
         return new ViewportManager(
             controllerManager,
             new Viewport(
-                x: -graphics.PreferredBackBufferWidth / 2,
-                y: -graphics.PreferredBackBufferHeight / 2,
-                width: graphics.PreferredBackBufferWidth,
-                height: graphics.PreferredBackBufferHeight));
+                x: -width / 2,
+                y: -height / 2,
+                width: width,
+                height: height))
+        {
+            Zoom = MinZoom
+        };
     }
 }
