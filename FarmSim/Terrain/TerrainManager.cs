@@ -4,16 +4,26 @@ namespace FarmSim.Terrain;
 
 class TerrainManager
 {
-    private readonly Dictionary<int, Dictionary<int, Chunk>> _chunks = new();
     private readonly TerrainGenerator _terrainGenerator;
+
+    private Dictionary<int, Dictionary<int, Chunk>> _chunks = new();
 
     public int ChunkRadius { get; private set; } = 16;
     public int ChunkSize { get; private set; } = 64;
 
-    public TerrainManager()
+    public TerrainManager(int seed)
     {
         _chunks = new();
-        _terrainGenerator = new TerrainGenerator(ChunkSize);
+        _terrainGenerator = new TerrainGenerator(chunkSize: ChunkSize, seed: seed);
+    }
+
+    public void Reseed(int seed, bool clearExisting = true)
+    {
+        _terrainGenerator.Reseed(seed);
+        if (clearExisting)
+        {
+            _chunks = new();
+        }
     }
 
     public Tile GetTile(int tileX, int tileY)

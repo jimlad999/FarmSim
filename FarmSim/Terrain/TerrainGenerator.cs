@@ -1,21 +1,27 @@
 ﻿using FarmSim.External;
+using System;
 using System.Collections.Generic;
 
 namespace FarmSim.Terrain;
 
 class TerrainGenerator
 {
-    private OpenSimplexNoise _noiseGen = new OpenSimplexNoise();
+    private Random _rand;
+    private OpenSimplexNoise _tileGenerator;
+    private OpenSimplexNoise _regionGenerator;
     private int _chunkSize;
 
-    public TerrainGenerator(int chunkSize)
+    public TerrainGenerator(int chunkSize, int seed)
     {
         _chunkSize = chunkSize;
+        Reseed(seed);
     }
 
-    public void Reseed(long seed)
+    public void Reseed(int seed)
     {
-        _noiseGen = new OpenSimplexNoise(seed);
+        _rand = new Random(seed);
+        _tileGenerator = new OpenSimplexNoise(_rand.NextInt64());
+        _regionGenerator = new OpenSimplexNoise(_rand.NextInt64());
     }
 
     public Chunk GenerateChunk(int chunkX, int chunkY)
@@ -31,7 +37,7 @@ class TerrainGenerator
             tiles.Add(tileSlice);
             for (var xi = xstart; xi < xend; ++xi)
             {
-                var noiseVal = _noiseGen.Evaluate(xi / 64.0, yi / 64.0);
+                var noiseVal = _tileGenerator.Evaluate(xi / 64.0, yi / 64.0);
                 var tileset = "grass";
                 if (noiseVal < -0.2)
                 {

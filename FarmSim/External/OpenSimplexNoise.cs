@@ -72,11 +72,6 @@ public class OpenSimplexNoise
         return x < xi ? xi - 1 : xi;
     }
 
-    public OpenSimplexNoise()
-        : this(DateTime.Now.Ticks)
-    {
-    }
-
     public OpenSimplexNoise(long seed)
     {
         perm = new byte[256];
