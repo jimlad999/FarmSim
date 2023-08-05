@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using System;
 
-namespace FarmSim.Utils;
+namespace FarmSim.Rendering;
 
 class RenderTargetScope : IDisposable
 {
