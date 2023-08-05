@@ -49,10 +49,10 @@ class Renderer
             viewport,
             _viewportManager.Zoom
         ));
-        var yDraw = yDrawOffset;
+        float yDraw = (int)yDrawOffset;
         for (var tileY = yTileStart; tileY < yTileEnd; ++tileY)
         {
-            var xDraw = xDrawOffset;
+            float xDraw = (int)xDrawOffset;
             for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
             {
                 var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
