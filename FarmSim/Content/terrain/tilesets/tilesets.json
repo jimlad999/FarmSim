@@ -10,8 +10,8 @@
     "rock": {
       "source": "rock.png"
     },
-    "desert": {
-      "source": "desert.png"
+    "sand": {
+      "source": "sand.png"
     },
     "void": {
       "source": "void.png"
