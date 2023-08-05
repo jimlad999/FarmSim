@@ -4,7 +4,10 @@ using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace FarmSim;
@@ -13,11 +16,11 @@ public class Game1 : Game
 {
     private static readonly Random Rand = new Random();
     private GraphicsDeviceManager _graphics;
-    private SpriteBatch _spriteBatch;
-
     private ControllerManager _controllerManager;
     private TerrainManager _terrainManager;
     private ViewportManager _viewportManager;
+    private SpriteBatch _spriteBatch;
+    private Tileset _tileset;
     private Renderer _renderer;
 
     public Game1()
@@ -37,32 +40,20 @@ public class Game1 : Game
 
         for (int y = -10 * 64; y < 10 * 64; y += 64)
             for (int x = -20 * 64; x < 20 * 64; x += 64)
-                //if ((x/ 64) % 2 == (y/ 64) % 2)
-                    _terrainManager.GetChunk(x, y);
+                _terrainManager.GetChunk(x, y);
         base.Initialize();
     }
 
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        var tileset = new[]
-        {
-            "desert",
-            "grass",
-            "lava",
-            "rock",
-            "void",
-            "water",
-        }.ToDictionary(s => s, s => _graphics.LoadFromFile($"Content/terrain/tilesets/{s}.png"));
-        _renderer = new Renderer(_viewportManager, _terrainManager, tileset);
+        var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/terrain/tilesets/tilesets.json"));
+        _tileset = new Tileset(_spriteBatch, tilesetData);
+        _renderer = new Renderer(_viewportManager, _terrainManager, _tileset);
     }
 
     protected override void Update(GameTime gameTime)
     {
-        System.Diagnostics.Debug.WriteLine(("ElapsedGameTime", gameTime.ElapsedGameTime.TotalSeconds));
-        if (gameTime.ElapsedGameTime.TotalSeconds > 0.02)
-            System.Diagnostics.Debug.WriteLine("=============================================    Running slow    =============================================");
-
         _controllerManager.Update();
         _viewportManager.Update(gameTime);
 
@@ -80,6 +71,10 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
+        System.Diagnostics.Debug.WriteLine(("ElapsedGameTime", gameTime.ElapsedGameTime.TotalSeconds));
+        if (gameTime.ElapsedGameTime.TotalSeconds > 0.02)
+            System.Diagnostics.Debug.WriteLine("=============================================    Running slow    =============================================");
+
         GraphicsDevice.Clear(Color.CornflowerBlue);
 
         _spriteBatch.Begin();

@@ -1,0 +1,23 @@
+{
+  "baseFolder": "Content/terrain/tilesets",
+  "tilesets": {
+    "grass": {
+      "source": "grass.png"
+    },
+    "water": {
+      "source": "water.png"
+    },
+    "rock": {
+      "source": "rock.png"
+    },
+    "desert": {
+      "source": "desert.png"
+    },
+    "void": {
+      "source": "void.png"
+    },
+    "lava": {
+      "source": "lava.png"
+    }
+  }
+}

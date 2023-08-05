@@ -11,15 +11,14 @@ class Renderer
 {
     private const int TileSize = 64;//px
     private const float TileSizeFloat = TileSize;
-
     private readonly ViewportManager _viewportManager;
     private readonly TerrainManager _terrainManager;
-    private readonly Dictionary<string, Texture2D> _tileset;
+    private readonly Tileset _tileset;
 
     public Renderer(
         ViewportManager viewportManager,
         TerrainManager terrainManager,
-        Dictionary<string, Texture2D> tileset)
+        Tileset tileset)
     {
         _viewportManager = viewportManager;
         _terrainManager = terrainManager;
@@ -57,10 +56,11 @@ class Renderer
             for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
             {
                 var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
+                var tileset = _tileset[tile.Tileset];
                 spriteBatch.Draw(
-                    texture: _tileset[tile.Tileset],
+                    texture: tileset.Item1,
                     position: new Vector2(xDraw, yDraw),
-                    sourceRectangle: null,
+                    sourceRectangle: tileset.Item2,
                     color: Color.White,
                     rotation: 0f,
                     origin: Vector2.Zero,
