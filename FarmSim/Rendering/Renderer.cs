@@ -46,7 +46,7 @@ class Renderer
             for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
             {
                 var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
-                var tileset = _tileset[tile.Tileset];
+                var tileset = _tileset[tile.Terrain];
                 spriteBatch.Draw(
                     texture: tileset.Texture,
                     position: new Vector2(xDraw, yDraw),

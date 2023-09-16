@@ -2,16 +2,16 @@
 
 class Tile
 {
-    public string Tileset { get; init; }
+    public string Terrain { get; init; }
     public string Trees { get; init; }
     public string Ores { get; init; }
 
     public Tile(
-        string tileset,
+        string terrain,
         string trees,
         string ores)
     {
-        Tileset = tileset;
+        Terrain = terrain;
         Trees = trees;
         Ores = ores;
     }

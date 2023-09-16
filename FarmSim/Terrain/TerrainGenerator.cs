@@ -46,10 +46,10 @@ class TerrainGenerator
                 var treeNoiseVal = _treeGenerator.Evaluate(xTile, yTile);
                 var oreNoiseVal = _oreGenerator.Evaluate(xTile, yTile);
                 var generatorFuncs = GetGeneratorFuncs(noiseVal: regionNoiseVal, xTile: xTile, yTile: yTile);
-                var tileset = generatorFuncs.TileFunc(tileNoiseVal);
-                var trees = generatorFuncs.TreeFunc(treeNoiseVal);
-                var ores = generatorFuncs.OreFunc(oreNoiseVal);
-                tileSlice.Add(new Tile(tileset, trees, ores));
+                var terrain = generatorFuncs.TerrainFunc(tileNoiseVal);
+                var trees = generatorFuncs.TreeFunc(treeNoiseVal, terrain);
+                var ores = generatorFuncs.OreFunc(oreNoiseVal, terrain);
+                tileSlice.Add(new Tile(terrain, trees, ores));
             }
         }
         return new Chunk(_chunkSize, tiles);
@@ -64,7 +64,7 @@ class TerrainGenerator
         if (Math.Abs(noiseVal) < boundMod)
         {
             return new GeneratorFuncs(
-                tileFunc: GetPlainsTileset,
+                terrainFunc: GetPlainsTerrain,
                 treeFunc: GetTreePlains,
                 oreFunc: GetOrePlains,
                 animalFunc: GetNothing);
@@ -72,24 +72,29 @@ class TerrainGenerator
         return noiseVal switch
         {
             > 0.7 => new GeneratorFuncs(
-                tileFunc: GetRockyTileset,
+                terrainFunc: GetRockyTerrain,
                 treeFunc: GetTreeRocky,
-                oreFunc: GetOreRockyAndSea,
+                oreFunc: GetOreRocky,
+                animalFunc: GetNothing),
+            > 0.5 => new GeneratorFuncs(
+                terrainFunc: GetPlainsTerrain,
+                treeFunc: GetTreeForrest,
+                oreFunc: GetNothing,
                 animalFunc: GetNothing),
             < 0.2 => new GeneratorFuncs(
-                tileFunc: GetSeaTileset,
+                terrainFunc: GetSeaTerrain,
                 treeFunc: GetNothing,
-                oreFunc: GetOreRockyAndSea,
+                oreFunc: GetOreSea,
                 animalFunc: GetNothing),
             _ => new GeneratorFuncs(
-                tileFunc: GetPlainsTileset,
+                terrainFunc: GetPlainsTerrain,
                 treeFunc: GetTreePlains,
                 oreFunc: GetOrePlains,
                 animalFunc: GetNothing),
         };
     }
 
-    private static string GetRockyTileset(double noiseVal)
+    private static string GetRockyTerrain(double noiseVal)
     {
         return noiseVal switch
         {
@@ -99,7 +104,7 @@ class TerrainGenerator
         };
     }
 
-    private static string GetSeaTileset(double noiseVal)
+    private static string GetSeaTerrain(double noiseVal)
     {
         return noiseVal switch
         {
@@ -109,7 +114,7 @@ class TerrainGenerator
         };
     }
 
-    private static string GetPlainsTileset(double noiseVal)
+    private static string GetPlainsTerrain(double noiseVal)
     {
         return noiseVal switch
         {
@@ -119,8 +124,12 @@ class TerrainGenerator
         };
     }
 
-    private static string GetTreePlains(double noiseVal)
+    private static string GetTreePlains(double noiseVal, string terrain)
     {
+        if (terrain == "water")
+        {
+            return null;
+        }
         return noiseVal switch
         {
             > 0.7 => "tree-pine",
@@ -128,8 +137,25 @@ class TerrainGenerator
         };
     }
 
-    private static string GetTreeRocky(double noiseVal)
+    private static string GetTreeForrest(double noiseVal, string terrain)
     {
+        if (terrain == "water")
+        {
+            return null;
+        }
+        return noiseVal switch
+        {
+            > 0.1 => "tree-pine",
+            _ => null,
+        };
+    }
+
+    private static string GetTreeRocky(double noiseVal, string terrain)
+    {
+        if (terrain == "water")
+        {
+            return null;
+        }
         return noiseVal switch
         {
             > 0.95 => "tree-pine",
@@ -137,7 +163,7 @@ class TerrainGenerator
         };
     }
 
-    private static string GetOrePlains(double noiseVal)
+    private static string GetOrePlains(double noiseVal, string terrain)
     {
         return noiseVal switch
         {
@@ -146,7 +172,16 @@ class TerrainGenerator
         };
     }
 
-    private static string GetOreRockyAndSea(double noiseVal)
+    private static string GetOreRocky(double noiseVal, string terrain)
+    {
+        return noiseVal switch
+        {
+            > 0.4 => "ore-coal",
+            _ => null,
+        };
+    }
+
+    private static string GetOreSea(double noiseVal, string terrain)
     {
         return noiseVal switch
         {
@@ -155,25 +190,25 @@ class TerrainGenerator
         };
     }
 
-    private static string GetNothing(double noiseVal)
+    private static string GetNothing(double noiseVal, string terrain)
     {
         return null;
     }
 
     private struct GeneratorFuncs
     {
-        public Func<double, string> TileFunc;
-        public Func<double, string> TreeFunc;
-        public Func<double, string> OreFunc;
-        public Func<double, string> AnimalFunc;
+        public Func<double, string> TerrainFunc;
+        public Func<double, string, string> TreeFunc;
+        public Func<double, string, string> OreFunc;
+        public Func<double, string, string> AnimalFunc;
 
         public GeneratorFuncs(
-            Func<double, string> tileFunc,
-            Func<double, string> treeFunc,
-            Func<double, string> oreFunc,
-            Func<double, string> animalFunc)
+            Func<double, string> terrainFunc,
+            Func<double, string, string> treeFunc,
+            Func<double, string, string> oreFunc,
+            Func<double, string, string> animalFunc)
         {
-            TileFunc = tileFunc;
+            TerrainFunc = terrainFunc;
             TreeFunc = treeFunc;
             OreFunc = oreFunc;
             AnimalFunc = animalFunc;
