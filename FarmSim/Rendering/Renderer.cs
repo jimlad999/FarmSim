@@ -39,16 +39,6 @@ class Renderer
         var xDrawOffset = -xOffset * _viewportManager.Zoom;
         var yDrawOffset = -yOffset * _viewportManager.Zoom;
 
-        System.Diagnostics.Debug.WriteLine((
-            xOffset,
-            yOffset,
-            xDrawOffset,
-            yDrawOffset,
-            (xTileStart, xTileEnd),
-            (yTileStart, yTileEnd),
-            viewport,
-            _viewportManager.Zoom
-        ));
         float yDraw = (int)yDrawOffset;
         for (var tileY = yTileStart; tileY < yTileEnd; ++tileY)
         {
@@ -58,15 +48,43 @@ class Renderer
                 var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
                 var tileset = _tileset[tile.Tileset];
                 spriteBatch.Draw(
-                    texture: tileset.Item1,
+                    texture: tileset.Texture,
                     position: new Vector2(xDraw, yDraw),
-                    sourceRectangle: tileset.Item2,
+                    sourceRectangle: tileset.SourceRectangle,
                     color: Color.White,
                     rotation: 0f,
-                    origin: Vector2.Zero,
+                    origin: tileset.Origin,
                     scale: _viewportManager.Zoom,
                     effects: SpriteEffects.None,
                     layerDepth: 0f);
+                if (tile.Trees != null)
+                {
+                    var tree = _tileset[tile.Trees];
+                    spriteBatch.Draw(
+                        texture: tree.Texture,
+                        position: new Vector2(xDraw, yDraw),
+                        sourceRectangle: tree.SourceRectangle,
+                        color: Color.White,
+                        rotation: 0f,
+                        origin: tree.Origin,
+                        scale: _viewportManager.Zoom,
+                        effects: SpriteEffects.None,
+                        layerDepth: 0f);
+                }
+                if (tile.Ores != null)
+                {
+                    var ore = _tileset[tile.Ores];
+                    spriteBatch.Draw(
+                        texture: ore.Texture,
+                        position: new Vector2(xDraw, yDraw),
+                        sourceRectangle: ore.SourceRectangle,
+                        color: Color.White,
+                        rotation: 0f,
+                        origin: ore.Origin,
+                        scale: _viewportManager.Zoom,
+                        effects: SpriteEffects.None,
+                        layerDepth: 0f);
+                }
                 xDraw += zoomedTileSize;
             }
             yDraw += zoomedTileSize;

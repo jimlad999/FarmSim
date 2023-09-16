@@ -27,25 +27,31 @@
     <Folder Include="Content\entities\player\" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="Content\terrain\tilesets\sand.png">
+    <None Update="Content\tilesets\objects\ore-coal.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Content\terrain\tilesets\grass.png">
+    <None Update="Content\tilesets\objects\tree-pine.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Content\terrain\tilesets\lava.png">
+    <None Update="Content\tilesets\terrain\sand.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Content\terrain\tilesets\rock.png">
+    <None Update="Content\tilesets\terrain\grass.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Content\terrain\tilesets\tilesets.json">
+    <None Update="Content\tilesets\terrain\lava.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Content\terrain\tilesets\void.png">
+    <None Update="Content\tilesets\terrain\rock.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Content\terrain\tilesets\water.png">
+    <None Update="Content\tilesets\tilesets.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\tilesets\terrain\void.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Content\tilesets\terrain\water.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

@@ -1,0 +1,33 @@
+{
+  "baseFolder": "Content/tilesets",
+  "tilesets": {
+    "grass": {
+      "source": "terrain/grass.png"
+    },
+    "water": {
+      "source": "terrain/water.png"
+    },
+    "rock": {
+      "source": "terrain/rock.png"
+    },
+    "sand": {
+      "source": "terrain/sand.png"
+    },
+    "void": {
+      "source": "terrain/void.png"
+    },
+    "lava": {
+      "source": "terrain/lava.png"
+    },
+    "tree-pine": {
+      "source": "objects/tree-pine.png",
+      "origin": {
+        "x": 0,
+        "y": 64
+      }
+    },
+    "ore-coal": {
+      "source": "objects/ore-coal.png"
+    }
+  }
+}

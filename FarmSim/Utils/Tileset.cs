@@ -8,6 +8,7 @@ namespace FarmSim.Utils;
 class Tileset
 {
     private readonly Dictionary<string, Rectangle> _sourceRectangle = new();
+    private readonly Dictionary<string, Vector2> _origin = new();
     private readonly RenderTarget2D _renderTarget;
 
     public Tileset(
@@ -22,6 +23,7 @@ class Tileset
             foreach (var data in tilesetData.Tilesets)
             {
                 var texture = Texture2D.FromFile(spriteBatch.GraphicsDevice, $"{tilesetData.BaseFolder}/{data.Value.Source}");
+                _origin[data.Key] = data.Value.Origin?.Convert() ?? Vector2.Zero;
                 // destinationRectangle to render to _renderTarget.
                 // Will then be used as the sourceRectangle from the _renderTarget.
                 var sourceRectangle = new Rectangle(
@@ -46,7 +48,8 @@ class Tileset
                 height: totalHeight);
             using (RenderTargetScope.Create(spriteBatch, _renderTarget))
             {
-                spriteBatch.Begin();
+                spriteBatch.GraphicsDevice.Clear(Color.Transparent);
+                spriteBatch.Begin(blendState: BlendState.AlphaBlend);
 
                 foreach (var sprite in sprites.Values)
                 {
@@ -58,8 +61,22 @@ class Tileset
         }
     }
 
-    public (Texture2D, Rectangle) this[string tileset]
+    public TilesetRenderingData this[string tileset]
     {
-        get => (_renderTarget, _sourceRectangle[tileset]);
+        get => new TilesetRenderingData(_renderTarget, _sourceRectangle[tileset], _origin[tileset]);
+    }
+
+    public struct TilesetRenderingData
+    {
+        public Texture2D Texture;
+        public Rectangle SourceRectangle;
+        public Vector2 Origin;
+
+        public TilesetRenderingData(Texture2D texture, Rectangle sourceRectangle, Vector2 origin)
+        {
+            Texture = texture;
+            SourceRectangle = sourceRectangle;
+            Origin = origin;
+        }
     }
 }

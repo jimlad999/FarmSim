@@ -2,12 +2,17 @@
 
 class Tile
 {
-    public static Tile Null = new Tile("void");
-
     public string Tileset { get; init; }
+    public string Trees { get; init; }
+    public string Ores { get; init; }
 
-    public Tile(string tileset)
+    public Tile(
+        string tileset,
+        string trees,
+        string ores)
     {
         Tileset = tileset;
+        Trees = trees;
+        Ores = ores;
     }
 }

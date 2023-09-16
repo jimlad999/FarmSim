@@ -1,5 +1,4 @@
-﻿using FarmSim.Rendering;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace FarmSim.Utils;
 class TilesetData

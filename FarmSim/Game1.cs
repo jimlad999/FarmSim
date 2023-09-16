@@ -47,7 +47,7 @@ public class Game1 : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/terrain/tilesets/tilesets.json"));
+        var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/tilesets/tilesets.json"));
         _tileset = new Tileset(_spriteBatch, tilesetData);
         _renderer = new Renderer(_viewportManager, _terrainManager, _tileset);
     }
