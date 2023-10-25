@@ -50,6 +50,7 @@ class TerrainGenerator
         var ystart = chunkY * _chunkSize;
         var yend = ystart + _chunkSize;
         var tiles = new List<List<Tile>>(_chunkSize);
+        var chunk = new Chunk(_chunkSize, tiles, chunkX: chunkX, chunkY: chunkY);
         for (var yTile = ystart; yTile < yend; ++yTile)
         {
             var tileSlice = new List<Tile>(_chunkSize);
@@ -65,10 +66,10 @@ class TerrainGenerator
                 var terrain = generatorFuncs.TerrainFunc(tileNoiseVal);
                 var trees = generatorFuncs.TreeFunc(treeNoiseVal, terrain);
                 var ores = generatorFuncs.OreFunc(oreNoiseVal, terrain);
-                tileSlice.Add(new Tile(terrain, trees, ores));
+                tileSlice.Add(new Tile(chunk, terrain, trees, ores));
             }
         }
-        return new Chunk(_chunkSize, tiles);
+        return chunk;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

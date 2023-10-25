@@ -8,7 +8,6 @@ class TerrainManager
 
     private Dictionary<int, Dictionary<int, Chunk>> _chunks = new();
 
-    public int ChunkRadius { get; private set; } = 16;
     public int ChunkSize { get; private set; } = 64;
 
     public TerrainManager(int seed)

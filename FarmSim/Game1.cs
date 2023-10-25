@@ -62,6 +62,7 @@ public class Game1 : Game
         if (_controllerManager.IsKeyPressed(Keys.F12))
         {
             _terrainManager.Reseed(Rand.Next());
+            _renderer.ClearLODCache();
         }
 
         base.Update(gameTime);
@@ -92,13 +93,7 @@ public class Game1 : Game
                 System.Diagnostics.Debug.WriteLine("=============================================    Running slow    =============================================");
         }
 #endif
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        _spriteBatch.Begin();
-
         _renderer.Draw(_spriteBatch);
-
-        _spriteBatch.End();
 
         base.Draw(gameTime);
     }
