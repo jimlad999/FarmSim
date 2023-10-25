@@ -20,6 +20,7 @@ Experimenting with procedural terrain generation in form of a farm simulator
   * Alchemy
 * Farm creatures need food - sacrifice smaller farm creatures to feed larger creatures
 * Progression/mix of fantasy into sci-fi
+* Tile blending to remove squareness of terrain
 
 # External sources
 * Terrain generation using OpenSimplexNoise (see comments in code)
