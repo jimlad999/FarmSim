@@ -1,6 +1,12 @@
 # Experimental Farm Simulation Game
 Experimenting with procedural terrain generation in form of a farm simulator
 
+## Controls
+* Arrow keys to pan viewport
+* Mouse scroll wheel to zoom
+* F12 to regenerate with new random seed
+* Left mouse click to see debug information for hovered tile in debug window (partially working)
+
 ## Possible features?
 * Random creature generation
 * Trait based creatures - traits pass on to offspring
