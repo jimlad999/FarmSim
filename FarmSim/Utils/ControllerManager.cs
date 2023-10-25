@@ -47,4 +47,9 @@ internal class ControllerManager
         return PreviousKeyboardState.IsKeyUp(key)
             && CurrentKeyboardState.IsKeyDown(key);
     }
+
+    public bool IsLeftMouseDown()
+    {
+        return CurrentMouseState.LeftButton == ButtonState.Pressed;
+    }
 }

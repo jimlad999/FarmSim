@@ -2,14 +2,12 @@
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace FarmSim.Rendering;
 
 class Renderer
 {
-    private const int TileSize = 64;//px
+    public const int TileSize = 64;//px
     private const float TileSizeFloat = TileSize;
     private readonly ViewportManager _viewportManager;
     private readonly TerrainManager _terrainManager;

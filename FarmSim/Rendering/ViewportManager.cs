@@ -9,7 +9,7 @@ namespace FarmSim.Rendering;
 internal class ViewportManager
 {
     private const float MaxZoom = 1f;
-    private const float MinZoom = 1f / 32f;
+    private const float MinZoom = 1f / 64f;
     private readonly ControllerManager _controllerManager;
     private double _x;
     private double _y;
@@ -88,6 +88,14 @@ internal class ViewportManager
                 width: (int)_width,
                 height: (int)_height);
         }
+    }
+
+    internal (int X, int Y) ConvertScrenCoordinatesToTileCoordinates(int screenX, int screenY)
+    {
+        return (
+            X: (int)Math.Floor((screenX / Zoom + Viewport.X) / Renderer.TileSize),
+            Y: (int)Math.Floor((screenY / Zoom + Viewport.Y) / Renderer.TileSize)
+        );
     }
 
     public static ViewportManager CenteredOnZeroZero(ControllerManager controllerManager, GraphicsDeviceManager graphics)

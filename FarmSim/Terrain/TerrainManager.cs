@@ -4,7 +4,7 @@ namespace FarmSim.Terrain;
 
 class TerrainManager
 {
-    private readonly TerrainGenerator _terrainGenerator;
+    internal readonly TerrainGenerator _terrainGenerator;
 
     private Dictionary<int, Dictionary<int, Chunk>> _chunks = new();
 
