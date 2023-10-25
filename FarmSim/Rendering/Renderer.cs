@@ -48,8 +48,9 @@ class Renderer
         var yOffset = viewport.Y.Mod(TileSize);
         int xTileStart = (viewport.X - xOffset) / TileSize;
         int yTileStart = (viewport.Y - yOffset) / TileSize;
-        int xTileEnd = (viewport.X + viewport.Width) / TileSize + 1;
-        int yTileEnd = (viewport.Y + viewport.Height) / TileSize + 1;
+        // +4 to allow for rendering objects taller than a few tile (e.g. trees and buildings)
+        int xTileEnd = (viewport.X + viewport.Width) / TileSize + 4;
+        int yTileEnd = (viewport.Y + viewport.Height) / TileSize + 4;
         var xDrawOffset = -xOffset * _viewportManager.Zoom;
         var yDrawOffset = -yOffset * _viewportManager.Zoom;
         // TODO: consider cycling unused chunk pre renders to reduce memory footprint. Currently sitting comfortably under 1GB memory (in testing)
