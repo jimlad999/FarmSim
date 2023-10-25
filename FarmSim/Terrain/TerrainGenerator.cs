@@ -12,6 +12,9 @@ class TerrainGenerator
     private const int GapBetweenContinents = 128;
     private const int ContinentRegion = ContinentRadius + GapBetweenContinents;
     private Random _rand;
+    private OpenSimplexNoise _climateGenerator1;
+    private OpenSimplexNoise _climateGenerator2;
+    private OpenSimplexNoise _climateGenerator3;
     private OpenSimplexNoise _regionGenerator1;
     private OpenSimplexNoise _regionGenerator2;
     private OpenSimplexNoise _regionGenerator3;
@@ -29,6 +32,9 @@ class TerrainGenerator
     public void Reseed(int seed)
     {
         _rand = new Random(seed);
+        _climateGenerator1 = new OpenSimplexNoise(_rand.NextInt64());
+        _climateGenerator2 = new OpenSimplexNoise(_rand.NextInt64());
+        _climateGenerator3 = new OpenSimplexNoise(_rand.NextInt64());
         _regionGenerator1 = new OpenSimplexNoise(_rand.NextInt64());
         _regionGenerator2 = new OpenSimplexNoise(_rand.NextInt64());
         _regionGenerator3 = new OpenSimplexNoise(_rand.NextInt64());
@@ -52,9 +58,10 @@ class TerrainGenerator
             {
                 var tileNoiseVal = GetTileNoiseVal(yTile, xTile);
                 var regionNoiseVal = GetRegionNoiseVal(yTile, xTile);
+                var climateNoiseVal = GetClimateNoiseVal(yTile, xTile);
                 var treeNoiseVal = _treeGenerator.Evaluate(xTile, yTile);
                 var oreNoiseVal = _oreGenerator.Evaluate(xTile, yTile);
-                var generatorFuncs = GetGeneratorFuncs(noiseVal: regionNoiseVal, xTile: xTile, yTile: yTile);
+                var generatorFuncs = GetGeneratorFuncs(regionNoiseVal: regionNoiseVal, climateNoiseVal: climateNoiseVal, xTile: xTile, yTile: yTile);
                 var terrain = generatorFuncs.TerrainFunc(tileNoiseVal);
                 var trees = generatorFuncs.TreeFunc(treeNoiseVal, terrain);
                 var ores = generatorFuncs.OreFunc(oreNoiseVal, terrain);
@@ -78,23 +85,26 @@ class TerrainGenerator
             - _regionGenerator3.Evaluate(xTile / 94.0, yTile / 56.0);
     }
 
-    private static GeneratorFuncs GetGeneratorFuncs(double noiseVal, int xTile, int yTile)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal double GetClimateNoiseVal(int yTile, int xTile)
+    {
+        return _climateGenerator1.Evaluate(xTile / 258.0, yTile / 234.0)
+            + _climateGenerator2.Evaluate(xTile / 321.0, yTile / 357.0)
+            - _climateGenerator3.Evaluate(xTile / 14.0, yTile / 9.0) / 3.0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static GeneratorFuncs GetGeneratorFuncs(double regionNoiseVal, double climateNoiseVal, int xTile, int yTile)
     {
         // ensure center area is plains
         var d = DistanceSquaredFromCenterOfContinent(xTile, yTile);
         const double dd = ContinentRadius * ContinentRadius;
-        //if (aaa > 0) d = d.Mod((int)dd);
         var dRatio = d / dd;
         var boundMod = 1 - dRatio;
-        if (Math.Abs(noiseVal) < boundMod)
-        {
-            return new GeneratorFuncs(
-                terrainFunc: GetPlainsTerrain,
-                treeFunc: GetTreePlains,
-                oreFunc: GetOrePlains,
-                animalFunc: GetNothing);
-        }
-        return GetGeneratorFuncs(GetRegionType(noiseVal));
+        var region = Math.Abs(regionNoiseVal) < boundMod
+            ? GetContinentalRegionType(climateNoiseVal)
+            : GetIntercontinentalRegionType(regionNoiseVal: regionNoiseVal, climateNoiseVal: climateNoiseVal);
+        return GetGeneratorFuncs(region);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -105,47 +115,98 @@ class TerrainGenerator
         yTile = Math.Abs(yTile);
         while (xTile >= ContinentRegion) xTile -= regionSizeX2;
         while (yTile >= ContinentRegion) yTile -= regionSizeX2;
-        xTile = xTile % ContinentRegion;
-        yTile = yTile % ContinentRegion;
+        xTile %= ContinentRegion;
+        yTile %= ContinentRegion;
         var d = xTile * xTile + yTile * yTile;
         return d;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static string GetRegionType(double noiseVal)
+    private static string GetContinentalRegionType(double climateNoiseVal)
     {
-        return noiseVal switch
+        return climateNoiseVal switch
         {
-            > 0.7 => "rocky",
-            < 0.2 => "sea",
-            < 0.4 => "beach",
+            > 1 => "snow",
+            < -1 => "desert",
             _ => "plains",
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal static string GetIntercontinentalRegionType(double regionNoiseVal, double climateNoiseVal)
+    {
+        return climateNoiseVal switch
+        {
+            > 1 => regionNoiseVal switch
+            {
+                > 2.0 => "rocky",
+                < 0.2 => "frozensea",
+                _ => "snow",
+            },
+            < -1 => regionNoiseVal switch
+            {
+                > 2.0 => "rockydesert",
+                _ => "desert",
+            },
+            _ => regionNoiseVal switch
+            {
+                > 1.1 => "rocky",
+                < 0.2 => "sea",
+                < 0.5 => "beach",
+                _ => "forrest",
+            }
+        };
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static GeneratorFuncs GetGeneratorFuncs(string regionType)
     {
         return regionType switch
         {
+            "beach" => new GeneratorFuncs(
+                terrainFunc: GetBeachTerrain,
+                treeFunc: GetNothing,
+                oreFunc: GetNothing,
+                animalFunc: GetNothing),
+            "desert" => new GeneratorFuncs(
+                terrainFunc: GetDesertTerrain,
+                treeFunc: GetTreeDesert,
+                oreFunc: GetOreDesert,
+                animalFunc: GetNothing),
+            "forrest" => new GeneratorFuncs(
+                terrainFunc: GetPlainsTerrain,
+                treeFunc: GetTreeForrest,
+                oreFunc: GetOrePlains,
+                animalFunc: GetNothing),
+            "plains" => new GeneratorFuncs(
+                terrainFunc: GetPlainsTerrain,
+                treeFunc: GetTreePlains,
+                oreFunc: GetOrePlains,
+                animalFunc: GetNothing),
             "rocky" => new GeneratorFuncs(
                 terrainFunc: GetRockyTerrain,
                 treeFunc: GetTreeRocky,
                 oreFunc: GetOreRocky,
                 animalFunc: GetNothing),
-            "plains" => new GeneratorFuncs(
-                terrainFunc: GetPlainsTerrain,
-                treeFunc: GetTreeForrest,
-                oreFunc: GetOrePlains,
+            "rockydesert" => new GeneratorFuncs(
+                terrainFunc: GetRockyDesertTerrain,
+                treeFunc: GetTreeRocky,
+                oreFunc: GetOreRocky,
                 animalFunc: GetNothing),
             "sea" => new GeneratorFuncs(
                 terrainFunc: GetSeaTerrain,
                 treeFunc: GetNothing,
                 oreFunc: GetOreSea,
                 animalFunc: GetNothing),
-            "beach" => new GeneratorFuncs(
-                terrainFunc: GetBeachTerrain,
+            "frozensea" => new GeneratorFuncs(
+                terrainFunc: GetFrozenSeaTerrain,
                 treeFunc: GetNothing,
                 oreFunc: GetNothing,
+                animalFunc: GetNothing),
+            "snow" => new GeneratorFuncs(
+                terrainFunc: GetSnowTerrain,
+                treeFunc: GetTreePlains,
+                oreFunc: GetOrePlains,
                 animalFunc: GetNothing),
             _ => throw new NotImplementedException(),
         };
@@ -155,8 +216,17 @@ class TerrainGenerator
     {
         return noiseVal switch
         {
-            < -0.9 => "grass",
-            < -0.5 => "sand",
+            < -0.2 => "grass",
+            < -0.1 => "sand",
+            _ => "rock",
+        };
+    }
+
+    private static string GetRockyDesertTerrain(double noiseVal)
+    {
+        return noiseVal switch
+        {
+            < -0.1 => "sand",
             _ => "rock",
         };
     }
@@ -171,6 +241,16 @@ class TerrainGenerator
         };
     }
 
+    private static string GetDesertTerrain(double noiseVal)
+    {
+        return noiseVal switch
+        {
+            > 0.95 => "rock",
+            < -0.95 => "water",
+            _ => "sand",
+        };
+    }
+
     private static string GetSeaTerrain(double noiseVal)
     {
         return noiseVal switch
@@ -178,6 +258,27 @@ class TerrainGenerator
             > 0.95 => "rock",
             > 0.85 => "sand",
             _ => "water",
+        };
+    }
+
+    private static string GetFrozenSeaTerrain(double noiseVal)
+    {
+        return noiseVal switch
+        {
+            > 0.95 => "rock",
+            > 0.85 => "snow",
+            _ => "ice",
+        };
+    }
+
+    private static string GetSnowTerrain(double noiseVal)
+    {
+        return noiseVal switch
+        {
+            > 0.8 => "rock",
+            < -0.95 => "water",
+            < -0.8 => "ice",
+            _ => "snow",
         };
     }
 
@@ -193,7 +294,7 @@ class TerrainGenerator
 
     private static string GetTreePlains(double noiseVal, string terrain)
     {
-        if (terrain == "water")
+        if (terrain == "water" || terrain == "ice")
         {
             return null;
         }
@@ -206,7 +307,7 @@ class TerrainGenerator
 
     private static string GetTreeForrest(double noiseVal, string terrain)
     {
-        if (terrain == "water")
+        if (terrain == "water" || terrain == "ice")
         {
             return null;
         }
@@ -219,13 +320,26 @@ class TerrainGenerator
 
     private static string GetTreeRocky(double noiseVal, string terrain)
     {
-        if (terrain == "water")
+        if (terrain == "water" || terrain == "ice")
         {
             return null;
         }
         return noiseVal switch
         {
             > 0.8 => "tree-pine",
+            _ => null,
+        };
+    }
+
+    private static string GetTreeDesert(double noiseVal, string terrain)
+    {
+        if (terrain == "water" || terrain == "ice")
+        {
+            return null;
+        }
+        return noiseVal switch
+        {
+            > 0.8 => "tree-pine", // TODO: palm
             _ => null,
         };
     }
@@ -244,6 +358,15 @@ class TerrainGenerator
         return noiseVal switch
         {
             > 0.4 => "ore-coal",
+            _ => null,
+        };
+    }
+
+    private static string GetOreDesert(double noiseVal, string terrain)
+    {
+        return noiseVal switch
+        {
+            > 0.7 => "ore-coal",
             _ => null,
         };
     }

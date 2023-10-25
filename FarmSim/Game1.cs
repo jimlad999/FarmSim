@@ -73,6 +73,7 @@ public class Game1 : Game
         if (_controllerManager.IsLeftMouseDown())
         {
             var (x, y) = _viewportManager.ConvertScrenCoordinatesToTileCoordinates(screenX: _controllerManager.CurrentMouseState.X, screenY: _controllerManager.CurrentMouseState.Y);
+            var climateNoiseVal = _terrainManager._terrainGenerator.GetClimateNoiseVal(x, y);
             var regionNoiseVal = _terrainManager._terrainGenerator.GetRegionNoiseVal(x, y);
             var tileNoiseVal = _terrainManager._terrainGenerator.GetTileNoiseVal(x, y);
             System.Diagnostics.Debug.WriteLine((
@@ -80,7 +81,7 @@ public class Game1 : Game
                 //$"(screenX: {_controllerManager.CurrentMouseState.X}, screenY: {_controllerManager.CurrentMouseState.Y})",
                 //_viewportManager.Viewport,
                 (Math.Sqrt(TerrainGenerator.DistanceSquaredFromCenterOfContinent(x, y)), x.Mod(256), x % 256),
-                ("region noise", regionNoiseVal, TerrainGenerator.GetRegionType(regionNoiseVal)),
+                ("region noise", regionNoiseVal, TerrainGenerator.GetIntercontinentalRegionType(regionNoiseVal: regionNoiseVal, climateNoiseVal: climateNoiseVal)),
                 ("tile noise", tileNoiseVal)
             ));
         }

@@ -19,6 +19,12 @@
     "lava": {
       "source": "terrain/lava.png"
     },
+    "snow": {
+      "source": "terrain/snow.png"
+    },
+    "ice": {
+      "source": "terrain/ice.png"
+    },
     "tree-pine": {
       "source": "objects/tree-pine.png",
       "origin": {
