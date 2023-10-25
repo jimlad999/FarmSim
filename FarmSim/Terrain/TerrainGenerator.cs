@@ -127,8 +127,11 @@ class TerrainGenerator
     {
         return climateNoiseVal switch
         {
-            > 1 => "snow",
-            < -1 => "desert",
+            > 1.0 => "snow",
+            > 0.7 => "plains",
+            > 0.5 => "volcanicrock",
+            > 0.0 => "plains",
+            < -1.0 => "desert",
             _ => "plains",
         };
     }
@@ -138,13 +141,18 @@ class TerrainGenerator
     {
         return climateNoiseVal switch
         {
-            > 1 => regionNoiseVal switch
+            > 1.0 => regionNoiseVal switch
             {
                 > 2.0 => "rocky",
                 < 0.2 => "frozensea",
                 _ => "snow",
             },
-            < -1 => regionNoiseVal switch
+            < -1.3 => regionNoiseVal switch
+            {
+                > 1.1 => "volcano",
+                _ => "volcanicrock",
+            },
+            < -1.0 => regionNoiseVal switch
             {
                 > 2.0 => "rockydesert",
                 _ => "desert",
@@ -208,6 +216,16 @@ class TerrainGenerator
                 terrainFunc: GetSnowTerrain,
                 treeFunc: GetTreePlains,
                 oreFunc: GetOrePlains,
+                animalFunc: GetNothing),
+            "volcano" => new GeneratorFuncs(
+                terrainFunc: GetVolcanoTerrain,
+                treeFunc: GetTreeVolcano,
+                oreFunc: GetOreVolcano,
+                animalFunc: GetNothing),
+            "volcanicrock" => new GeneratorFuncs(
+                terrainFunc: GetVolcanicRockTerrain,
+                treeFunc: GetTreeVolcano,
+                oreFunc: GetOreVolcano,
                 animalFunc: GetNothing),
             _ => throw new NotImplementedException(),
         };
@@ -293,6 +311,24 @@ class TerrainGenerator
         };
     }
 
+    private static string GetVolcanoTerrain(double noiseVal)
+    {
+        return noiseVal switch
+        {
+            > 0.3 => "rock",
+            _ => "lava",
+        };
+    }
+
+    private static string GetVolcanicRockTerrain(double noiseVal)
+    {
+        return noiseVal switch
+        {
+            < -0.8 => "lava",
+            _ => "rock",
+        };
+    }
+
     private static string GetTreePlains(double noiseVal, string terrain)
     {
         if (terrain == "water" || terrain == "ice")
@@ -345,6 +381,19 @@ class TerrainGenerator
         };
     }
 
+    private static string GetTreeVolcano(double noiseVal, string terrain)
+    {
+        if (terrain == "lava")
+        {
+            return null;
+        }
+        return noiseVal switch
+        {
+            > 0.8 => "tree-pine", // TODO: burnt tree
+            _ => null,
+        };
+    }
+
     private static string GetOrePlains(double noiseVal, string terrain)
     {
         return noiseVal switch
@@ -377,6 +426,19 @@ class TerrainGenerator
         return noiseVal switch
         {
             > 0.7 => "ore-coal",
+            _ => null,
+        };
+    }
+
+    private static string GetOreVolcano(double noiseVal, string terrain)
+    {
+        if (terrain == "lava")
+        {
+            return null;
+        }
+        return noiseVal switch
+        {
+            > 0.4 => "ore-coal",
             _ => null,
         };
     }
