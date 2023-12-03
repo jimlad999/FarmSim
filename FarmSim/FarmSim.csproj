@@ -27,6 +27,9 @@
     <Folder Include="Content\entities\player\" />
   </ItemGroup>
   <ItemGroup>
+    <None Update="Content\tilesets\buildings\wood-floor.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Content\tilesets\objects\ore-coal.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -17,6 +17,7 @@ public class Game1 : Game
     private ControllerManager _controllerManager;
     private TerrainManager _terrainManager;
     private ViewportManager _viewportManager;
+    private Player.Player _player;
     private SpriteBatch _spriteBatch;
     private Tileset _tileset;
     private Renderer _renderer;
@@ -47,13 +48,23 @@ public class Game1 : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/tilesets/tilesets.json"));
         _tileset = new Tileset(_spriteBatch, tilesetData);
-        _renderer = new Renderer(_viewportManager, _terrainManager, _tileset);
+        _player = new Player.Player(
+            _controllerManager,
+            _viewportManager,
+            _terrainManager,
+            _tileset);
+        _renderer = new Renderer(
+            _viewportManager,
+            _terrainManager,
+            _tileset,
+            _player);
     }
 
     protected override void Update(GameTime gameTime)
     {
         _controllerManager.Update();
         _viewportManager.Update(gameTime);
+        _player.Update(gameTime);
 
         if (_controllerManager.CurrentKeyboardState.IsKeyDown(Keys.Escape))
         {

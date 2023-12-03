@@ -66,7 +66,7 @@ class TerrainGenerator
                 var terrain = generatorFuncs.TerrainFunc(tileNoiseVal);
                 var trees = generatorFuncs.TreeFunc(treeNoiseVal, terrain);
                 var ores = generatorFuncs.OreFunc(oreNoiseVal, terrain);
-                tileSlice.Add(new Tile(chunk, terrain, trees, ores));
+                tileSlice.Add(new Tile(chunk, terrain, trees, ores, new Buildings()));
             }
         }
         return chunk;

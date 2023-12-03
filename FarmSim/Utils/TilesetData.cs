@@ -4,5 +4,5 @@ namespace FarmSim.Utils;
 class TilesetData
 {
     public string BaseFolder { get; set; }
-    public Dictionary<string, SpriteData> Tilesets { get; set; }
+    public Dictionary<string, TileData> Tilesets { get; set; }
 }

@@ -53,5 +53,43 @@ class TerrainManager
         return chunk;
     }
 
+    public TileRange GetRange(
+        int topLeftX,
+        int topLeftY,
+        int bottomRightX,
+        int bottomRightY)
+    {
+        var tiles = new List<Tile>((bottomRightY - topLeftY + 1) * (bottomRightX - topLeftX + 1));
+        for (int tileY = topLeftY; tileY <= bottomRightY; ++tileY)
+        {
+            for (int tileX = topLeftX; tileX <= bottomRightX; ++tileX)
+            {
+                tiles.Add(GetTile(tileX: tileX, tileY: tileY));
+            }
+        }
+        return new TileRange(
+            tiles,
+            topLeftX: topLeftX,
+            topLeftY: topLeftY,
+            bottomRightX: bottomRightX,
+            bottomRightY: bottomRightY);
+    }
 
+    public void PlaceBuilding(
+        string building,
+        int topLeftX,
+        int topLeftY,
+        int bottomRightX,
+        int bottomRightY)
+    {
+        for (int tileY = topLeftY; tileY <= bottomRightY; ++tileY)
+        {
+            for (int tileX = topLeftX; tileX <= bottomRightX; ++tileX)
+            {
+                GetTile(tileX: tileX, tileY: tileY)
+                    .Buildings
+                    .Add(building);
+            }
+        }
+    }
 }

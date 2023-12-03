@@ -1,9 +1,10 @@
-﻿using FarmSim.Terrain;
+﻿using FarmSim.Player;
+using FarmSim.Terrain;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FarmSim.Rendering;
 
@@ -15,19 +16,25 @@ class Renderer
     private const float ChunkLODFloat = ChunkLOD;
     private const float ChunkTerrainLODZoomLevel = 1f / 8f;
     private const float ChunkObjectLODZoomLevel = 1f / 16f;
+    private static readonly Color PartialBuildingColor = new Color(127, 127, 127, 127);
+    private static readonly Color PartialBuildingInvalidColor = new Color(255, 0, 0, 127);
+
     private readonly ViewportManager _viewportManager;
     private readonly TerrainManager _terrainManager;
     private readonly Tileset _tileset;
+    private readonly Player.Player _player;
     private Dictionary<Chunk, RenderTarget2D> _chunkTilePrerender = new();
 
     public Renderer(
         ViewportManager viewportManager,
         TerrainManager terrainManager,
-        Tileset tileset)
+        Tileset tileset,
+        Player.Player player)
     {
         _viewportManager = viewportManager;
         _terrainManager = terrainManager;
         _tileset = tileset;
+        _player = player;
     }
 
     public void ClearLODCache()
@@ -109,6 +116,11 @@ class Renderer
                 if (_viewportManager.Zoom >= ChunkObjectLODZoomLevel)
                 {
                     DrawTileObjects(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw);
+                    if (_player.TilePlacement != null
+                        && _player.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
+                    {
+                        DrawPartialBuilding(spriteBatch, tile, _player.TilePlacement, xDraw: xDraw, yDraw: yDraw);
+                    }
                 }
                 else
                 {
@@ -184,17 +196,31 @@ class Renderer
 
     private void DrawTileTerrain(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, float scale)
     {
-        var tileset = _tileset[tile.Terrain];
-        spriteBatch.Draw(
-            texture: tileset.Texture,
-            position: new Vector2(xDraw, yDraw),
-            sourceRectangle: tileset.SourceRectangle,
-            color: Color.White,
-            rotation: 0f,
-            origin: tileset.Origin,
-            scale: scale,
-            effects: SpriteEffects.None,
-            layerDepth: 0f);
+        if (!tile.Buildings.HasFloor)
+        {
+            var tileset = _tileset[tile.Terrain];
+            DrawTileset(
+                spriteBatch,
+                tileset,
+                xDraw: xDraw,
+                yDraw: yDraw,
+                scale: scale,
+                Color.White);
+        }
+        if (tile.Buildings.Any())
+        {
+            foreach (var building in tile.Buildings)
+            {
+                var tileset = _tileset[building];
+                DrawTileset(
+                    spriteBatch,
+                    tileset,
+                    xDraw: xDraw,
+                    yDraw: yDraw,
+                    scale: scale,
+                    Color.White);
+            }
+        }
     }
 
     private void DrawTileObjects(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw)
@@ -202,30 +228,62 @@ class Renderer
         if (tile.Trees != null)
         {
             var tree = _tileset[tile.Trees];
-            spriteBatch.Draw(
-                texture: tree.Texture,
-                position: new Vector2(xDraw, yDraw),
-                sourceRectangle: tree.SourceRectangle,
-                color: Color.White,
-                rotation: 0f,
-                origin: tree.Origin,
+            DrawTileset(
+                spriteBatch,
+                tree,
+                xDraw: xDraw,
+                yDraw: yDraw,
                 scale: _viewportManager.Zoom,
-                effects: SpriteEffects.None,
-                layerDepth: 0f);
+                Color.White);
         }
         if (tile.Ores != null)
         {
             var ore = _tileset[tile.Ores];
-            spriteBatch.Draw(
-                texture: ore.Texture,
-                position: new Vector2(xDraw, yDraw),
-                sourceRectangle: ore.SourceRectangle,
-                color: Color.White,
-                rotation: 0f,
-                origin: ore.Origin,
+            DrawTileset(
+                spriteBatch,
+                ore,
+                xDraw: xDraw,
+                yDraw: yDraw,
                 scale: _viewportManager.Zoom,
-                effects: SpriteEffects.None,
-                layerDepth: 0f);
+                Color.White);
         }
+    }
+
+    private void DrawPartialBuilding(SpriteBatch spriteBatch, Tile tile, ITilePlacement tilePlacement, float xDraw, float yDraw)
+    {
+        var color = !(tilePlacement.AllTilesBuildable
+            || BuildingTypeExtensions.YieldTilesets(tile)
+                .All(key => _tileset[key].IsBuildable(tilePlacement.Buildable))
+            )
+            ? PartialBuildingInvalidColor
+            : PartialBuildingColor;
+        var building = _tileset[tilePlacement.BuildingTileset];
+        DrawTileset(
+            spriteBatch,
+            building,
+            xDraw: xDraw,
+            yDraw: yDraw,
+            scale: _viewportManager.Zoom,
+            color);
+    }
+
+    private static void DrawTileset(
+        SpriteBatch spriteBatch,
+        Tileset.ProcessedTileData tileset,
+        float xDraw,
+        float yDraw,
+        float scale,
+        Color color)
+    {
+        spriteBatch.Draw(
+            texture: tileset.Texture,
+            position: new Vector2(xDraw, yDraw),
+            sourceRectangle: tileset.SourceRectangle,
+            color: color,
+            rotation: 0f,
+            origin: tileset.Origin,
+            scale: scale,
+            effects: SpriteEffects.None,
+            layerDepth: 0f);
     }
 }

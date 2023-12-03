@@ -2,7 +2,8 @@
   "baseFolder": "Content/tilesets",
   "tilesets": {
     "grass": {
-      "source": "terrain/grass.png"
+      "source": "terrain/grass.png",
+      "buildable": [ "Normal" ]
     },
     "water": {
       "source": "terrain/water.png"
@@ -34,6 +35,10 @@
     },
     "ore-coal": {
       "source": "objects/ore-coal.png"
+    },
+    "wood-floor": {
+      "source": "buildings/wood-floor.png",
+      "buildable": [ "Normal" ]
     }
   }
 }

@@ -27,6 +27,12 @@ internal class ControllerManager
         CurrentKeyboardState = Keyboard.GetState();
     }
 
+    public bool IsKeyPressed(Keys key)
+    {
+        return PreviousKeyboardState.IsKeyUp(key)
+            && CurrentKeyboardState.IsKeyDown(key);
+    }
+
     public int GetMouseScrollDelta()
     {
         return CurrentMouseState.ScrollWheelValue - PreviousMouseState.ScrollWheelValue;
@@ -42,14 +48,19 @@ internal class ControllerManager
         return GetMouseScrollDelta() < 0;
     }
 
-    public bool IsKeyPressed(Keys key)
+    public bool IsLeftMouseInitialPressed()
     {
-        return PreviousKeyboardState.IsKeyUp(key)
-            && CurrentKeyboardState.IsKeyDown(key);
+        return CurrentMouseState.LeftButton == ButtonState.Pressed
+            && PreviousMouseState.LeftButton == ButtonState.Released;
     }
 
     public bool IsLeftMouseDown()
     {
         return CurrentMouseState.LeftButton == ButtonState.Pressed;
+    }
+
+    public bool IsLeftMouseUp()
+    {
+        return CurrentMouseState.LeftButton == ButtonState.Released;
     }
 }
