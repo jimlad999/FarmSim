@@ -66,6 +66,8 @@ class Renderer
         int yTileEnd = (viewport.Y + viewport.Height) / TileSize + 4;
         var xDrawOffset = -xOffset * _viewportManager.Zoom;
         var yDrawOffset = -yOffset * _viewportManager.Zoom;
+        var shouldRenderChunks = _viewportManager.Zoom < ChunkTerrainLODZoomLevel;
+        var shouldRenderEntities = _viewportManager.Zoom >= ChunkObjectLODZoomLevel;
         // TODO: consider cycling unused chunk pre renders to reduce memory footprint. Currently sitting comfortably under 1GB memory (in testing)
         var renderedChunks = new HashSet<Chunk>();
 
@@ -108,31 +110,46 @@ class Renderer
         for (var tileY = yTileStart; tileY < yTileEnd; ++tileY)
         {
             float xDraw = (int)xDrawOffset;
-            var processYSkip = true;
+            var processedYSkip = true;
             var yTilesSkipped = 0;
             var topYPoint = tileY * TileSize;
             for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
             {
-                var leftXPoint = tileX * TileSize;
-                var entitiesToRenderThisTile = playerYTile == tileY && playerXTile == tileX
-                    ? new[] { _player }.OrderBy(e => e.Y).ToArray()
-                    : Array.Empty<Player.Player>();
                 var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
                 var (xChunkIndex, yChunkIndex) = tile.Chunk.GetIndices(tileX: tileX, tileY: tileY);
                 var chunkSize = tile.Chunk.ChunkSize;
-                if (_viewportManager.Zoom < ChunkTerrainLODZoomLevel)
+                if (shouldRenderChunks)
                 {
                     if (renderedChunks.Add(tile.Chunk))
                     {
                         DrawChunk(spriteBatch, tile.Chunk, xDraw: xDraw - xChunkIndex * zoomedTileSize, yDraw: yDraw - yChunkIndex * zoomedTileSize);
                     }
+                    var xTilesSkipped = chunkSize - xChunkIndex;
+                    tileX += xTilesSkipped;
+                    xDraw += zoomedTileSize * xTilesSkipped;
+                    if (!shouldRenderEntities && processedYSkip)
+                    {
+                        processedYSkip = false;
+                        yTilesSkipped = chunkSize - yChunkIndex - 1;
+                    }
                 }
                 else
                 {
                     DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, playerIsInsideBuilding);
+                    xDraw += zoomedTileSize;
                 }
-                if (_viewportManager.Zoom >= ChunkObjectLODZoomLevel)
+            }
+            // render entities after the terrain has finished so we don't clip the sprite when rendering the next tile over
+            if (shouldRenderEntities)
+            {
+                xDraw = (int)xDrawOffset;
+                for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
                 {
+                    var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
+                    var leftXPoint = tileX * TileSize;
+                    var entitiesToRenderThisTile = playerYTile == tileY && playerXTile == tileX
+                        ? new[] { _player }.OrderBy(e => e.Y).ToArray()
+                        : Array.Empty<Player.Player>();
                     var entitiesAlreadyRendered = 0;
                     foreach (var entity in entitiesToRenderThisTile)
                     {
@@ -156,19 +173,8 @@ class Renderer
                     {
                         DrawPartialBuilding(spriteBatch, tile, _player.TilePlacement, xDraw: xDraw, yDraw: yDraw);
                     }
+                    xDraw += zoomedTileSize;
                 }
-                else
-                {
-                    var xTilesSkipped = chunkSize - xChunkIndex - 1;
-                    tileX += xTilesSkipped;
-                    xDraw += zoomedTileSize * xTilesSkipped;
-                    if (processYSkip)
-                    {
-                        processYSkip = false;
-                        yTilesSkipped = chunkSize - yChunkIndex - 1;
-                    }
-                }
-                xDraw += zoomedTileSize;
             }
             yDraw += zoomedTileSize;
             if (yTilesSkipped != 0)
