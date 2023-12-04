@@ -39,6 +39,20 @@
     "wood-floor": {
       "source": "buildings/wood-floor.png",
       "buildable": [ "Normal" ]
+    },
+    "wood-exterior-wall": {
+      "source": "buildings/wood-exterior-wall.png",
+      "origin": {
+        "x": 0,
+        "y": 32
+      }
+    },
+    "wood-interior-wall": {
+      "source": "buildings/wood-interior-wall.png",
+      "origin": {
+        "x": 0,
+        "y": 32
+      }
     }
   }
 }

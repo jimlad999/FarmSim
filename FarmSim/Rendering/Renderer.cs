@@ -3,6 +3,7 @@ using FarmSim.Terrain;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,17 +12,20 @@ namespace FarmSim.Rendering;
 class Renderer
 {
     public const int TileSize = 64;//px
+    public const int TileSizeHalf = TileSize / 2;//px
     private const float TileSizeFloat = TileSize;
     private const int ChunkLOD = 32;
     private const float ChunkLODFloat = ChunkLOD;
     private const float ChunkTerrainLODZoomLevel = 1f / 8f;
     private const float ChunkObjectLODZoomLevel = 1f / 16f;
+    private static readonly Color ExteriorWallTransparency = new Color(15, 15, 15, 127);
     private static readonly Color PartialBuildingColor = new Color(127, 127, 127, 127);
     private static readonly Color PartialBuildingInvalidColor = new Color(255, 0, 0, 127);
 
     private readonly ViewportManager _viewportManager;
     private readonly TerrainManager _terrainManager;
     private readonly Tileset _tileset;
+    private readonly EntitySpriteSheet _entitySpriteSheet;
     private readonly Player.Player _player;
     private Dictionary<Chunk, RenderTarget2D> _chunkTilePrerender = new();
 
@@ -29,11 +33,13 @@ class Renderer
         ViewportManager viewportManager,
         TerrainManager terrainManager,
         Tileset tileset,
+        EntitySpriteSheet entitySpriteSheet,
         Player.Player player)
     {
         _viewportManager = viewportManager;
         _terrainManager = terrainManager;
         _tileset = tileset;
+        _entitySpriteSheet = entitySpriteSheet;
         _player = player;
     }
 
@@ -89,6 +95,13 @@ class Renderer
             }
         }
 
+        var playerXTile = _player.XInt / TileSize;
+        if (_player.XInt < 0) --playerXTile;
+        var playerYTile = _player.YInt / TileSize;
+        if (_player.YInt < 0) --playerYTile;
+        // TODO: correctly identify "inside" building". probably same as "has floor"
+        var playerIsInsideBuilding = _terrainManager.GetTile(tileX: playerXTile, tileY: playerYTile).Buildings.Any();
+
         spriteBatch.GraphicsDevice.Clear(Color.CornflowerBlue);
         spriteBatch.Begin();
         float yDraw = (int)yDrawOffset;
@@ -97,8 +110,13 @@ class Renderer
             float xDraw = (int)xDrawOffset;
             var processYSkip = true;
             var yTilesSkipped = 0;
+            var topYPoint = tileY * TileSize;
             for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
             {
+                var leftXPoint = tileX * TileSize;
+                var entitiesToRenderThisTile = playerYTile == tileY && playerXTile == tileX
+                    ? new[] { _player }.OrderBy(e => e.Y).ToArray()
+                    : Array.Empty<Player.Player>();
                 var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
                 var (xChunkIndex, yChunkIndex) = tile.Chunk.GetIndices(tileX: tileX, tileY: tileY);
                 var chunkSize = tile.Chunk.ChunkSize;
@@ -111,11 +129,28 @@ class Renderer
                 }
                 else
                 {
-                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom);
+                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, playerIsInsideBuilding);
                 }
                 if (_viewportManager.Zoom >= ChunkObjectLODZoomLevel)
                 {
+                    var entitiesAlreadyRendered = 0;
+                    foreach (var entity in entitiesToRenderThisTile)
+                    {
+                        var entityDiffFromTopOfRow = topYPoint - entity.YInt;
+                        if (entityDiffFromTopOfRow > 0.5)
+                            break;
+                        var drawXDiff = (leftXPoint - entity.XInt) * _viewportManager.Zoom;
+                        var drawYDiff = entityDiffFromTopOfRow * _viewportManager.Zoom;
+                        DrawEntity(spriteBatch, entity, xDraw: xDraw - drawXDiff, yDraw: yDraw - drawYDiff, scale: _viewportManager.Zoom);
+                        ++entitiesAlreadyRendered;
+                    }
                     DrawTileObjects(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw);
+                    foreach (var entity in entitiesToRenderThisTile.Skip(entitiesAlreadyRendered))
+                    {
+                        var drawXDiff = (leftXPoint - entity.XInt) * _viewportManager.Zoom;
+                        var drawYDiff = (topYPoint - entity.YInt) * _viewportManager.Zoom;
+                        DrawEntity(spriteBatch, entity, xDraw: xDraw - drawXDiff, yDraw: yDraw - drawYDiff, scale: _viewportManager.Zoom);
+                    }
                     if (_player.TilePlacement != null
                         && _player.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
                     {
@@ -183,7 +218,7 @@ class Renderer
                 float xDraw = 0;
                 foreach (var tile in row)
                 {
-                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: ChunkTerrainLODZoomLevel);
+                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: ChunkTerrainLODZoomLevel, playerIsInsideBuilding: false);
                     xDraw += zoomedTileSize;
                 }
                 yDraw += zoomedTileSize;
@@ -194,7 +229,7 @@ class Renderer
         return chunkPrerender;
     }
 
-    private void DrawTileTerrain(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, float scale)
+    private void DrawTileTerrain(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, float scale, bool playerIsInsideBuilding)
     {
         if (!tile.Buildings.HasFloor)
         {
@@ -207,6 +242,10 @@ class Renderer
                 scale: scale,
                 Color.White);
         }
+        var tileAbove = _terrainManager.GetTile(tile.X, tile.Y - 1);
+        // TODO: work out this correctly when multiple kinds of buildings
+        var tileAboveHasFloor = tileAbove.Buildings.Any();
+        var thisTileHasFloor = tile.Buildings.Any();
         if (tile.Buildings.Any())
         {
             foreach (var building in tile.Buildings)
@@ -220,6 +259,33 @@ class Renderer
                     scale: scale,
                     Color.White);
             }
+            if (playerIsInsideBuilding && !tileAboveHasFloor)
+            {
+                var floor = tile.Buildings.First();
+                var wall = $"{floor.Split('-')[0]}-interior-wall";
+                var tileset = _tileset[wall];
+                DrawTileset(
+                    spriteBatch,
+                    tileset,
+                    xDraw: xDraw,
+                    yDraw: yDraw - TileSizeFloat * scale,
+                    scale: scale,
+                    Color.White);
+            }
+        }
+        // defer drawing exterior walls so that they are always rendered over any entities inside
+        if (!thisTileHasFloor && tileAboveHasFloor)
+        {
+            var floor = tileAbove.Buildings.First();
+            var wall = $"{floor.Split('-')[0]}-exterior-wall";
+            var tileset = _tileset[wall];
+            DrawTileset(
+                spriteBatch,
+                tileset,
+                xDraw: xDraw,
+                yDraw: yDraw - TileSizeFloat * scale,
+                scale: scale,
+                playerIsInsideBuilding ? ExteriorWallTransparency : Color.White);
         }
     }
 
@@ -247,6 +313,18 @@ class Renderer
                 scale: _viewportManager.Zoom,
                 Color.White);
         }
+    }
+
+    private void DrawEntity(SpriteBatch spriteBatch, Player.Player entity, float xDraw, float yDraw, float scale)
+    {
+        var entitySpriteSheet = _entitySpriteSheet[entity.EntitySpriteKey];
+        DrawEntity(
+            spriteBatch,
+            entitySpriteSheet,
+            xDraw: xDraw,
+            yDraw: yDraw,
+            scale: scale,
+            Color.White);
     }
 
     private void DrawPartialBuilding(SpriteBatch spriteBatch, Tile tile, ITilePlacement tilePlacement, float xDraw, float yDraw)
@@ -282,6 +360,26 @@ class Renderer
             color: color,
             rotation: 0f,
             origin: tileset.Origin,
+            scale: scale,
+            effects: SpriteEffects.None,
+            layerDepth: 0f);
+    }
+
+    private static void DrawEntity(
+        SpriteBatch spriteBatch,
+        EntitySpriteSheet.ProcessedEntityData entity,
+        float xDraw,
+        float yDraw,
+        float scale,
+        Color color)
+    {
+        spriteBatch.Draw(
+            texture: entity.Texture,
+            position: new Vector2(xDraw, yDraw),
+            sourceRectangle: entity.SourceRectangle,
+            color: color,
+            rotation: 0f,
+            origin: entity.Origin,
             scale: scale,
             effects: SpriteEffects.None,
             layerDepth: 0f);

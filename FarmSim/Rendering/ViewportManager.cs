@@ -14,11 +14,14 @@ internal class ViewportManager
     private double _x;
     private double _y;
     private double _width;
+    private double _widthHalf;
     private double _height;
+    private double _heightHalf;
 
     public float Zoom { get; private set; } = 1f;
     public Viewport Viewport { get; private set; }
     public int ScrollSpeed { get; set; } = 500;
+    public Player.Player Tracking { get; set; }
 
     public ViewportManager(
         ControllerManager controllerManager,
@@ -30,7 +33,9 @@ internal class ViewportManager
         _x = Viewport.X;
         _y = Viewport.Y;
         _width = Viewport.Width;
+        _widthHalf = _width / 2;
         _height = Viewport.Height;
+        _heightHalf = _height / 2;
     }
 
     internal void Update(GameTime gameTime)
@@ -38,25 +43,37 @@ internal class ViewportManager
         bool stateChanged = false;
         var keyboardState = _controllerManager.CurrentKeyboardState;
         var viewportScroll = gameTime.ElapsedGameTime.TotalSeconds * ScrollSpeed / Zoom;
-        if (keyboardState.IsKeyDown(Keys.Up))
+        if (Tracking == null)
         {
-            _y -= viewportScroll;
-            stateChanged = true;
+            if (keyboardState.IsKeyDown(Keys.Up))
+            {
+                _y -= viewportScroll;
+                stateChanged = true;
+            }
+            if (keyboardState.IsKeyDown(Keys.Down))
+            {
+                _y += viewportScroll;
+                stateChanged = true;
+            }
+            if (keyboardState.IsKeyDown(Keys.Left))
+            {
+                _x -= viewportScroll;
+                stateChanged = true;
+            }
+            if (keyboardState.IsKeyDown(Keys.Right))
+            {
+                _x += viewportScroll;
+                stateChanged = true;
+            }
         }
-        if (keyboardState.IsKeyDown(Keys.Down))
+        else
         {
-            _y += viewportScroll;
-            stateChanged = true;
-        }
-        if (keyboardState.IsKeyDown(Keys.Left))
-        {
-            _x -= viewportScroll;
-            stateChanged = true;
-        }
-        if (keyboardState.IsKeyDown(Keys.Right))
-        {
-            _x += viewportScroll;
-            stateChanged = true;
+            stateChanged = Tracking.X != (_x + _widthHalf) || Tracking.Y != (_y + _heightHalf);
+            if (stateChanged)
+            {
+                _x = Tracking.X - _widthHalf;
+                _y = Tracking.Y - _heightHalf;
+            }
         }
 
         if (Zoom < MaxZoom && _controllerManager.IsMouseScrollingUp())
@@ -66,7 +83,9 @@ internal class ViewportManager
             _x += _width / 4;
             _y += _height / 4;
             _width /= 2;
+            _widthHalf = _width / 2;
             _height /= 2;
+            _heightHalf = _height / 2;
             stateChanged = true;
         }
         else if (Zoom > MinZoom && _controllerManager.IsMouseScrollingDown())
@@ -76,7 +95,9 @@ internal class ViewportManager
             _x -= _width / 2;
             _y -= _height / 2;
             _width *= 2;
+            _widthHalf = _width / 2;
             _height *= 2;
+            _heightHalf = _height / 2;
             stateChanged = true;
         }
 

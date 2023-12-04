@@ -2,17 +2,28 @@
 using FarmSim.Terrain;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace FarmSim.Player;
 
 class Player
 {
+    private const double MovementSpeed = 150;
+
     private readonly ControllerManager _controllerManager;
     private readonly ViewportManager _viewportManager;
     private readonly TerrainManager _terrainManager;
     private readonly Tileset _tileset;
 
     private string _buildingTileset = "wood-floor";
+
+    public string EntitySpriteKey = "player";
+
+    public double X;
+    public int XInt;
+    public double Y;
+    public int YInt;
 
     public Player(
         ControllerManager controllerManager,
@@ -34,8 +45,42 @@ class Player
 
     public void Update(GameTime gameTime)
     {
-        if (_buildingTileset != null
-            && _controllerManager.IsLeftMouseInitialPressed())
+        UpdateMovement(gameTime);
+        if (_buildingTileset != null)
+        {
+            UpdateBuildingPlacement();
+        }
+    }
+
+    private void UpdateMovement(GameTime gameTime)
+    {
+        var keyboardState = _controllerManager.CurrentKeyboardState;
+        var movementPerFrame = gameTime.ElapsedGameTime.TotalSeconds * MovementSpeed;
+        if (keyboardState.IsKeyDown(Keys.Up))
+        {
+            Y -= movementPerFrame;
+            YInt = (int)Y;
+        }
+        if (keyboardState.IsKeyDown(Keys.Down))
+        {
+            Y += movementPerFrame;
+            YInt = (int)Y;
+        }
+        if (keyboardState.IsKeyDown(Keys.Left))
+        {
+            X -= movementPerFrame;
+            XInt = (int)X;
+        }
+        if (keyboardState.IsKeyDown(Keys.Right))
+        {
+            X += movementPerFrame;
+            XInt = (int)X;
+        }
+    }
+
+    private void UpdateBuildingPlacement()
+    {
+        if (_controllerManager.IsLeftMouseInitialPressed())
         {
             var tilePosition = GetHoveredTileCoordinates();
             var tileTerrain = _terrainManager.GetTile(tilePosition.X, tilePosition.Y).Terrain;
@@ -80,7 +125,7 @@ class Player
         }
     }
 
-    public (int X, int Y) GetHoveredTileCoordinates()
+    private (int X, int Y) GetHoveredTileCoordinates()
     {
         var screenPosition = _controllerManager.CurrentMouseState.Position;
         var tilePosition = _viewportManager.ConvertScrenCoordinatesToTileCoordinates(screenPosition.X, screenPosition.Y);

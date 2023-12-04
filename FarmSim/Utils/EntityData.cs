@@ -1,9 +1,8 @@
 ﻿namespace FarmSim.Utils;
 
-class TileData
+class EntityData
 {
     public string Source { get; set; }
-    // "origin" is from top left corner of the tile
+    // "origin" is from point the entity "stands"
     public TilesetOrigin Origin { get; set; }
-    public BuildingType[] Buildable { get; set; } 
 }

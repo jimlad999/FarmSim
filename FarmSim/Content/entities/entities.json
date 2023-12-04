@@ -1,0 +1,12 @@
+{
+  "baseFolder": "Content/entities",
+  "entities": {
+    "player": {
+      "source": "player/player.png",
+      "origin": {
+        "x": 32,
+        "y": 80
+      }
+    }
+  }
+}

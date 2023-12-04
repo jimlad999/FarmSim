@@ -20,6 +20,7 @@ public class Game1 : Game
     private Player.Player _player;
     private SpriteBatch _spriteBatch;
     private Tileset _tileset;
+    private EntitySpriteSheet _entitySpriteSheet;
     private Renderer _renderer;
 
     public Game1()
@@ -48,15 +49,19 @@ public class Game1 : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/tilesets/tilesets.json"));
         _tileset = new Tileset(_spriteBatch, tilesetData);
+        var entitiesData = JsonConvert.DeserializeObject<EntitiesData>(File.ReadAllText("Content/entities/entities.json"));
+        _entitySpriteSheet = new EntitySpriteSheet(_spriteBatch, entitiesData);
         _player = new Player.Player(
             _controllerManager,
             _viewportManager,
             _terrainManager,
             _tileset);
+        _viewportManager.Tracking = _player;
         _renderer = new Renderer(
             _viewportManager,
             _terrainManager,
             _tileset,
+            _entitySpriteSheet,
             _player);
     }
 
