@@ -33,6 +33,9 @@
     <None Update="Content\tilesets\buildings\wood-exterior-wall.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Content\tilesets\buildings\wood-roof.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Content\tilesets\buildings\wood-interior-wall.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

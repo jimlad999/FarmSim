@@ -11,9 +11,13 @@ namespace FarmSim.Rendering;
 
 class Renderer
 {
+    // Pull these from the tilesets? Should these be configurable?
     public const int TileSize = 64;//px
     public const int TileSizeHalf = TileSize / 2;//px
     private const float TileSizeFloat = TileSize;
+    public const int WallHeight = 96;//px
+    public const float WallHeightFloat = WallHeight;
+    public const float WallPlusTileSizeFloat = WallHeightFloat + TileSizeFloat;
     private const int ChunkLOD = 32;
     private const float ChunkLODFloat = ChunkLOD;
     private const float ChunkTerrainLODZoomLevel = 1f / 8f;
@@ -239,10 +243,9 @@ class Renderer
     {
         if (!tile.Buildings.HasFloor)
         {
-            var tileset = _tileset[tile.Terrain];
             DrawTileset(
                 spriteBatch,
-                tileset,
+                _tileset[tile.Terrain],
                 xDraw: xDraw,
                 yDraw: yDraw,
                 scale: scale,
@@ -256,27 +259,45 @@ class Renderer
         {
             foreach (var building in tile.Buildings)
             {
-                var tileset = _tileset[building];
                 DrawTileset(
                     spriteBatch,
-                    tileset,
+                    _tileset[building],
                     xDraw: xDraw,
                     yDraw: yDraw,
                     scale: scale,
                     Color.White);
             }
-            if (playerIsInsideBuilding && !tileAboveHasFloor)
+            if (thisTileHasFloor)
             {
                 var floor = tile.Buildings.First();
-                var wall = $"{floor.Split('-')[0]}-interior-wall";
-                var tileset = _tileset[wall];
-                DrawTileset(
-                    spriteBatch,
-                    tileset,
-                    xDraw: xDraw,
-                    yDraw: yDraw - TileSizeFloat * scale,
-                    scale: scale,
-                    Color.White);
+                if (playerIsInsideBuilding && !tileAboveHasFloor)
+                {
+                    var wall = $"{floor.Split('-')[0]}-interior-wall";
+                    DrawTileset(
+                        spriteBatch,
+                        _tileset[wall],
+                        xDraw: xDraw,
+                        yDraw: yDraw - TileSizeFloat * scale,
+                        scale: scale,
+                        Color.White);
+                }
+                else if (!playerIsInsideBuilding)
+                {
+                    var tileBelow = _terrainManager.GetTile(tile.X, tile.Y + 1);
+                    var tileBelowHasFloor = tileBelow.Buildings.Any();
+                    // defer the roof tile for exterior wall until the exterior wall is drawn
+                    if (tileBelowHasFloor)
+                    {
+                        var roof = $"{floor.Split('-')[0]}-roof";
+                        DrawTileset(
+                            spriteBatch,
+                            _tileset[roof],
+                            xDraw: xDraw,
+                            yDraw: yDraw - WallHeightFloat * scale,
+                            scale: scale,
+                            Color.White);
+                    }
+                }
             }
         }
         // defer drawing exterior walls so that they are always rendered over any entities inside
@@ -284,14 +305,24 @@ class Renderer
         {
             var floor = tileAbove.Buildings.First();
             var wall = $"{floor.Split('-')[0]}-exterior-wall";
-            var tileset = _tileset[wall];
             DrawTileset(
                 spriteBatch,
-                tileset,
+                _tileset[wall],
                 xDraw: xDraw,
                 yDraw: yDraw - TileSizeFloat * scale,
                 scale: scale,
                 playerIsInsideBuilding ? ExteriorWallTransparency : Color.White);
+            if (!playerIsInsideBuilding)
+            {
+                var roof = $"{floor.Split('-')[0]}-roof";
+                DrawTileset(
+                    spriteBatch,
+                    _tileset[roof],
+                    xDraw: xDraw,
+                    yDraw: yDraw - (WallPlusTileSizeFloat) * scale,
+                    scale: scale,
+                    Color.White);
+            }
         }
     }
 

@@ -53,6 +53,13 @@
         "x": 0,
         "y": 32
       }
+    },
+    "wood-roof": {
+      "source": "buildings/wood-roof.png",
+      "origin": {
+        "x": 0,
+        "y": 4
+      }
     }
   }
 }
