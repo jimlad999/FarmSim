@@ -1,14 +1,15 @@
-﻿using FarmSim.Rendering;
+﻿using FarmSim.Entities;
+using FarmSim.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FarmSim.Utils;
 
 class EntitySpriteSheet
 {
-    private readonly Dictionary<string, Rectangle> _sourceRectangle = new();
-    private readonly Dictionary<string, Vector2> _origin = new();
+    private readonly Dictionary<string, Metadata> _metadata = new();
     private readonly RenderTarget2D _renderTarget;
 
     public EntitySpriteSheet(
@@ -23,16 +24,26 @@ class EntitySpriteSheet
             foreach (var data in tilesetData.Entities)
             {
                 var texture = Texture2D.FromFile(spriteBatch.GraphicsDevice, $"{tilesetData.BaseFolder}/{data.Value.Source}");
-                _origin[data.Key] = data.Value.Origin?.Convert() ?? Vector2.Zero;
                 // destinationRectangle to render to _renderTarget.
                 // Will then be used as the sourceRectangle from the _renderTarget.
-                var sourceRectangle = new Rectangle(
+                var destinationRectangle = new Rectangle(
                     x: 0,
                     y: totalHeight,
                     width: texture.Width,
                     height: texture.Height);
-                _sourceRectangle[data.Key] = sourceRectangle;
-                sprites[data.Key] = (texture, sourceRectangle);
+                var sourceRectangles = data.Value.DirectionFrames.ToDictionary(
+                    a => a.Key,
+                    a => new Rectangle(
+                        x: destinationRectangle.X + a.Value.X,
+                        y: destinationRectangle.Y + a.Value.Y,
+                        width: data.Value.FrameWidth,
+                        height: data.Value.FrameHeight));
+                _metadata[data.Key] = new Metadata
+                {
+                    SourceRectangles = sourceRectangles,
+                    Origin = data.Value.Origin?.Convert() ?? Vector2.Zero,
+                };
+                sprites[data.Key] = (texture, destinationRectangle);
 
                 disposeScope.Disposables.Add(texture);
 
@@ -61,12 +72,22 @@ class EntitySpriteSheet
         }
     }
 
-    public ProcessedEntityData this[string entity]
+    public ProcessedEntityData this[string entity, FacingDirection facingDirection]
     {
-        get => new ProcessedEntityData(
-            _renderTarget,
-            _sourceRectangle[entity],
-            _origin[entity]);
+        get
+        {
+            var metadata = _metadata[entity];
+            return new ProcessedEntityData(
+                _renderTarget,
+                metadata.SourceRectangles[facingDirection],
+                metadata.Origin);
+        }
+    }
+
+    public struct Metadata
+    {
+        public Vector2 Origin;
+        public Dictionary<FacingDirection, Rectangle> SourceRectangles;
     }
 
     public struct ProcessedEntityData

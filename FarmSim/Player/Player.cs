@@ -1,4 +1,5 @@
-﻿using FarmSim.Rendering;
+﻿using FarmSim.Entities;
+using FarmSim.Rendering;
 using FarmSim.Terrain;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
@@ -9,7 +10,7 @@ namespace FarmSim.Player;
 
 class Player
 {
-    private const double MovementSpeed = 150;
+    private const double MovementSpeed = 200;
 
     private readonly ControllerManager _controllerManager;
     private readonly ViewportManager _viewportManager;
@@ -19,6 +20,7 @@ class Player
     private string _buildingTileset = "wood-floor";
 
     public string EntitySpriteKey = "player";
+    public FacingDirection FacingDirection { get; private set; } = FacingDirection.Down;
 
     public double X;
     public int XInt;
@@ -56,25 +58,30 @@ class Player
     {
         var keyboardState = _controllerManager.CurrentKeyboardState;
         var movementPerFrame = gameTime.ElapsedGameTime.TotalSeconds * MovementSpeed;
+        // normalise vector for diagnoal movement?
         if (keyboardState.IsKeyDown(Keys.Up))
         {
             Y -= movementPerFrame;
             YInt = (int)Y;
+            FacingDirection = FacingDirection.Up;
         }
         if (keyboardState.IsKeyDown(Keys.Down))
         {
             Y += movementPerFrame;
             YInt = (int)Y;
+            FacingDirection = FacingDirection.Down;
         }
         if (keyboardState.IsKeyDown(Keys.Left))
         {
             X -= movementPerFrame;
             XInt = (int)X;
+            FacingDirection = FacingDirection.Left;
         }
         if (keyboardState.IsKeyDown(Keys.Right))
         {
             X += movementPerFrame;
             XInt = (int)X;
+            FacingDirection = FacingDirection.Right;
         }
     }
 

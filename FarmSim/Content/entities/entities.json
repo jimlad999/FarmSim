@@ -6,6 +6,26 @@
       "origin": {
         "x": 32,
         "y": 80
+      },
+      "frameWidth": 64,
+      "frameHeight": 96,
+      "directionFrames": {
+        "Up": {
+          "x": 0,
+          "y": 0
+        },
+        "Down": {
+          "x": 0,
+          "y": 96
+        },
+        "Left": {
+          "x": 0,
+          "y": 192
+        },
+        "Right": {
+          "x": 0,
+          "y": 288
+        }
       }
     }
   }

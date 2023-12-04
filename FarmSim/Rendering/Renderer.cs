@@ -323,7 +323,7 @@ class Renderer
 
     private void DrawEntity(SpriteBatch spriteBatch, Player.Player entity, float xDraw, float yDraw, float scale)
     {
-        var entitySpriteSheet = _entitySpriteSheet[entity.EntitySpriteKey];
+        var entitySpriteSheet = _entitySpriteSheet[entity.EntitySpriteKey, entity.FacingDirection];
         DrawEntity(
             spriteBatch,
             entitySpriteSheet,
