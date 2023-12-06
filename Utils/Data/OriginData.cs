@@ -1,8 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace FarmSim.Utils;
+namespace Utils.Data;
 
-class TilesetOrigin
+public class OriginData
 {
     public float X { get; set; }
     public float Y { get; set; }

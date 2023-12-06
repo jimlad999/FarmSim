@@ -1,0 +1,22 @@
+{
+  "UIElements": [
+    {
+      "$type": "UI.Panel, UI",
+      "width": 800,
+      "height": 600,
+      "verticalAlignment": "Center",
+      "horizontalAlignment": "Center",
+      "texture": "panel",
+      "Children": [
+        {
+          "$type": "UI.Button, UI",
+          "verticalAlignment": "Center",
+          "horizontalAlignment": "Center",
+          "releasedTexture": "button-released",
+          "selectedTexture": "button-selected",
+          "pressedTexture": "button-pressed"
+        }
+      ]
+    }
+  ]
+}

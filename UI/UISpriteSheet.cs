@@ -1,47 +1,39 @@
-﻿using FarmSim.Entities;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
-using System.Linq;
+using UI.Data;
 using Utils;
 using Utils.Rendering;
 
-namespace FarmSim.Utils;
+namespace UI;
 
-class EntitySpriteSheet
+public class UISpriteSheet
 {
     private readonly Dictionary<string, Metadata> _metadata = new();
     private readonly RenderTarget2D _renderTarget;
 
-    public EntitySpriteSheet(
+    public UISpriteSheet(
         SpriteBatch spriteBatch,
-        EntitiesData tilesetData)
+        UISpriteData uiData)
     {
         using (var disposeScope = new DeferredDisposeScope())
         {
             var totalWidth = 0;
             var totalHeight = 0;
             var sprites = new Dictionary<string, (Texture2D, Rectangle)>();
-            foreach (var data in tilesetData.Entities)
+            foreach (var data in uiData.Elements)
             {
-                var texture = Texture2D.FromFile(spriteBatch.GraphicsDevice, $"{tilesetData.BaseFolder}/{data.Value.Source}");
+                var texture = Texture2D.FromFile(spriteBatch.GraphicsDevice, $"{uiData.BaseFolder}/{data.Value.Source}");
                 // destinationRectangle to render to _renderTarget.
-                // Will then be used as the base for each frames sourceRectangles from the _renderTarget.
+                // Will then be used as the sourceRectangle from the _renderTarget.
                 var destinationRectangle = new Rectangle(
                     x: 0,
                     y: totalHeight,
                     width: texture.Width,
                     height: texture.Height);
-                var sourceRectangles = data.Value.DirectionFrames.ToDictionary(
-                    a => a.Key,
-                    a => new Rectangle(
-                        x: destinationRectangle.X + a.Value.X,
-                        y: destinationRectangle.Y + a.Value.Y,
-                        width: data.Value.FrameWidth,
-                        height: data.Value.FrameHeight));
                 _metadata[data.Key] = new Metadata
                 {
-                    SourceRectangles = sourceRectangles,
+                    SourceRectangle = destinationRectangle,
                     Origin = data.Value.Origin?.Convert() ?? Vector2.Zero,
                 };
                 sprites[data.Key] = (texture, destinationRectangle);
@@ -73,14 +65,14 @@ class EntitySpriteSheet
         }
     }
 
-    public ProcessedEntityData this[string entity, FacingDirection facingDirection]
+    public ProcessedData this[string key]
     {
         get
         {
-            var metadata = _metadata[entity];
-            return new ProcessedEntityData(
+            var metadata = _metadata[key];
+            return new ProcessedData(
                 _renderTarget,
-                metadata.SourceRectangles[facingDirection],
+                metadata.SourceRectangle,
                 metadata.Origin);
         }
     }
@@ -88,16 +80,16 @@ class EntitySpriteSheet
     public struct Metadata
     {
         public Vector2 Origin;
-        public Dictionary<FacingDirection, Rectangle> SourceRectangles;
+        public Rectangle SourceRectangle;
     }
 
-    public struct ProcessedEntityData
+    public struct ProcessedData
     {
         public Texture2D Texture;
         public Rectangle SourceRectangle;
         public Vector2 Origin;
 
-        public ProcessedEntityData(
+        public ProcessedData(
             Texture2D texture,
             Rectangle sourceRectangle,
             Vector2 origin)

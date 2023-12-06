@@ -1,9 +1,9 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using System;
 
-namespace FarmSim.Rendering;
+namespace Utils.Rendering;
 
-class RenderTargetScope : IDisposable
+public sealed class RenderTargetScope : IDisposable
 {
     private readonly SpriteBatch _spriteBatch;
 

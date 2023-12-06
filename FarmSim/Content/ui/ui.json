@@ -1,0 +1,17 @@
+{
+  "baseFolder": "Content/ui",
+  "elements": {
+    "panel": {
+      "source": "panel.png"
+    },
+    "button-released": {
+      "source": "button-released.png"
+    },
+    "button-selected": {
+      "source": "button-selected.png"
+    },
+    "button-pressed": {
+      "source": "button-pressed.png"
+    }
+  }
+}

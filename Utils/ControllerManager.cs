@@ -1,8 +1,8 @@
 ﻿using Microsoft.Xna.Framework.Input;
 
-namespace FarmSim.Utils;
+namespace Utils;
 
-internal class ControllerManager
+public class ControllerManager
 {
     public MouseState PreviousMouseState { get; private set; }
     public MouseState CurrentMouseState { get; private set; }

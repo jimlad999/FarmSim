@@ -1,8 +1,9 @@
-﻿using FarmSim.Rendering;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using Utils;
+using Utils.Rendering;
 
 namespace FarmSim.Utils;
 

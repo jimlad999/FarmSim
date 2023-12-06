@@ -6,21 +6,31 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using UI;
+using UI.Data;
+using Utils;
 
 namespace FarmSim;
 
 public class Game1 : Game
 {
     private static readonly Random Rand = new Random();
+
+    private readonly Stack<string> _screensToDraw = new();
+
     private GraphicsDeviceManager _graphics;
     private ControllerManager _controllerManager;
     private TerrainManager _terrainManager;
     private ViewportManager _viewportManager;
+    private UIOverlay _uiOverlay;
     private Player.Player _player;
     private SpriteBatch _spriteBatch;
     private Tileset _tileset;
     private EntitySpriteSheet _entitySpriteSheet;
+    private UISpriteSheet _uiSpriteSheet;
     private Renderer _renderer;
 
     public Game1()
@@ -51,6 +61,24 @@ public class Game1 : Game
         _tileset = new Tileset(_spriteBatch, tilesetData);
         var entitiesData = JsonConvert.DeserializeObject<EntitiesData>(File.ReadAllText("Content/entities/entities.json"));
         _entitySpriteSheet = new EntitySpriteSheet(_spriteBatch, entitiesData);
+        var uiSpriteData = JsonConvert.DeserializeObject<UISpriteData>(File.ReadAllText("Content/ui/ui.json"));
+        _uiSpriteSheet = new UISpriteSheet(_spriteBatch, uiSpriteData);
+        var screenData = JsonConvert.DeserializeObject<ScreensData>(File.ReadAllText("Content/ui/screens.json"));
+        var screens = screenData.Screens
+            .Select(s => (
+                s.ScreenName,
+                Screen: JsonConvert.DeserializeObject<Screen>(File.ReadAllText($"{screenData.BaseFolder}/{s.ScreenFilename}"), new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto
+                })
+            ))
+            .ToDictionary(a => a.ScreenName, a => a.Screen);
+        //debug
+        //_screensToDraw.Push("buildscreen");
+        _uiOverlay = new UIOverlay(
+            screens,
+            _uiSpriteSheet,
+            _controllerManager);
         _player = new Player.Player(
             _controllerManager,
             _viewportManager,
@@ -68,6 +96,7 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         _controllerManager.Update();
+        _uiOverlay.Update(gameTime, _screensToDraw);
         _viewportManager.Update(gameTime);
         _player.Update(gameTime);
 
@@ -110,6 +139,11 @@ public class Game1 : Game
         }
 #endif
         _renderer.Draw(_spriteBatch);
+
+        // should UIOverlay be inside the Renderer instead?
+        _spriteBatch.Begin();
+        _uiOverlay.Draw(_spriteBatch, _screensToDraw);
+        _spriteBatch.End();
 
         base.Draw(gameTime);
     }

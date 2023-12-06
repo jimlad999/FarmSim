@@ -1,0 +1,9 @@
+{
+  "baseFolder": "Content/ui",
+  "screens": [
+    {
+      "screenName": "buildscreen",
+      "screenFilename": "buildscreen.json"
+    }
+  ]
+}
