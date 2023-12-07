@@ -56,6 +56,8 @@ public class Game1 : Game
 
     protected override void LoadContent()
     {
+        Text.Normal = Content.Load<SpriteFont>("fonts/GameFont");
+        Text.Bold = Content.Load<SpriteFont>("fonts/GameFontBold");
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/tilesets/tilesets.json"));
         _tileset = new Tileset(_spriteBatch, tilesetData);

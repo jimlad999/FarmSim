@@ -29,6 +29,22 @@ public class UIOverlay
         }
     }
 
+    // Currently only returns first matching id.
+    // Is it a good idea to require global ids across all screens?
+    public bool TryGetById(string id, out UIElement result)
+    {
+        foreach (var screen in _screens.Values)
+        {
+            if (screen.TryGetById(id, out result))
+            {
+                return true;
+            }
+        }
+
+        result = null;
+        return false;
+    }
+
     public void Update(GameTime gameTime, Stack<string> screensToDraw)
     {
         foreach (var screen in screensToDraw)

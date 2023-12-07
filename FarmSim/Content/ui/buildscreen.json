@@ -14,7 +14,22 @@
           "horizontalAlignment": "Center",
           "releasedTexture": "button-released",
           "selectedTexture": "button-selected",
-          "pressedTexture": "button-pressed"
+          "pressedTexture": "button-pressed",
+          "Children": [
+            {
+              "$type": "UI.Text, UI",
+              "verticalAlignment": "Center",
+              "horizontalAlignment": "Center",
+              "value": "<white>Click me<white>"
+            }
+          ]
+        },
+        {
+          "$type": "UI.Text, UI",
+          "verticalAlignment": "Top",
+          "horizontalAlignment": "Center",
+          "top": "50",
+          "value": "<b>Build<b> Screen"
         }
       ]
     }

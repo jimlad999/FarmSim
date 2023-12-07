@@ -20,6 +20,20 @@ public class Screen
         }
     }
 
+    public bool TryGetById(string id, out UIElement result)
+    {
+        foreach (var uiElement in UIElements)
+        {
+            if (uiElement.TryGetById(id, out result))
+            {
+                return true;
+            }
+        }
+
+        result = null;
+        return false;
+    }
+
     public void Update(
         GameTime gameTime,
         UISpriteSheet uiSpriteSheet,

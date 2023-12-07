@@ -3,6 +3,6 @@
 namespace UI;
 
 [DataContract]
-public class Panel : UIElement
+public class Panel : SpriteUIElement
 {
 }

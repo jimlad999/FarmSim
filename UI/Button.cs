@@ -1,11 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Runtime.Serialization;
 using Utils;
 
 namespace UI;
 
+public delegate void ButtonEventHandler(Button sender, Button.ButtonState state);
+
 [DataContract]
-public class Button : UIElement
+public class Button : SpriteUIElement
 {
     public enum ButtonState
     {
@@ -20,18 +23,22 @@ public class Button : UIElement
     public string SelectedTexture;
     [DataMember]
     public string PressedTexture;
-    // key lookup to action
-    [DataMember]
-    public string PressedAction;
 
     [IgnoreDataMember]
     public ButtonState State;
+    [IgnoreDataMember]
+    public ButtonEventHandler EventHandler;
 
     public override void Update(
         GameTime gameTime,
         UISpriteSheet uiSpriteSheet,
         ControllerManager controllerManager)
     {
+        if (Hidden)
+        {
+            return;
+        }
+        var previousState = State;
         var selected = DestinationCache != Rectangle.Empty
             && DestinationCache.Contains(controllerManager.CurrentMouseState.Position);
         //or selected with controller
@@ -43,6 +50,7 @@ public class Button : UIElement
                 Texture = PressedTexture;
                 TextureStale = true;
             }
+
         }
         else if (selected)
         {
@@ -64,5 +72,10 @@ public class Button : UIElement
         }
 
         base.Update(gameTime, uiSpriteSheet, controllerManager);
+
+        if (previousState != State && EventHandler != null)
+        {
+            EventHandler.Invoke(this, State);
+        }
     }
 }
