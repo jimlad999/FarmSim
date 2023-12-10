@@ -23,6 +23,7 @@ public abstract class SpriteUIElement : UIElement
 
     public override void Update(
         GameTime gameTime,
+        UIState state,
         UISpriteSheet uiSpriteSheet,
         ControllerManager controllerManager)
     {
@@ -35,7 +36,7 @@ public abstract class SpriteUIElement : UIElement
             SpriteSheetData = uiSpriteSheet[Texture];
             TextureStale = false;
         }
-        base.Update(gameTime, uiSpriteSheet, controllerManager);
+        base.Update(gameTime, state, uiSpriteSheet, controllerManager);
     }
 
     public override void Draw(SpriteBatch spriteBatch, Rectangle drawArea)

@@ -40,12 +40,12 @@ public abstract class UIElement
         }
     }
 
-    public bool TryGetById(string id, out UIElement result)
+    public bool TryGetById<T>(string id, out T result) where T : UIElement
     {
         if (id == Id)
         {
-            result = this;
-            return true;
+            result = this as T;
+            return this is T;
         }
         foreach (var child in Children)
         {
@@ -61,6 +61,7 @@ public abstract class UIElement
 
     public virtual void Update(
         GameTime gameTime,
+        UIState state,
         UISpriteSheet uiSpriteSheet,
         ControllerManager controllerManager)
     {
@@ -68,9 +69,13 @@ public abstract class UIElement
         {
             return;
         }
+        if (!state.IsMouseOverElement && DestinationCache.Contains(controllerManager.CurrentMouseState.Position))
+        {
+            state.IsMouseOverElement = true;
+        }
         foreach (var child in Children)
         {
-            child.Update(gameTime, uiSpriteSheet, controllerManager);
+            child.Update(gameTime, state, uiSpriteSheet, controllerManager);
         }
     }
 

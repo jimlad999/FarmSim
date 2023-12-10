@@ -1,0 +1,21 @@
+{
+  "UIElements": [
+    {
+      "$type": "UI.Button, UI",
+      "id": "build-button",
+      "verticalAlignment": "Bottom",
+      "horizontalAlignment": "Right",
+      "releasedTexture": "button-released",
+      "selectedTexture": "button-selected",
+      "pressedTexture": "button-pressed",
+      "Children": [
+        {
+          "$type": "UI.Text, UI",
+          "verticalAlignment": "Center",
+          "horizontalAlignment": "Center",
+          "value": "<white>Build<white>"
+        }
+      ]
+    }
+  ]
+}

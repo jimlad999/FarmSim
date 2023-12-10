@@ -19,7 +19,7 @@ public class Game1 : Game
 {
     private static readonly Random Rand = new Random();
 
-    private readonly Stack<string> _screensToDraw = new();
+    private readonly List<string> _screensToDraw = new();
 
     private GraphicsDeviceManager _graphics;
     private ControllerManager _controllerManager;
@@ -76,16 +76,38 @@ public class Game1 : Game
             ))
             .ToDictionary(a => a.ScreenName, a => a.Screen);
         //debug
-        //_screensToDraw.Push("buildscreen");
+        _screensToDraw.Add("hud");
         _uiOverlay = new UIOverlay(
             screens,
             _uiSpriteSheet,
             _controllerManager);
+        // TODO: find a better place for UI interactions to sit (should sit within the Game, i.e. not the library)
+        if (_uiOverlay.TryGetById<Button>("build-button", out var buildButton))
+        {
+            buildButton.EventHandler += (Button sender, Button.ButtonState state, Button.ButtonState previousState) =>
+            {
+                if (previousState != Button.ButtonState.Pressed && state == Button.ButtonState.Pressed)
+                {
+                    _uiOverlay.NextRefresh(() => _screensToDraw.Add("buildscreen"));
+                }
+            };
+        }
+        if (_uiOverlay.TryGetById<Button>("close-button", out var closeButton))
+        {
+            closeButton.EventHandler += (Button sender, Button.ButtonState state, Button.ButtonState previousState) =>
+            {
+                if (previousState != Button.ButtonState.Pressed && state == Button.ButtonState.Pressed)
+                {
+                    _uiOverlay.NextRefresh(() => _screensToDraw.Remove("buildscreen"));
+                }
+            };
+        }
         _player = new Player.Player(
             _controllerManager,
             _viewportManager,
             _terrainManager,
-            _tileset);
+            _tileset,
+            _uiOverlay);
         _viewportManager.Tracking = _player;
         _renderer = new Renderer(
             _viewportManager,
@@ -102,11 +124,11 @@ public class Game1 : Game
         _viewportManager.Update(gameTime);
         _player.Update(gameTime);
 
-        if (_controllerManager.CurrentKeyboardState.IsKeyDown(Keys.Escape))
+        if (_controllerManager.IsKeyInitialPressed(Keys.Escape))
         {
             Exit();
         }
-        if (_controllerManager.IsKeyPressed(Keys.F12))
+        if (_controllerManager.IsKeyInitialPressed(Keys.F12))
         {
             _terrainManager.Reseed(Rand.Next());
             _renderer.ClearLODCache();

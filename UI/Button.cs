@@ -5,7 +5,7 @@ using Utils;
 
 namespace UI;
 
-public delegate void ButtonEventHandler(Button sender, Button.ButtonState state);
+public delegate void ButtonEventHandler(Button sender, Button.ButtonState state, Button.ButtonState previoudState);
 
 [DataContract]
 public class Button : SpriteUIElement
@@ -31,6 +31,7 @@ public class Button : SpriteUIElement
 
     public override void Update(
         GameTime gameTime,
+        UIState state,
         UISpriteSheet uiSpriteSheet,
         ControllerManager controllerManager)
     {
@@ -71,11 +72,11 @@ public class Button : SpriteUIElement
             }
         }
 
-        base.Update(gameTime, uiSpriteSheet, controllerManager);
+        base.Update(gameTime, state, uiSpriteSheet, controllerManager);
 
         if (previousState != State && EventHandler != null)
         {
-            EventHandler.Invoke(this, State);
+            EventHandler.Invoke(this, State, previousState);
         }
     }
 }

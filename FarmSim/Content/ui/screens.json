@@ -3,7 +3,11 @@
   "screens": [
     {
       "screenName": "buildscreen",
-      "screenFilename": "buildscreen.json"
+      "screenFilename": "screens/buildscreen.json"
+    },
+    {
+      "screenName": "hud",
+      "screenFilename": "screens/hud.json"
     }
   ]
 }

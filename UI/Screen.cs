@@ -20,7 +20,7 @@ public class Screen
         }
     }
 
-    public bool TryGetById(string id, out UIElement result)
+    public bool TryGetById<T>(string id, out T result) where T : UIElement
     {
         foreach (var uiElement in UIElements)
         {
@@ -36,12 +36,13 @@ public class Screen
 
     public void Update(
         GameTime gameTime,
+        UIState state,
         UISpriteSheet uiSpriteSheet,
         ControllerManager controllerManager)
     {
         foreach (var uiElement in UIElements)
         {
-            uiElement.Update(gameTime, uiSpriteSheet, controllerManager);
+            uiElement.Update(gameTime, state, uiSpriteSheet, controllerManager);
         }
     }
 

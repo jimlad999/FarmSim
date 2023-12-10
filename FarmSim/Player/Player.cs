@@ -4,6 +4,7 @@ using FarmSim.Terrain;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using UI;
 using Utils;
 
 namespace FarmSim.Player;
@@ -16,7 +17,7 @@ class Player
     private readonly ViewportManager _viewportManager;
     private readonly TerrainManager _terrainManager;
     private readonly Tileset _tileset;
-
+    private readonly UIOverlay _uiOverlay;
     private string _buildingTileset = "wood-floor";
 
     public string EntitySpriteKey = "player";
@@ -31,12 +32,14 @@ class Player
         ControllerManager controllerManager,
         ViewportManager viewportManager,
         TerrainManager terrainManager,
-        Tileset tileset)
+        Tileset tileset,
+        UIOverlay uiOverlay)
     {
         _controllerManager = controllerManager;
         _viewportManager = viewportManager;
         _terrainManager = terrainManager;
         _tileset = tileset;
+        _uiOverlay = uiOverlay;
 
         // DEBUG:
         var tilePlacementBuildable = _tileset[_buildingTileset].Buildable;
@@ -48,7 +51,8 @@ class Player
     public void Update(GameTime gameTime)
     {
         UpdateMovement(gameTime);
-        if (_buildingTileset != null)
+        if (_buildingTileset != null
+            && !_uiOverlay.State.IsMouseOverElement)
         {
             UpdateBuildingPlacement();
         }
@@ -56,28 +60,27 @@ class Player
 
     private void UpdateMovement(GameTime gameTime)
     {
-        var keyboardState = _controllerManager.CurrentKeyboardState;
         var movementPerFrame = gameTime.ElapsedGameTime.TotalSeconds * MovementSpeed;
         // normalise vector for diagnoal movement?
-        if (keyboardState.IsKeyDown(Keys.Up))
+        if (_controllerManager.IsKeyDown(Keys.W))
         {
             Y -= movementPerFrame;
             YInt = (int)Y;
             FacingDirection = FacingDirection.Up;
         }
-        if (keyboardState.IsKeyDown(Keys.Down))
+        if (_controllerManager.IsKeyDown(Keys.S))
         {
             Y += movementPerFrame;
             YInt = (int)Y;
             FacingDirection = FacingDirection.Down;
         }
-        if (keyboardState.IsKeyDown(Keys.Left))
+        if (_controllerManager.IsKeyDown(Keys.A))
         {
             X -= movementPerFrame;
             XInt = (int)X;
             FacingDirection = FacingDirection.Left;
         }
-        if (keyboardState.IsKeyDown(Keys.Right))
+        if (_controllerManager.IsKeyDown(Keys.D))
         {
             X += movementPerFrame;
             XInt = (int)X;

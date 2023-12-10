@@ -27,10 +27,20 @@ public class ControllerManager
         CurrentKeyboardState = Keyboard.GetState();
     }
 
-    public bool IsKeyPressed(Keys key)
+    public bool IsKeyInitialPressed(Keys key)
     {
         return PreviousKeyboardState.IsKeyUp(key)
             && CurrentKeyboardState.IsKeyDown(key);
+    }
+
+    public bool IsKeyDown(Keys key)
+    {
+        return CurrentKeyboardState.IsKeyDown(key);
+    }
+
+    public bool IsKeyUp(Keys key)
+    {
+        return CurrentKeyboardState.IsKeyUp(key);
     }
 
     public int GetMouseScrollDelta()

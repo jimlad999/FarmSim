@@ -10,6 +10,7 @@
       "Children": [
         {
           "$type": "UI.Button, UI",
+          "id": "close-button",
           "verticalAlignment": "Center",
           "horizontalAlignment": "Center",
           "releasedTexture": "button-released",

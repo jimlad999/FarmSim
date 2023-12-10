@@ -35,7 +35,7 @@ public class Text : UIElement
     [IgnoreDataMember]
     private ProcessedData[] ParsedValue;
 
-    public override void Update(GameTime gameTime, UISpriteSheet uiSpriteSheet, ControllerManager controllerManager)
+    public override void Update(GameTime gameTime, UIState state, UISpriteSheet uiSpriteSheet, ControllerManager controllerManager)
     {
         if (ParsedValue == null && !string.IsNullOrEmpty(Value))
         {
@@ -96,7 +96,7 @@ public class Text : UIElement
             } while (processed < Value.Length);
             ParsedValue = parsedList.ToArray();
         }
-        base.Update(gameTime, uiSpriteSheet, controllerManager);
+        base.Update(gameTime, state, uiSpriteSheet, controllerManager);
     }
 
     public override void Draw(SpriteBatch spriteBatch, Rectangle drawArea)
