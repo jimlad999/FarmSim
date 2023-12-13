@@ -39,15 +39,21 @@ public abstract class SpriteUIElement : UIElement
         base.Update(gameTime, state, uiSpriteSheet, controllerManager);
     }
 
-    public override void Draw(SpriteBatch spriteBatch, Rectangle drawArea)
+    public override void Draw(SpriteBatch spriteBatch, Rectangle drawArea, Point offset)
     {
         // Empty, transparent panels can be built without textures. Must specify Height and Width at least.
         // Empty destination is a no-op. Texture probably hasn't loaded or been set or not a transparent panel.
         if (!Hidden && !(SpriteSheetData == null && (Height == null || Width == null)))
         {
-            if (DestinationCache == Rectangle.Empty)
+            if (DestinationCache == Rectangle.Empty || CachedDrawArea != drawArea || CachedOffset != offset)
             {
-                DestinationCache = ComputeScreenDestination(drawArea);
+                CachedDrawArea = drawArea;
+                CachedOffset = offset;
+                DestinationCache = ComputeScreenDestination(drawArea, offset);
+            }
+            if (!drawArea.Intersects(DestinationCache))
+            {
+                return;
             }
             if (SpriteSheetData != null)
             {
@@ -64,18 +70,19 @@ public abstract class SpriteUIElement : UIElement
             }
             foreach (var child in Children)
             {
-                child.Draw(spriteBatch, DestinationCache);
+                // offset will already have been considered in the calculation for destination above
+                child.Draw(spriteBatch, DestinationCache, offset: Point.Zero);
             }
         }
     }
 
-    private Rectangle ComputeScreenDestination(Rectangle drawArea)
+    protected Rectangle ComputeScreenDestination(Rectangle drawArea, Point offset)
     {
         var height = Height != null ? Utils.ToPixels(Height, drawArea.Height) : SpriteSheetData.Value.SourceRectangle.Height;
         var width = Width != null ? Utils.ToPixels(Width, drawArea.Width) : SpriteSheetData.Value.SourceRectangle.Width;
         var y = Utils.ComputePosition(VerticalAlignment, startValue: Top, endValue: Bottom, thisDimensionSize: height, parentDimensionSize: drawArea.Height);
         var x = Utils.ComputePosition(HorizontalAlignment, startValue: Left, endValue: Right, thisDimensionSize: width, parentDimensionSize: drawArea.Width);
 
-        return new Rectangle(x: drawArea.X + x, y: drawArea.Y + y, width: width, height: height);
+        return new Rectangle(x: drawArea.X + offset.X + x, y: drawArea.Y + offset.Y + y, width: width, height: height);
     }
 }

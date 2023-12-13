@@ -99,13 +99,19 @@ public class Text : UIElement
         base.Update(gameTime, state, uiSpriteSheet, controllerManager);
     }
 
-    public override void Draw(SpriteBatch spriteBatch, Rectangle drawArea)
+    public override void Draw(SpriteBatch spriteBatch, Rectangle drawArea, Point offset)
     {
         if (!Hidden && !string.IsNullOrEmpty(Value) && ParsedValue != null)
         {
-            if (DestinationCache == Rectangle.Empty)
+            if (DestinationCache == Rectangle.Empty || CachedDrawArea != drawArea || CachedOffset != offset)
             {
-                DestinationCache = ComputeScreenDestination(drawArea);
+                CachedDrawArea = drawArea;
+                CachedOffset = offset;
+                DestinationCache = ComputeScreenDestination(drawArea, offset);
+            }
+            if (!drawArea.Intersects(DestinationCache))
+            {
+                return;
             }
             float y = DestinationCache.Y;
             float x = DestinationCache.X;
@@ -120,7 +126,7 @@ public class Text : UIElement
         }
     }
 
-    private Rectangle ComputeScreenDestination(Rectangle drawArea)
+    private Rectangle ComputeScreenDestination(Rectangle drawArea, Point offset)
     {
         float maxHeight = 0f;
         float sumWidth = 0f;
@@ -138,7 +144,7 @@ public class Text : UIElement
         var y = Utils.ComputePosition(VerticalAlignment, startValue: Top, endValue: Bottom, thisDimensionSize: height, parentDimensionSize: drawArea.Height);
         var x = Utils.ComputePosition(HorizontalAlignment, startValue: Left, endValue: Right, thisDimensionSize: width, parentDimensionSize: drawArea.Width);
 
-        return new Rectangle(x: drawArea.X + x, y: drawArea.Y + y, width: width, height: height);
+        return new Rectangle(x: drawArea.X + offset.X + x, y: drawArea.Y + offset.Y + y, width: width, height: height);
     }
 
     private static int Ceiling(float value)

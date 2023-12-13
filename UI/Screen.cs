@@ -50,7 +50,7 @@ public class Screen
     {
         foreach (var uiElement in UIElements)
         {
-            uiElement.Draw(spriteBatch, drawArea: spriteBatch.GraphicsDevice.Viewport.TitleSafeArea);
+            uiElement.Draw(spriteBatch, drawArea: spriteBatch.GraphicsDevice.Viewport.TitleSafeArea, Point.Zero);
         }
     }
 }

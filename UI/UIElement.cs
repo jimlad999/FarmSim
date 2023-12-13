@@ -29,7 +29,11 @@ public abstract class UIElement
     public UIElement[] Children = Array.Empty<UIElement>();
 
     [IgnoreDataMember]
-    protected Rectangle DestinationCache = Rectangle.Empty;
+    public Rectangle DestinationCache = Rectangle.Empty;
+    [IgnoreDataMember]
+    protected Rectangle CachedDrawArea;
+    [IgnoreDataMember]
+    protected Point CachedOffset;
 
     public void Resize()
     {
@@ -79,5 +83,5 @@ public abstract class UIElement
         }
     }
 
-    public abstract void Draw(SpriteBatch spriteBatch, Rectangle drawArea);
+    public abstract void Draw(SpriteBatch spriteBatch, Rectangle drawArea, Point offset);
 }

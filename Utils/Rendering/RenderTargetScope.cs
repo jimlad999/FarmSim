@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 
 namespace Utils.Rendering;
@@ -14,6 +15,7 @@ public sealed class RenderTargetScope : IDisposable
 
     public void Dispose()
     {
+        _spriteBatch.End();
         _spriteBatch.GraphicsDevice.SetRenderTarget(null);
     }
 
@@ -21,6 +23,8 @@ public sealed class RenderTargetScope : IDisposable
     {
         var scope = new RenderTargetScope(spriteBatch);
         spriteBatch.GraphicsDevice.SetRenderTarget(renderTarget);
+        spriteBatch.GraphicsDevice.Clear(Color.Transparent);
+        spriteBatch.Begin(blendState: BlendState.AlphaBlend);
         return scope;
     }
 }

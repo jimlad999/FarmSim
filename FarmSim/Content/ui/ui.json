@@ -12,6 +12,15 @@
     },
     "button-pressed": {
       "source": "button-pressed.png"
+    },
+    "scrollbox": {
+      "source": "scrollbox.png"
+    },
+    "scrollbar-background": {
+      "source": "scrollbar-background.png"
+    },
+    "scrollable-container-background": {
+      "source": "scrollable-container-background.png"
     }
   }
 }

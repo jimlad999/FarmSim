@@ -109,6 +109,7 @@ public class Game1 : Game
             _tileset,
             _uiOverlay);
         _viewportManager.Tracking = _player;
+        _viewportManager.UIOverlay = _uiOverlay;
         _renderer = new Renderer(
             _viewportManager,
             _terrainManager,

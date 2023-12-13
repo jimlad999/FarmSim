@@ -219,9 +219,6 @@ class Renderer
             height: chunk.ChunkSize * TileSize / ChunkLOD);
         using (RenderTargetScope.Create(spriteBatch, chunkPrerender))
         {
-            spriteBatch.GraphicsDevice.Clear(Color.Transparent);
-            spriteBatch.Begin(blendState: BlendState.AlphaBlend);
-
             float zoomedTileSize = TileSizeFloat / ChunkLODFloat;
             float yDraw = 0;
             foreach (var row in chunk.Tiles)
@@ -234,8 +231,6 @@ class Renderer
                 }
                 yDraw += zoomedTileSize;
             }
-
-            spriteBatch.End();
         }
         return chunkPrerender;
     }

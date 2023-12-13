@@ -48,7 +48,8 @@ class EntitySpriteSheet
 
                 disposeScope.Disposables.Add(texture);
 
-                totalHeight += texture.Height;
+                // +1 so that there is a small gap between sprites so that you don't get bleeding around the edges
+                totalHeight += texture.Height + 1;
                 if (texture.Width > totalWidth)
                 {
                     totalWidth = texture.Width;
@@ -60,15 +61,10 @@ class EntitySpriteSheet
                 height: totalHeight);
             using (RenderTargetScope.Create(spriteBatch, _renderTarget))
             {
-                spriteBatch.GraphicsDevice.Clear(Color.Transparent);
-                spriteBatch.Begin(blendState: BlendState.AlphaBlend);
-
                 foreach (var sprite in sprites.Values)
                 {
                     spriteBatch.Draw(sprite.Item1, destinationRectangle: sprite.Item2, Color.White);
                 }
-
-                spriteBatch.End();
             }
         }
     }

@@ -18,10 +18,11 @@ internal class ViewportManager
     private double _height;
     private double _heightHalf;
 
-    public float Zoom { get; private set; } = 1f;
-    public Viewport Viewport { get; private set; }
-    public int ScrollSpeed { get; set; } = 500;
-    public Player.Player Tracking { get; set; }
+    public float Zoom = 1f;
+    public Viewport Viewport;
+    public int ScrollSpeed = 500;
+    public Player.Player Tracking;
+    public UI.UIOverlay UIOverlay;
 
     public ViewportManager(
         ControllerManager controllerManager,
@@ -45,25 +46,30 @@ internal class ViewportManager
         var viewportScroll = gameTime.ElapsedGameTime.TotalSeconds * ScrollSpeed / Zoom;
         if (Tracking == null)
         {
-            if (keyboardState.IsKeyDown(Keys.Up))
+            // TODO: consider consolidating controller management in a single location
+            // to avoid spreading control management around to different classes.
+            if (UIOverlay?.State.IsMouseOverElement == false)
             {
-                _y -= viewportScroll;
-                stateChanged = true;
-            }
-            if (keyboardState.IsKeyDown(Keys.Down))
-            {
-                _y += viewportScroll;
-                stateChanged = true;
-            }
-            if (keyboardState.IsKeyDown(Keys.Left))
-            {
-                _x -= viewportScroll;
-                stateChanged = true;
-            }
-            if (keyboardState.IsKeyDown(Keys.Right))
-            {
-                _x += viewportScroll;
-                stateChanged = true;
+                if (keyboardState.IsKeyDown(Keys.Up))
+                {
+                    _y -= viewportScroll;
+                    stateChanged = true;
+                }
+                if (keyboardState.IsKeyDown(Keys.Down))
+                {
+                    _y += viewportScroll;
+                    stateChanged = true;
+                }
+                if (keyboardState.IsKeyDown(Keys.Left))
+                {
+                    _x -= viewportScroll;
+                    stateChanged = true;
+                }
+                if (keyboardState.IsKeyDown(Keys.Right))
+                {
+                    _x += viewportScroll;
+                    stateChanged = true;
+                }
             }
         }
         else
@@ -76,29 +82,32 @@ internal class ViewportManager
             }
         }
 
-        if (Zoom < MaxZoom && _controllerManager.IsMouseScrollingUp())
+        if (UIOverlay?.State.IsMouseOverElement == false)
         {
-            Zoom *= 2;
-            if (Zoom > MaxZoom) Zoom = MaxZoom;
-            _x += _width / 4;
-            _y += _height / 4;
-            _width /= 2;
-            _widthHalf = _width / 2;
-            _height /= 2;
-            _heightHalf = _height / 2;
-            stateChanged = true;
-        }
-        else if (Zoom > MinZoom && _controllerManager.IsMouseScrollingDown())
-        {
-            Zoom /= 2;
-            if (Zoom < MinZoom) Zoom = MinZoom;
-            _x -= _width / 2;
-            _y -= _height / 2;
-            _width *= 2;
-            _widthHalf = _width / 2;
-            _height *= 2;
-            _heightHalf = _height / 2;
-            stateChanged = true;
+            if (Zoom < MaxZoom && _controllerManager.IsMouseScrollingUp())
+            {
+                Zoom *= 2;
+                if (Zoom > MaxZoom) Zoom = MaxZoom;
+                _x += _width / 4;
+                _y += _height / 4;
+                _width /= 2;
+                _widthHalf = _width / 2;
+                _height /= 2;
+                _heightHalf = _height / 2;
+                stateChanged = true;
+            }
+            else if (Zoom > MinZoom && _controllerManager.IsMouseScrollingDown())
+            {
+                Zoom /= 2;
+                if (Zoom < MinZoom) Zoom = MinZoom;
+                _x -= _width / 2;
+                _y -= _height / 2;
+                _width *= 2;
+                _widthHalf = _width / 2;
+                _height *= 2;
+                _heightHalf = _height / 2;
+                stateChanged = true;
+            }
         }
 
         if (stateChanged)
