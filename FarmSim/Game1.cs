@@ -132,6 +132,10 @@ public class Game1 : Game
             {
                 _screensToDraw.RemoveAt(_screensToDraw.Count - 1);
             }
+            else if (_player.BuildingTileset != null)
+            {
+                _player.BuildingTileset = null;
+            }
             else
             {
                 Exit();
