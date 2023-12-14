@@ -36,8 +36,8 @@ public class ScrollableContainer : SpriteUIElement
     private int ScrollboxDrawOffset;
     [IgnoreDataMember]
     private int ScrollboxDrawHeight;
-    //[IgnoreDataMember]
-    //protected Rectangle ChildDrawArea = Rectangle.Empty;
+    [IgnoreDataMember]
+    private bool DraggingScrollbox = false;
 
     public override void Update(
         GameTime gameTime,
@@ -45,7 +45,9 @@ public class ScrollableContainer : SpriteUIElement
         UISpriteSheet uiSpriteSheet,
         ControllerManager controllerManager)
     {
-        if (MaxScrollOffset > 0 && TotalAreaCache.Contains(controllerManager.CurrentMouseState.Position))
+        var updateDrawOffset = false;
+        var mousePosition = controllerManager.CurrentMouseState.Position;
+        if (MaxScrollOffset > 0 && TotalAreaCache.Contains(mousePosition))
         {
             if (controllerManager.IsMouseScrollingDown())
             {
@@ -54,7 +56,7 @@ public class ScrollableContainer : SpriteUIElement
                 {
                     ScrollOffset = MaxScrollOffset;
                 }
-                ScrollboxDrawOffset = (int)((DestinationCache.Height - ScrollboxDrawHeight) * (ScrollOffset / (float)MaxScrollOffset));
+                updateDrawOffset = true;
             }
             else if (controllerManager.IsMouseScrollingUp() && ScrollOffset > 0)
             {
@@ -63,8 +65,38 @@ public class ScrollableContainer : SpriteUIElement
                 {
                     ScrollOffset = 0;
                 }
-                ScrollboxDrawOffset = (int)((DestinationCache.Height - ScrollboxDrawHeight) * (ScrollOffset / (float)MaxScrollOffset));
+                updateDrawOffset = true;
             }
+            else if (controllerManager.IsLeftMouseInitialPressed() && ScrollbarDestinationCache.Contains(mousePosition))
+            {
+                DraggingScrollbox = true;
+            }
+        }
+        if (DraggingScrollbox)
+        {
+            if (controllerManager.IsLeftMouseUp())
+            {
+                DraggingScrollbox = false;
+            }
+            else
+            {
+                ScrollOffset = (int)(MaxScrollOffset
+                    * (mousePosition.Y - ScrollbarDestinationCache.Y - (ScrollboxDrawHeight / 2))
+                    / (float)(ScrollbarDestinationCache.Height - ScrollboxDrawHeight));
+                if (ScrollOffset < 0)
+                {
+                    ScrollOffset = 0;
+                }
+                else if (ScrollOffset > MaxScrollOffset)
+                {
+                    ScrollOffset = MaxScrollOffset;
+                }
+                updateDrawOffset = true;
+            }
+        }
+        if (updateDrawOffset)
+        {
+            ScrollboxDrawOffset = (int)((ScrollbarDestinationCache.Height - ScrollboxDrawHeight) * (ScrollOffset / (float)MaxScrollOffset));
         }
         if (ScrollbarBackgroundTextureStale && ScrollbarBackgroundTexture != null)
         {
@@ -91,7 +123,6 @@ public class ScrollableContainer : SpriteUIElement
                 ScrollbarDestinationCache = Rectangle.Empty;
                 DestinationCache = ComputeScreenDestination(drawArea, offset);
                 TotalAreaCache = DestinationCache;
-                //ChildDrawArea = new Rectangle(0, 0, DestinationCache.Width, DestinationCache.Height);
             }
             if (ScrollbarDestinationCache == Rectangle.Empty && (ScrollbarBackgroundSpriteSheetData != null || ScrollboxSpriteSheetData != null))
             {

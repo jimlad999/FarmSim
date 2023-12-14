@@ -127,7 +127,15 @@ public class Game1 : Game
 
         if (_controllerManager.IsKeyInitialPressed(Keys.Escape))
         {
-            Exit();
+            // if not just HUD displayed
+            if (_screensToDraw.Count > 1)
+            {
+                _screensToDraw.RemoveAt(_screensToDraw.Count - 1);
+            }
+            else
+            {
+                Exit();
+            }
         }
         if (_controllerManager.IsKeyInitialPressed(Keys.F12))
         {
