@@ -19,18 +19,219 @@
           "scrollbarBackgroundTexture": "scrollbar-background",
           "Children": [
             {
-              "$type": "UI.Button, UI",
-              "id": "close-button",
-              "top": 800,
-              "releasedTexture": "button-released",
-              "selectedTexture": "button-selected",
-              "pressedTexture": "button-pressed",
+              "$type": "UI.WrapContainer, UI",
+              "Padding": 20,
               "Children": [
                 {
-                  "$type": "UI.Text, UI",
-                  "verticalAlignment": "Center",
-                  "horizontalAlignment": "Center",
-                  "value": "<white>Click me<white>"
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Nothing<white>"
+                    }
+                  ]
+                },
+                {
+                  "$type": "UI.Button, UI",
+                  "id": "close-button",
+                  "releasedTexture": "button-released",
+                  "selectedTexture": "button-selected",
+                  "pressedTexture": "button-pressed",
+                  "Children": [
+                    {
+                      "$type": "UI.Text, UI",
+                      "verticalAlignment": "Center",
+                      "horizontalAlignment": "Center",
+                      "value": "<white>Click me<white>"
+                    }
+                  ]
                 }
               ]
             }

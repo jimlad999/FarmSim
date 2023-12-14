@@ -21,6 +21,16 @@ public abstract class SpriteUIElement : UIElement
     [IgnoreDataMember]
     protected UISpriteSheet.ProcessedData? SpriteSheetData;
 
+    public override Rectangle PreComputeDestinationCache(Rectangle drawArea, Point offset)
+    {
+        var height = Height != null ? Utils.ToPixels(Height, drawArea.Height) : SpriteSheetData.Value.SourceRectangle.Height;
+        var width = Width != null ? Utils.ToPixels(Width, drawArea.Width) : SpriteSheetData.Value.SourceRectangle.Width;
+        var y = Utils.ComputePosition(VerticalAlignment, startValue: Top, endValue: Bottom, thisDimensionSize: height, parentDimensionSize: drawArea.Height);
+        var x = Utils.ComputePosition(HorizontalAlignment, startValue: Left, endValue: Right, thisDimensionSize: width, parentDimensionSize: drawArea.Width);
+
+        return new Rectangle(x: drawArea.X + offset.X + x, y: drawArea.Y + offset.Y + y, width: width, height: height);
+    }
+
     public override void Update(
         GameTime gameTime,
         UIState state,
@@ -49,7 +59,7 @@ public abstract class SpriteUIElement : UIElement
             {
                 CachedDrawArea = drawArea;
                 CachedOffset = offset;
-                DestinationCache = ComputeScreenDestination(drawArea, offset);
+                DestinationCache = PreComputeDestinationCache(drawArea, offset);
             }
             if (!drawArea.Intersects(DestinationCache))
             {
@@ -74,15 +84,5 @@ public abstract class SpriteUIElement : UIElement
                 child.Draw(spriteBatch, DestinationCache, offset: Point.Zero);
             }
         }
-    }
-
-    protected Rectangle ComputeScreenDestination(Rectangle drawArea, Point offset)
-    {
-        var height = Height != null ? Utils.ToPixels(Height, drawArea.Height) : SpriteSheetData.Value.SourceRectangle.Height;
-        var width = Width != null ? Utils.ToPixels(Width, drawArea.Width) : SpriteSheetData.Value.SourceRectangle.Width;
-        var y = Utils.ComputePosition(VerticalAlignment, startValue: Top, endValue: Bottom, thisDimensionSize: height, parentDimensionSize: drawArea.Height);
-        var x = Utils.ComputePosition(HorizontalAlignment, startValue: Left, endValue: Right, thisDimensionSize: width, parentDimensionSize: drawArea.Width);
-
-        return new Rectangle(x: drawArea.X + offset.X + x, y: drawArea.Y + offset.Y + y, width: width, height: height);
     }
 }

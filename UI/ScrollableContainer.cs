@@ -121,7 +121,7 @@ public class ScrollableContainer : SpriteUIElement
                 CachedOffset = offset;
                 MaxScrollOffset = int.MinValue;
                 ScrollbarDestinationCache = Rectangle.Empty;
-                DestinationCache = ComputeScreenDestination(drawArea, offset);
+                DestinationCache = PreComputeDestinationCache(drawArea, offset);
                 TotalAreaCache = DestinationCache;
             }
             if (ScrollbarDestinationCache == Rectangle.Empty && (ScrollbarBackgroundSpriteSheetData != null || ScrollboxSpriteSheetData != null))

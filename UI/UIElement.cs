@@ -44,6 +44,10 @@ public abstract class UIElement
         }
     }
 
+    // Calculate DestinationCache ahead of time but don't set it.
+    // Used for parent elements to decide if to change drawArea or offset based on child size.
+    public abstract Rectangle PreComputeDestinationCache(Rectangle drawArea, Point offset);
+
     public bool TryGetById<T>(string id, out T result) where T : UIElement
     {
         if (id == Id)

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using Utils;
@@ -34,6 +33,27 @@ public class Text : UIElement
 
     [IgnoreDataMember]
     private ProcessedData[] ParsedValue;
+
+    public override Rectangle PreComputeDestinationCache(Rectangle drawArea, Point offset)
+    {
+        float maxHeight = 0f;
+        float sumWidth = 0f;
+        foreach (var value in ParsedValue)
+        {
+            var measurement = GetFont(value.Weight).MeasureString(value.Value);
+            if (measurement.Y > maxHeight)
+            {
+                maxHeight = measurement.Y;
+            }
+            sumWidth += measurement.X;
+        }
+        var height = Ceiling(maxHeight);
+        var width = Ceiling(sumWidth);
+        var y = Utils.ComputePosition(VerticalAlignment, startValue: Top, endValue: Bottom, thisDimensionSize: height, parentDimensionSize: drawArea.Height);
+        var x = Utils.ComputePosition(HorizontalAlignment, startValue: Left, endValue: Right, thisDimensionSize: width, parentDimensionSize: drawArea.Width);
+
+        return new Rectangle(x: drawArea.X + offset.X + x, y: drawArea.Y + offset.Y + y, width: width, height: height);
+    }
 
     public override void Update(GameTime gameTime, UIState state, UISpriteSheet uiSpriteSheet, ControllerManager controllerManager)
     {
@@ -107,7 +127,7 @@ public class Text : UIElement
             {
                 CachedDrawArea = drawArea;
                 CachedOffset = offset;
-                DestinationCache = ComputeScreenDestination(drawArea, offset);
+                DestinationCache = PreComputeDestinationCache(drawArea, offset);
             }
             if (!drawArea.Intersects(DestinationCache))
             {
@@ -124,27 +144,6 @@ public class Text : UIElement
                 x += measurement.X;
             }
         }
-    }
-
-    private Rectangle ComputeScreenDestination(Rectangle drawArea, Point offset)
-    {
-        float maxHeight = 0f;
-        float sumWidth = 0f;
-        foreach (var value in ParsedValue)
-        {
-            var measurement = GetFont(value.Weight).MeasureString(value.Value);
-            if (measurement.Y > maxHeight)
-            {
-                maxHeight = measurement.Y;
-            }
-            sumWidth += measurement.X;
-        }
-        var height = Ceiling(maxHeight);
-        var width = Ceiling(sumWidth);
-        var y = Utils.ComputePosition(VerticalAlignment, startValue: Top, endValue: Bottom, thisDimensionSize: height, parentDimensionSize: drawArea.Height);
-        var x = Utils.ComputePosition(HorizontalAlignment, startValue: Left, endValue: Right, thisDimensionSize: width, parentDimensionSize: drawArea.Width);
-
-        return new Rectangle(x: drawArea.X + offset.X + x, y: drawArea.Y + offset.Y + y, width: width, height: height);
     }
 
     private static int Ceiling(float value)
