@@ -1,5 +1,6 @@
 ﻿using FarmSim.Rendering;
 using FarmSim.Terrain;
+using FarmSim.UI;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -57,11 +58,15 @@ public class Game1 : Game
 
     protected override void LoadContent()
     {
+        _spriteBatch = new SpriteBatch(GraphicsDevice);
+
         Text.Normal = Content.Load<SpriteFont>("fonts/GameFont");
         Text.Bold = Content.Load<SpriteFont>("fonts/GameFontBold");
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
+
+        GlobalState.BuildingData = JsonConvert.DeserializeObject<BuildingData>(File.ReadAllText("Content/tilesets/buildings/buildings.json"));
+
         var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/tilesets/tilesets.json"));
-        _tileset = new Tileset(_spriteBatch, tilesetData);
+        GlobalState.Tileset = _tileset = new Tileset(_spriteBatch, tilesetData);
         var entitiesData = JsonConvert.DeserializeObject<EntitiesData>(File.ReadAllText("Content/entities/entities.json"));
         _entitySpriteSheet = new EntitySpriteSheet(_spriteBatch, entitiesData);
         var uiSpriteData = JsonConvert.DeserializeObject<UISpriteData>(File.ReadAllText("Content/ui/ui.json"));
@@ -76,14 +81,13 @@ public class Game1 : Game
                 })
             ))
             .ToDictionary(a => a.ScreenName, a => a.Screen);
-        //debug
         _screensToDraw.Add("hud");
         _uiOverlay = new UIOverlay(
             screens,
             _uiSpriteSheet,
             _controllerManager);
         // TODO: find a better place for UI interactions to sit (should sit within the Game, i.e. not the library)
-        if (_uiOverlay.TryGetById<Button>("build-button", out var buildButton))
+        if (_uiOverlay.TryGetById("build-button", out Button buildButton))
         {
             buildButton.EventHandler += (Button sender, ButtonState state, ButtonState previousState) =>
             {
@@ -93,12 +97,13 @@ public class Game1 : Game
                 }
             };
         }
-        if (_uiOverlay.TryGetById<Button>("close-button", out var closeButton))
+        if (_uiOverlay.TryGetById("building-selector", out BuildingSelector buildingSelector))
         {
-            closeButton.EventHandler += (Button sender, ButtonState state, ButtonState previousState) =>
+            buildingSelector.EventHandler += (Button sender, ButtonState state, ButtonState previousState) =>
             {
-                if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
+                if (previousState != ButtonState.Pressed && state == ButtonState.Pressed && sender is BuildingSelectorButton buildingSelectorButton)
                 {
+                    _player.BuildingKey = buildingSelectorButton.BuildingKey;
                     _uiOverlay.NextRefresh(() => _screensToDraw.Remove("buildscreen"));
                 }
             };
@@ -133,9 +138,9 @@ public class Game1 : Game
             {
                 _screensToDraw.RemoveAt(_screensToDraw.Count - 1);
             }
-            else if (_player.BuildingTileset != null)
+            else if (_player.BuildingKey != null)
             {
-                _player.BuildingTileset = null;
+                _player.BuildingKey = null;
             }
             else
             {

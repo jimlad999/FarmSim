@@ -39,26 +39,23 @@ class Player
         _terrainManager = terrainManager;
         _tileset = tileset;
         _uiOverlay = uiOverlay;
-
-        // DEBUG:
-        BuildingTileset = "wood-floor";
     }
 
-    private string _buildingTileset;
-    public string BuildingTileset
+    private string _buildingKey;
+    public string BuildingKey
     {
-        get { return _buildingTileset; }
+        get { return _buildingKey; }
         set
         {
-            _buildingTileset = value;
-            if (_buildingTileset == null)
+            _buildingKey = value;
+            if (_buildingKey == null)
             {
                 TilePlacement = null;
             }
             else
             {
-                var tilePlacementBuildable = _tileset[BuildingTileset].Buildable;
-                TilePlacement = new PointTilePlacement(BuildingTileset, tilePlacementBuildable);
+                var building = GlobalState.BuildingData.Buildings[BuildingKey];
+                TilePlacement = new PointTilePlacement(building.Type, BuildingKey, building.Buildable);
             }
         }
     }
@@ -67,7 +64,7 @@ class Player
     public void Update(GameTime gameTime)
     {
         UpdateMovement(gameTime);
-        if (BuildingTileset != null
+        if (BuildingKey != null
             && !_uiOverlay.State.IsMouseOverElement)
         {
             UpdateBuildingPlacement();
@@ -111,11 +108,11 @@ class Player
             var tilePosition = GetHoveredTileCoordinates();
             var tileTerrain = _terrainManager.GetTile(tilePosition.X, tilePosition.Y).Terrain;
             var terrain = _tileset[tileTerrain];
-            var tilePlacementBuildable = _tileset[BuildingTileset].Buildable;
-            if (terrain.IsBuildable(tilePlacementBuildable))
+            if (terrain.IsBuildable(TilePlacement.Buildable))
             {
-                // TODO: identify point placement vs range placement
-                TilePlacement = new RangeTilePlacement(BuildingTileset, tilePlacementBuildable, tilePosition);
+                // TODO: identify point placement vs range placement depending on what is being built
+                // buildings are range, stations are single
+                TilePlacement = new RangeTilePlacement(TilePlacement.BuildingType, BuildingKey, TilePlacement.Buildable, tilePosition);
                 TilePlacement.CommittedToBuild = true;
             }
         }
@@ -145,8 +142,12 @@ class Player
                 // TODO: work out if
                 // * clear building command
                 // * start next building with current selection (currently what is below)
-                var tilePlacementBuildable = _tileset[BuildingTileset].Buildable;
-                TilePlacement = new PointTilePlacement(BuildingTileset, tilePlacementBuildable);
+                var tilePlacementBuildable = TilePlacement.Buildable;
+                TilePlacement = new PointTilePlacement(TilePlacement.BuildingType, BuildingKey, tilePlacementBuildable);
+                TilePlacement.Update(
+                    tilePlacementPosition,
+                    _terrainManager,
+                    _tileset);
             }
         }
     }

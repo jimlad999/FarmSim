@@ -5,32 +5,42 @@ namespace FarmSim.Terrain;
 
 class Buildings : IEnumerable<string>
 {
-    private readonly List<string> _buildings = new();
+    private string _building;
+    private readonly List<string> _stations = new();
 
-    public bool HasFloor { get; private set; }
-
-    public void Add(string building)
+    public void Add(BuildingType buildingType, string buildingKey)
     {
-        if (!HasFloor)
+        if (buildingType == BuildingType.Building)
         {
-            _buildings.Add(building);
-            // TODO: currently only placing floors
-            HasFloor = true;
+            _building = buildingKey;
+        }
+        else if (buildingType == BuildingType.Station)
+        {
+            _stations.Add(buildingKey);
         }
     }
 
     public bool Any()
     {
-        return _buildings.Count > 0;
+        return _building != null || _stations.Count > 0;
     }
 
     public IEnumerator<string> GetEnumerator()
     {
-        return ((IEnumerable<string>)_buildings).GetEnumerator();
+        if (_building != null)
+        {
+            var allBuildings = new List<string>(_stations.Count + 1) { _building };
+            allBuildings.AddRange(_stations);
+            return allBuildings.GetEnumerator();
+        }
+        else
+        {
+            return _stations.GetEnumerator();
+        }
     }
 
     IEnumerator IEnumerable.GetEnumerator()
     {
-        return ((IEnumerable)_buildings).GetEnumerator();
+        return GetEnumerator();
     }
 }

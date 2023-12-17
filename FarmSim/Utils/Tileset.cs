@@ -11,7 +11,7 @@ class Tileset
 {
     private readonly Dictionary<string, Rectangle> _sourceRectangle = new();
     private readonly Dictionary<string, Vector2> _origin = new();
-    private readonly Dictionary<string, BuildingType[]> _buildable = new();
+    private readonly Dictionary<string, Zoning[]> _buildable = new();
     private readonly RenderTarget2D _renderTarget;
 
     public Tileset(
@@ -25,7 +25,7 @@ class Tileset
             var sprites = new Dictionary<string, (Texture2D, Rectangle)>();
             foreach (var data in tilesetData.Tilesets)
             {
-                _buildable[data.Key] = data.Value.Buildable ?? Array.Empty<BuildingType>();
+                _buildable[data.Key] = data.Value.Buildable ?? Array.Empty<Zoning>();
                 var texture = Texture2D.FromFile(spriteBatch.GraphicsDevice, $"{tilesetData.BaseFolder}/{data.Value.Source}");
                 _origin[data.Key] = data.Value.Origin?.Convert() ?? Vector2.Zero;
                 // destinationRectangle to render to _renderTarget.
@@ -75,13 +75,13 @@ class Tileset
         public Texture2D Texture;
         public Rectangle SourceRectangle;
         public Vector2 Origin;
-        public ICollection<BuildingType> Buildable;
+        public ICollection<Zoning> Buildable;
 
         public ProcessedTileData(
             Texture2D texture,
             Rectangle sourceRectangle,
             Vector2 origin,
-            BuildingType[] buildable)
+            Zoning[] buildable)
         {
             Texture = texture;
             SourceRectangle = sourceRectangle;

@@ -37,8 +37,7 @@
       "source": "objects/ore-coal.png"
     },
     "wood-floor": {
-      "source": "buildings/wood-floor.png",
-      "buildable": [ "Normal" ]
+      "source": "buildings/wood-floor.png"
     },
     "wood-exterior-wall": {
       "source": "buildings/wood-exterior-wall.png",
@@ -49,6 +48,34 @@
     },
     "wood-interior-wall": {
       "source": "buildings/wood-interior-wall.png",
+      "origin": {
+        "x": 0,
+        "y": 32
+      }
+    },
+    "wood-exterior-window": {
+      "source": "buildings/wood-exterior-window.png",
+      "origin": {
+        "x": 0,
+        "y": 32
+      }
+    },
+    "wood-interior-window": {
+      "source": "buildings/wood-interior-window.png",
+      "origin": {
+        "x": 0,
+        "y": 32
+      }
+    },
+    "wood-exterior-door": {
+      "source": "buildings/wood-exterior-door.png",
+      "origin": {
+        "x": 0,
+        "y": 32
+      }
+    },
+    "wood-interior-door": {
+      "source": "buildings/wood-interior-door.png",
       "origin": {
         "x": 0,
         "y": 32

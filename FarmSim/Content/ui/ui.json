@@ -21,6 +21,9 @@
     },
     "scrollable-container-background": {
       "source": "scrollable-container-background.png"
+    },
+    "building-panel": {
+      "source": "building-panel.png"
     }
   }
 }

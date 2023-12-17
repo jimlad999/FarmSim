@@ -1,7 +1,7 @@
 ﻿namespace FarmSim.Utils;
 
 // stored in list, none implied by empty list
-enum BuildingType
+enum Zoning
 {
     Normal,
     Rocky,

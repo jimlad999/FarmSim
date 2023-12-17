@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using UI;
 using Utils;
 
 namespace FarmSim.Rendering;
@@ -22,7 +23,7 @@ internal class ViewportManager
     public Viewport Viewport;
     public int ScrollSpeed = 500;
     public Player.Player Tracking;
-    public UI.UIOverlay UIOverlay;
+    public UIOverlay UIOverlay;
 
     public ViewportManager(
         ControllerManager controllerManager,

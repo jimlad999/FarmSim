@@ -76,7 +76,8 @@ class TerrainManager
     }
 
     public void PlaceBuilding(
-        string building,
+        BuildingType buildingType,
+        string buildingKey,
         int topLeftX,
         int topLeftY,
         int bottomRightX,
@@ -88,7 +89,7 @@ class TerrainManager
             {
                 GetTile(tileX: tileX, tileY: tileY)
                     .Buildings
-                    .Add(building);
+                    .Add(buildingType, buildingKey);
             }
         }
     }

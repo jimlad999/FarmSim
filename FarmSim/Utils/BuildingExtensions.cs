@@ -5,7 +5,7 @@ using static FarmSim.Utils.Tileset;
 
 namespace FarmSim.Utils;
 
-static class BuildingTypeExtensions
+static class BuildingExtensions
 {
     public static IEnumerable<string> YieldTilesets(Tile tile)
     {
@@ -16,7 +16,7 @@ static class BuildingTypeExtensions
             yield return tile.Ores;
     }
 
-    public static bool IsBuildable(this ProcessedTileData tileData, ICollection<BuildingType> buildable)
+    public static bool IsBuildable(this ProcessedTileData tileData, ICollection<Zoning> buildable)
     {
         return tileData.Buildable.Count > 0
             && tileData.Buildable.All(buildable.Contains);

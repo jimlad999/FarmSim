@@ -1,0 +1,47 @@
+{
+  "buildings": {
+    "wood-building": {
+      "type": "Building",
+      "roof": "wood-roof",
+      "exteriorWall": "wood-exterior-wall",
+      "interiorWall": "wood-interior-wall",
+      "floor": "wood-floor",
+      "buildable": [ "Normal" ],
+      "cost": {
+        "wood": 4
+      }
+    },
+    "wood-floor": {
+      "type": "Building",
+      "floor": "wood-floor",
+      "buildable": [ "Normal" ],
+      "cost": {
+        "wood": 1
+      }
+    },
+    "wood-window": {
+      "type": "Building",
+      "roof": "wood-roof",
+      "exteriorWall": "wood-exterior-window",
+      "interiorWall": "wood-interior-window",
+      "floor": "wood-floor",
+      "hasTransparency": true,
+      "buildable": [ "Normal" ],
+      "cost": {
+        "wood": 4
+      }
+    },
+    "wood-door": {
+      "type": "Building",
+      "roof": "wood-roof",
+      "exteriorWall": "wood-exterior-door",
+      "interiorWall": "wood-interior-door",
+      "floor": "wood-floor",
+      "hasTransparency": true,
+      "buildable": [ "Normal" ],
+      "cost": {
+        "wood": 4
+      }
+    }
+  }
+}

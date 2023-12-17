@@ -7,12 +7,15 @@ namespace FarmSim.Player;
 
 interface ITilePlacement
 {
-    string BuildingTileset { get; }
-    ICollection<BuildingType> Buildable { get; }
+    public BuildingType BuildingType { get; }
+    string BuildingKey { get; }
+    ICollection<Zoning> Buildable { get; }
     bool AllTilesBuildable { get; }
     bool CommittedToBuild { get; set; }
 
     bool TileInRange(int tileX, int tileY);
+    bool TileTopOfRange(int tileX, int tileY);
+    bool TileBottomOfRange(int tileX, int tileY);
     void Update(
         (int X, int Y) tilePlacementPosition,
         TerrainManager terrainManager,
@@ -25,20 +28,35 @@ class PointTilePlacement : ITilePlacement
 {
     private (int X, int Y) _tilePlacementPosition;
 
-    public string BuildingTileset { get; init; }
-    public ICollection<BuildingType> Buildable { get; init; }
+    public BuildingType BuildingType { get; init; }
+    public string BuildingKey { get; init; }
+    public ICollection<Zoning> Buildable { get; init; }
     public bool AllTilesBuildable { get; private set; }
     public bool CommittedToBuild { get; set; }
 
     public PointTilePlacement(
-        string buildingTileset,
-        ICollection<BuildingType> buildable)
+        BuildingType buildingType,
+        string buildingKey,
+        ICollection<Zoning> buildable)
     {
-        BuildingTileset = buildingTileset;
+        BuildingType = buildingType;
+        BuildingKey = buildingKey;
         Buildable = buildable;
     }
 
     public bool TileInRange(int tileX, int tileY)
+    {
+        return _tilePlacementPosition.X == tileX
+            && _tilePlacementPosition.Y == tileY;
+    }
+
+    public bool TileTopOfRange(int tileX, int tileY)
+    {
+        return _tilePlacementPosition.X == tileX
+            && _tilePlacementPosition.Y == tileY;
+    }
+
+    public bool TileBottomOfRange(int tileX, int tileY)
     {
         return _tilePlacementPosition.X == tileX
             && _tilePlacementPosition.Y == tileY;
@@ -51,14 +69,15 @@ class PointTilePlacement : ITilePlacement
     {
         _tilePlacementPosition = tilePlacementPosition;
         var tile = terrainManager.GetTile(tileX: tilePlacementPosition.X, tileY: tilePlacementPosition.Y);
-        AllTilesBuildable = BuildingTypeExtensions.YieldTilesets(tile)
+        AllTilesBuildable = BuildingExtensions.YieldTilesets(tile)
             .All(key => tileset[key].IsBuildable(Buildable));
     }
 
     public void PlaceBuildings(TerrainManager terrainManager)
     {
         terrainManager.PlaceBuilding(
-            BuildingTileset,
+            BuildingType,
+            BuildingKey,
             topLeftX: _tilePlacementPosition.X,
             topLeftY: _tilePlacementPosition.Y,
             bottomRightX: _tilePlacementPosition.X,
@@ -74,17 +93,20 @@ class RangeTilePlacement : ITilePlacement
     private int _bottomRightX;
     private int _bottomRightY;
 
-    public ICollection<BuildingType> Buildable { get; init; }
-    public string BuildingTileset { get; init; }
+    public BuildingType BuildingType { get; init; }
+    public ICollection<Zoning> Buildable { get; init; }
+    public string BuildingKey { get; init; }
     public bool AllTilesBuildable { get; private set; }
     public bool CommittedToBuild { get; set; }
 
     public RangeTilePlacement(
-        string buildingTileset,
-        ICollection<BuildingType> buildable,
+        BuildingType buildingType,
+        string buildingKey,
+        ICollection<Zoning> buildable,
         (int X, int Y) initialTilePlacementPosition)
     {
-        BuildingTileset = buildingTileset;
+        BuildingType = buildingType;
+        BuildingKey = buildingKey;
         Buildable = buildable;
         _initialTilePlacementPosition = initialTilePlacementPosition;
     }
@@ -93,6 +115,18 @@ class RangeTilePlacement : ITilePlacement
     {
         return _topLeftX <= tileX && tileX <= _bottomRightX
             && _topLeftY <= tileY && tileY <= _bottomRightY;
+    }
+
+    public bool TileTopOfRange(int tileX, int tileY)
+    {
+        return _topLeftX <= tileX && tileX <= _bottomRightX
+            && tileY == _topLeftY;
+    }
+
+    public bool TileBottomOfRange(int tileX, int tileY)
+    {
+        return _topLeftX <= tileX && tileX <= _bottomRightX
+            && tileY == _bottomRightY;
     }
 
     public void Update(
@@ -131,7 +165,8 @@ class RangeTilePlacement : ITilePlacement
     public void PlaceBuildings(TerrainManager terrainManager)
     {
         terrainManager.PlaceBuilding(
-            BuildingTileset,
+            BuildingType,
+            BuildingKey,
             topLeftX: _topLeftX,
             topLeftY: _topLeftY,
             bottomRightX: _bottomRightX,
