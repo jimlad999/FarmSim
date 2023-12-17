@@ -17,25 +17,20 @@ public class WrapContainer : UIElement
 
     public override Rectangle PreComputeDestinationCache(Rectangle drawArea, Point offset)
     {
+        if (MarginComputed == null)
+        {
+            MarginComputed = Utils.ComputePaddingOrMargin(Margin, drawArea);
+        }
+        if (PaddingComputed == null)
+        {
+            PaddingComputed = Utils.ComputePaddingOrMargin(Padding, drawArea);
+        }
         return Utils.PreComputeDestinationCache(
             ref ChildOffsetCache,
             this,
             PaddingComputed.Value,
             drawArea,
             offset);
-    }
-
-    public override void Draw(SpriteBatch spriteBatch, Rectangle drawArea, Point offset)
-    {
-        if (Hidden)
-        {
-            return;
-        }
-        if (PaddingComputed == null)
-        {
-            PaddingComputed = Utils.ComputePadding(Padding, drawArea);
-        }
-        base.Draw(spriteBatch, drawArea, offset);
     }
 
     protected override void DrawChildren(SpriteBatch spriteBatch)

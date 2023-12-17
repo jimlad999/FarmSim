@@ -34,6 +34,7 @@ public class Text : UIElement
     [IgnoreDataMember]
     private ProcessedData[] ParsedValue;
 
+    // Ignore margin since top/bottom/left/right can do it instead
     public override Rectangle PreComputeDestinationCache(Rectangle drawArea, Point offset)
     {
         float maxHeight = 0f;
@@ -121,28 +122,29 @@ public class Text : UIElement
 
     public override void Draw(SpriteBatch spriteBatch, Rectangle drawArea, Point offset)
     {
-        if (!Hidden && !string.IsNullOrEmpty(Value) && ParsedValue != null)
+        if (Hidden || string.IsNullOrEmpty(Value) || ParsedValue == null)
         {
-            if (DestinationCache == Rectangle.Empty || CachedDrawArea != drawArea || CachedOffset != offset)
-            {
-                CachedDrawArea = drawArea;
-                CachedOffset = offset;
-                DestinationCache = PreComputeDestinationCache(drawArea, offset);
-            }
-            if (!drawArea.Intersects(DestinationCache))
-            {
-                return;
-            }
-            float y = DestinationCache.Y;
-            float x = DestinationCache.X;
-            foreach (var value in ParsedValue)
-            {
-                var font = GetFont(value.Weight);
-                var measurement = font.MeasureString(value.Value);
-                var yDiff = DestinationCache.Height - measurement.Y;
-                spriteBatch.DrawString(font, value.Value, new Vector2(x: x, y: y + yDiff), value.Color);
-                x += measurement.X;
-            }
+            return;
+        }
+        if (DestinationCache == Rectangle.Empty || CachedDrawArea != drawArea || CachedOffset != offset)
+        {
+            CachedDrawArea = drawArea;
+            CachedOffset = offset;
+            DestinationCache = PreComputeDestinationCache(drawArea, offset);
+        }
+        if (!drawArea.Intersects(DestinationCache))
+        {
+            return;
+        }
+        float y = DestinationCache.Y;
+        float x = DestinationCache.X;
+        foreach (var value in ParsedValue)
+        {
+            var font = GetFont(value.Weight);
+            var measurement = font.MeasureString(value.Value);
+            var yDiff = DestinationCache.Height - measurement.Y;
+            spriteBatch.DrawString(font, value.Value, new Vector2(x: x, y: y + yDiff), value.Color);
+            x += measurement.X;
         }
     }
 

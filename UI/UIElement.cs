@@ -26,8 +26,12 @@ public abstract class UIElement
     [DataMember]
     public bool Hidden;
     [DataMember]
+    public string Margin;
+    [DataMember]
     public UIElement[] Children = Array.Empty<UIElement>();
 
+    [IgnoreDataMember]
+    public Point? MarginComputed;
     [IgnoreDataMember]
     public Rectangle DestinationCache = Rectangle.Empty;
     [IgnoreDataMember]
@@ -48,11 +52,16 @@ public abstract class UIElement
     // Used for parent elements to decide if to change drawArea or offset based on child size.
     public virtual Rectangle PreComputeDestinationCache(Rectangle drawArea, Point offset)
     {
+        if (MarginComputed == null)
+        {
+            MarginComputed = Utils.ComputePaddingOrMargin(Margin, drawArea);
+        }
+        var margin = MarginComputed.Value;
         return new Rectangle(
-            x: drawArea.X + offset.X,
-            y: drawArea.Y + offset.Y,
-            width: drawArea.Width - offset.X,
-            height: drawArea.Height - offset.Y);
+            x: drawArea.X + offset.X + margin.X,
+            y: drawArea.Y + offset.Y + margin.Y,
+            width: drawArea.Width - offset.X - margin.X * 2,
+            height: drawArea.Height - offset.Y - margin.Y * 2);
     }
 
     public virtual bool TryGetById<T>(string id, out T result) where T : UIElement
@@ -106,7 +115,7 @@ public abstract class UIElement
             CachedOffset = offset;
             DestinationCache = PreComputeDestinationCache(drawArea, offset);
         }
-        else if (!drawArea.Intersects(DestinationCache))
+        if (!drawArea.Intersects(DestinationCache))
         {
             return;
         }

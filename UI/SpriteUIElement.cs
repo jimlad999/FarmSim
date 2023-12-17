@@ -23,12 +23,22 @@ public abstract class SpriteUIElement : UIElement
 
     public override Rectangle PreComputeDestinationCache(Rectangle drawArea, Point offset)
     {
+        if (MarginComputed == null)
+        {
+            MarginComputed = Utils.ComputePaddingOrMargin(Margin, drawArea);
+        }
+
+        var margin = MarginComputed.Value;
         var height = Height != null ? Utils.ToPixels(Height, drawArea.Height) : SpriteSheetData.Value.SourceRectangle.Height;
         var width = Width != null ? Utils.ToPixels(Width, drawArea.Width) : SpriteSheetData.Value.SourceRectangle.Width;
         var y = Utils.ComputePosition(VerticalAlignment, startValue: Top, endValue: Bottom, thisDimensionSize: height, parentDimensionSize: drawArea.Height);
         var x = Utils.ComputePosition(HorizontalAlignment, startValue: Left, endValue: Right, thisDimensionSize: width, parentDimensionSize: drawArea.Width);
 
-        return new Rectangle(x: drawArea.X + offset.X + x, y: drawArea.Y + offset.Y + y, width: width, height: height);
+        return new Rectangle(
+            x: drawArea.X + offset.X + margin.X + x,
+            y: drawArea.Y + offset.Y + margin.Y + y,
+            width: width - margin.X * 2,
+            height: height - margin.Y * 2);
     }
 
     public override void Update(
@@ -53,32 +63,33 @@ public abstract class SpriteUIElement : UIElement
     {
         // Empty, transparent panels can be built without textures. Must specify Height and Width at least.
         // Empty destination is a no-op. Texture probably hasn't loaded or been set or not a transparent panel.
-        if (!Hidden && !(SpriteSheetData == null && (Height == null || Width == null)))
+        if (Hidden || (SpriteSheetData == null && (Height == null || Width == null)))
         {
-            if (DestinationCache == Rectangle.Empty || CachedDrawArea != drawArea || CachedOffset != offset)
-            {
-                CachedDrawArea = drawArea;
-                CachedOffset = offset;
-                DestinationCache = PreComputeDestinationCache(drawArea, offset);
-            }
-            if (!drawArea.Intersects(DestinationCache))
-            {
-                return;
-            }
-            if (SpriteSheetData != null)
-            {
-                var data = SpriteSheetData.Value;
-                spriteBatch.Draw(
-                    data.Texture,
-                    destinationRectangle: DestinationCache,
-                    sourceRectangle: data.SourceRectangle,
-                    Color.White,
-                    rotation: 0f,
-                    data.Origin,
-                    SpriteEffects.None,
-                    layerDepth: 0f);
-            }
-            DrawChildren(spriteBatch);
+            return;
         }
+        if (DestinationCache == Rectangle.Empty || CachedDrawArea != drawArea || CachedOffset != offset)
+        {
+            CachedDrawArea = drawArea;
+            CachedOffset = offset;
+            DestinationCache = PreComputeDestinationCache(drawArea, offset);
+        }
+        if (!drawArea.Intersects(DestinationCache))
+        {
+            return;
+        }
+        if (SpriteSheetData != null)
+        {
+            var data = SpriteSheetData.Value;
+            spriteBatch.Draw(
+                data.Texture,
+                destinationRectangle: DestinationCache,
+                sourceRectangle: data.SourceRectangle,
+                Color.White,
+                rotation: 0f,
+                data.Origin,
+                SpriteEffects.None,
+                layerDepth: 0f);
+        }
+        DrawChildren(spriteBatch);
     }
 }

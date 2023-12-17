@@ -32,10 +32,9 @@
             "tabContent": [
               {
                 "$type": "UI.ScrollableContainer, UI",
-                "top": "2%",
-                "left": "1%",
-                "width": "96%",
-                "height": "96%",
+                "width": "100%",
+                "height": "100%",
+                "margin": 20,
                 "texture": "scrollable-container-background",
                 "scrollboxTexture": "scrollbox",
                 "scrollbarBackgroundTexture": "scrollbar-background",

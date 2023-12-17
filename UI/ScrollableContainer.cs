@@ -113,124 +113,131 @@ public class ScrollableContainer : SpriteUIElement
 
     public override void Draw(SpriteBatch spriteBatch, Rectangle drawArea, Point offset)
     {
-        if (!Hidden && !(SpriteSheetData == null && (Height == null || Width == null)))
+        if (Hidden || (SpriteSheetData == null && (Height == null || Width == null)))
         {
-            if (DestinationCache == Rectangle.Empty || CachedDrawArea != drawArea || CachedOffset != offset)
+            return;
+        }
+        if (DestinationCache == Rectangle.Empty || CachedDrawArea != drawArea || CachedOffset != offset)
+        {
+            CachedDrawArea = drawArea;
+            CachedOffset = offset;
+            MaxScrollOffset = int.MinValue;
+            ScrollbarDestinationCache = Rectangle.Empty;
+            DestinationCache = PreComputeDestinationCache(drawArea, offset);
+            TotalAreaCache = DestinationCache;
+        }
+        if (ScrollbarDestinationCache == Rectangle.Empty && (ScrollbarBackgroundSpriteSheetData != null || ScrollboxSpriteSheetData != null))
+        {
+            var scrollbarWidth = ScrollbarBackgroundSpriteSheetData?.SourceRectangle.Width ?? ScrollboxSpriteSheetData.Value.SourceRectangle.Width;
+            DestinationCache = new Rectangle(
+                x: DestinationCache.X,
+                y: DestinationCache.Y,
+                width: DestinationCache.Width - scrollbarWidth,
+                height: DestinationCache.Height);
+            ScrollbarDestinationCache = new Rectangle(
+                x: DestinationCache.X + DestinationCache.Width,
+                y: DestinationCache.Y,
+                width: scrollbarWidth,
+                height: DestinationCache.Height);
+        }
+        if (!drawArea.Intersects(DestinationCache))
+        {
+            return;
+        }
+        if (SpriteSheetData != null)
+        {
+            var data = SpriteSheetData.Value;
+            spriteBatch.Draw(
+                data.Texture,
+                destinationRectangle: DestinationCache,
+                sourceRectangle: data.SourceRectangle,
+                Color.White,
+                rotation: 0f,
+                data.Origin,
+                SpriteEffects.None,
+                layerDepth: 0f);
+        }
+        if (ScrollbarBackgroundSpriteSheetData != null)
+        {
+            var data = ScrollbarBackgroundSpriteSheetData.Value;
+            spriteBatch.Draw(
+                data.Texture,
+                destinationRectangle: ScrollbarDestinationCache,
+                sourceRectangle: data.SourceRectangle,
+                Color.White,
+                rotation: 0f,
+                data.Origin,
+                SpriteEffects.None,
+                layerDepth: 0f);
+        }
+        if (ScrollboxSpriteSheetData != null && MaxScrollOffset != int.MinValue)
+        {
+            var data = ScrollboxSpriteSheetData.Value;
+            var scrollboxDestinationCache = new Rectangle(
+                x: ScrollbarDestinationCache.X,
+                y: ScrollbarDestinationCache.Y + ScrollboxDrawOffset,
+                width: ScrollbarDestinationCache.Width,
+                height: ScrollboxDrawHeight);
+            spriteBatch.Draw(
+                data.Texture,
+                destinationRectangle: scrollboxDestinationCache,
+                sourceRectangle: data.SourceRectangle,
+                ScrollboxDrawHeight == DestinationCache.Height
+                    ? Color.Gray
+                    : Color.White,
+                rotation: 0f,
+                data.Origin,
+                SpriteEffects.None,
+                layerDepth: 0f);
+        }
+        DrawChildren(spriteBatch);
+    }
+
+    protected override void DrawChildren(SpriteBatch spriteBatch)
+    {
+        spriteBatch.End();
+        using (ScissorRectangleScope.Create(spriteBatch, DestinationCache))
+        {
+            if (MaxScrollOffset == int.MinValue)
             {
-                CachedDrawArea = drawArea;
-                CachedOffset = offset;
-                MaxScrollOffset = int.MinValue;
-                ScrollbarDestinationCache = Rectangle.Empty;
-                DestinationCache = PreComputeDestinationCache(drawArea, offset);
-                TotalAreaCache = DestinationCache;
-            }
-            if (ScrollbarDestinationCache == Rectangle.Empty && (ScrollbarBackgroundSpriteSheetData != null || ScrollboxSpriteSheetData != null))
-            {
-                ScrollbarDestinationCache = new Rectangle(
-                    x: DestinationCache.X + DestinationCache.Width,
-                    y: DestinationCache.Y,
-                    width: ScrollbarBackgroundSpriteSheetData?.SourceRectangle.Width ?? ScrollboxSpriteSheetData.Value.SourceRectangle.Width,
-                    height: DestinationCache.Height);
-                TotalAreaCache = new Rectangle(
-                    x: DestinationCache.X,
-                    y: DestinationCache.Y,
-                    width: DestinationCache.Width + ScrollbarDestinationCache.Width,
-                    height: DestinationCache.Height);
-            }
-            if (!drawArea.Intersects(DestinationCache))
-            {
-                return;
-            }
-            if (SpriteSheetData != null)
-            {
-                var data = SpriteSheetData.Value;
-                spriteBatch.Draw(
-                    data.Texture,
-                    destinationRectangle: DestinationCache,
-                    sourceRectangle: data.SourceRectangle,
-                    Color.White,
-                    rotation: 0f,
-                    data.Origin,
-                    SpriteEffects.None,
-                    layerDepth: 0f);
-            }
-            if (ScrollbarBackgroundSpriteSheetData != null)
-            {
-                var data = ScrollbarBackgroundSpriteSheetData.Value;
-                spriteBatch.Draw(
-                    data.Texture,
-                    destinationRectangle: ScrollbarDestinationCache,
-                    sourceRectangle: data.SourceRectangle,
-                    Color.White,
-                    rotation: 0f,
-                    data.Origin,
-                    SpriteEffects.None,
-                    layerDepth: 0f);
-            }
-            if (ScrollboxSpriteSheetData != null && MaxScrollOffset != int.MinValue)
-            {
-                var data = ScrollboxSpriteSheetData.Value;
-                var scrollboxDestinationCache = new Rectangle(
-                    x: ScrollbarDestinationCache.X,
-                    y: ScrollbarDestinationCache.Y + ScrollboxDrawOffset,
-                    width: ScrollbarDestinationCache.Width,
-                    height: ScrollboxDrawHeight);
-                spriteBatch.Draw(
-                    data.Texture,
-                    destinationRectangle: scrollboxDestinationCache,
-                    sourceRectangle: data.SourceRectangle,
-                    ScrollboxDrawHeight == DestinationCache.Height
-                        ? Color.Gray
-                        : Color.White,
-                    rotation: 0f,
-                    data.Origin,
-                    SpriteEffects.None,
-                    layerDepth: 0f);
-            }
-            spriteBatch.End();
-            using (ScissorRectangleScope.Create(spriteBatch, DestinationCache))
-            {
-                if (MaxScrollOffset == int.MinValue)
+                var maxY = int.MinValue;
+                var maxYHeight = 0;
+                foreach (var child in Children)
                 {
-                    var maxY = int.MinValue;
-                    var maxYHeight = 0;
-                    foreach (var child in Children)
+                    // No scroll for initial draw so child x and heights are calculated correctly for MaxScrollOffset
+                    child.Draw(spriteBatch, DestinationCache, Point.Zero);
+                    var y = child.DestinationCache.Y;
+                    var height = child.DestinationCache.Height;
+                    if (y > maxY)
                     {
-                        // No scroll for initial draw so child x and heights are calculated correctly for MaxScrollOffset
-                        child.Draw(spriteBatch, DestinationCache, Point.Zero);
-                        var y = child.DestinationCache.Y;
-                        var height = child.DestinationCache.Height;
-                        if (y > maxY)
-                        {
-                            maxY = y;
-                            maxYHeight = height;
-                        }
-                        else if (y == maxY && height > maxYHeight)
-                        {
-                            maxYHeight = height;
-                        }
+                        maxY = y;
+                        maxYHeight = height;
                     }
-                    var totalChildHeight = maxY - DestinationCache.Y + maxYHeight;
-                    MaxScrollOffset = totalChildHeight - DestinationCache.Height;
-                    if (MaxScrollOffset > 0)
+                    else if (y == maxY && height > maxYHeight)
                     {
-                        ScrollboxDrawHeight = (int)(DestinationCache.Height * (DestinationCache.Height / (float)totalChildHeight));
+                        maxYHeight = height;
                     }
-                    else
-                    {
-                        ScrollboxDrawHeight = DestinationCache.Height;
-                    }
+                }
+                var totalChildHeight = maxY - DestinationCache.Y + maxYHeight;
+                MaxScrollOffset = totalChildHeight - DestinationCache.Height;
+                if (MaxScrollOffset > 0)
+                {
+                    ScrollboxDrawHeight = (int)(DestinationCache.Height * (DestinationCache.Height / (float)totalChildHeight));
                 }
                 else
                 {
-                    var childOffset = new Point(x: 0, y: -ScrollOffset);
-                    foreach (var child in Children)
-                    {
-                        child.Draw(spriteBatch, DestinationCache, childOffset);
-                    }
+                    ScrollboxDrawHeight = DestinationCache.Height;
                 }
             }
-            spriteBatch.Begin();
+            else
+            {
+                var childOffset = new Point(x: 0, y: -ScrollOffset);
+                foreach (var child in Children)
+                {
+                    child.Draw(spriteBatch, DestinationCache, childOffset);
+                }
+            }
         }
+        spriteBatch.Begin();
     }
 }

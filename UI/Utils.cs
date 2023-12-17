@@ -63,7 +63,7 @@ public static class Utils
         }
     }
 
-    public static Point ComputePadding(string padding, Rectangle drawArea)
+    public static Point ComputePaddingOrMargin(string padding, Rectangle drawArea)
     {
         if (padding == null)
         {
@@ -89,6 +89,7 @@ public static class Utils
         }
         var parentX = ComputePosition(element.HorizontalAlignment, startValue: element.Left, endValue: element.Right, thisDimensionSize: drawArea.Width, parentDimensionSize: drawArea.Width);
         var parentY = ComputePosition(element.VerticalAlignment, startValue: element.Top, endValue: element.Bottom, thisDimensionSize: drawArea.Height, parentDimensionSize: drawArea.Height);
+        var margin = element.MarginComputed.Value;
 
         var maxY = int.MinValue;
         var maxYHeight = 0;
@@ -118,9 +119,9 @@ public static class Utils
         }
         var contentHeight = maxY - drawArea.Y + maxYHeight + padding.Y;
         return new Rectangle(
-            x: drawArea.X + parentX,
-            y: drawArea.Y + parentY,
-            width: drawArea.Width - parentX,
-            height: (contentHeight > drawArea.Height ? contentHeight : drawArea.Height) - parentY);
+            x: drawArea.X + parentX + margin.X,
+            y: drawArea.Y + parentY + margin.Y,
+            width: drawArea.Width - parentX - margin.X * 2,
+            height: (contentHeight > drawArea.Height ? contentHeight : drawArea.Height) - parentY - margin.Y * 2);
     }
 }

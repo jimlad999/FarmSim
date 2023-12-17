@@ -19,6 +19,10 @@ public class ButtonGroup : UIElement
 
     public override Rectangle PreComputeDestinationCache(Rectangle drawArea, Point offset)
     {
+        if (MarginComputed == null)
+        {
+            MarginComputed = Utils.ComputePaddingOrMargin(Margin, drawArea);
+        }
         return Utils.PreComputeDestinationCache(
             ref ChildOffsetCache,
             this,
