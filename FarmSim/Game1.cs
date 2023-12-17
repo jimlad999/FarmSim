@@ -12,6 +12,7 @@ using System.Linq;
 using UI;
 using UI.Data;
 using Utils;
+using ButtonState = UI.ButtonState;
 
 namespace FarmSim;
 
@@ -84,9 +85,9 @@ public class Game1 : Game
         // TODO: find a better place for UI interactions to sit (should sit within the Game, i.e. not the library)
         if (_uiOverlay.TryGetById<Button>("build-button", out var buildButton))
         {
-            buildButton.EventHandler += (Button sender, Button.ButtonState state, Button.ButtonState previousState) =>
+            buildButton.EventHandler += (Button sender, ButtonState state, ButtonState previousState) =>
             {
-                if (previousState != Button.ButtonState.Pressed && state == Button.ButtonState.Pressed)
+                if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
                 {
                     _uiOverlay.NextRefresh(() => _screensToDraw.Add("buildscreen"));
                 }
@@ -94,9 +95,9 @@ public class Game1 : Game
         }
         if (_uiOverlay.TryGetById<Button>("close-button", out var closeButton))
         {
-            closeButton.EventHandler += (Button sender, Button.ButtonState state, Button.ButtonState previousState) =>
+            closeButton.EventHandler += (Button sender, ButtonState state, ButtonState previousState) =>
             {
-                if (previousState != Button.ButtonState.Pressed && state == Button.ButtonState.Pressed)
+                if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
                 {
                     _uiOverlay.NextRefresh(() => _screensToDraw.Remove("buildscreen"));
                 }

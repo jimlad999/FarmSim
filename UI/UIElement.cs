@@ -46,9 +46,16 @@ public abstract class UIElement
 
     // Calculate DestinationCache ahead of time but don't set it.
     // Used for parent elements to decide if to change drawArea or offset based on child size.
-    public abstract Rectangle PreComputeDestinationCache(Rectangle drawArea, Point offset);
+    public virtual Rectangle PreComputeDestinationCache(Rectangle drawArea, Point offset)
+    {
+        return new Rectangle(
+            x: drawArea.X + offset.X,
+            y: drawArea.Y + offset.Y,
+            width: drawArea.Width - offset.X,
+            height: drawArea.Height - offset.Y);
+    }
 
-    public bool TryGetById<T>(string id, out T result) where T : UIElement
+    public virtual bool TryGetById<T>(string id, out T result) where T : UIElement
     {
         if (id == Id)
         {
@@ -87,5 +94,31 @@ public abstract class UIElement
         }
     }
 
-    public abstract void Draw(SpriteBatch spriteBatch, Rectangle drawArea, Point offset);
+    public virtual void Draw(SpriteBatch spriteBatch, Rectangle drawArea, Point offset)
+    {
+        if (Hidden)
+        {
+            return;
+        }
+        if (DestinationCache == Rectangle.Empty || CachedDrawArea != drawArea || CachedOffset != offset)
+        {
+            CachedDrawArea = drawArea;
+            CachedOffset = offset;
+            DestinationCache = PreComputeDestinationCache(drawArea, offset);
+        }
+        else if (!drawArea.Intersects(DestinationCache))
+        {
+            return;
+        }
+        DrawChildren(spriteBatch);
+    }
+
+    protected virtual void DrawChildren(SpriteBatch spriteBatch)
+    {
+        foreach (var child in Children)
+        {
+            // In general, offset from the Draw method will have already been considered in DestinationCache
+            child.Draw(spriteBatch, DestinationCache, offset: Point.Zero);
+        }
+    }
 }

@@ -78,11 +78,7 @@ public abstract class SpriteUIElement : UIElement
                     SpriteEffects.None,
                     layerDepth: 0f);
             }
-            foreach (var child in Children)
-            {
-                // offset will already have been considered in the calculation for destination above
-                child.Draw(spriteBatch, DestinationCache, offset: Point.Zero);
-            }
+            DrawChildren(spriteBatch);
         }
     }
 }

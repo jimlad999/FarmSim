@@ -1,22 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
-using System;
 using System.Runtime.Serialization;
 using Utils;
 
 namespace UI;
 
-public delegate void ButtonEventHandler(Button sender, Button.ButtonState state, Button.ButtonState previoudState);
+public delegate void ButtonEventHandler(Button sender, ButtonState state, ButtonState previoudState);
 
 [DataContract]
 public class Button : SpriteUIElement
 {
-    public enum ButtonState
-    {
-        Released,
-        Selected,
-        Pressed,
-    }
-
     [DataMember]
     public string ReleasedTexture;
     [DataMember]
@@ -40,14 +32,42 @@ public class Button : SpriteUIElement
             return;
         }
         var previousState = State;
+        UpdateState(previousState, controllerManager);
+
+        base.Update(gameTime, state, uiSpriteSheet, controllerManager);
+
+        if (previousState != State && EventHandler != null)
+        {
+            EventHandler.Invoke(this, State, previousState);
+        }
+    }
+
+    // For use with ButtonGroups
+    public void ResetState()
+    {
+        if (State != ButtonState.Released)
+        {
+            var previousState = State;
+            State = ButtonState.Released;
+            Texture = ReleasedTexture;
+            TextureStale = true;
+            if (EventHandler != null)
+            {
+                EventHandler.Invoke(this, State, previousState);
+            }
+        }
+    }
+
+    protected virtual void UpdateState(ButtonState previousState, ControllerManager controllerManager)
+    {
         var selected = DestinationCache != Rectangle.Empty
             && DestinationCache.Contains(controllerManager.CurrentMouseState.Position);
         //or selected with controller
         if (selected && controllerManager.IsLeftMouseDown())
         {
-            State = ButtonState.Pressed;
-            if (Texture != PressedTexture)
+            if (State != ButtonState.Pressed)
             {
+                State = ButtonState.Pressed;
                 Texture = PressedTexture;
                 TextureStale = true;
             }
@@ -55,28 +75,21 @@ public class Button : SpriteUIElement
         }
         else if (selected)
         {
-            State = ButtonState.Selected;
-            if (Texture != SelectedTexture)
+            if (State != ButtonState.Selected)
             {
+                State = ButtonState.Selected;
                 Texture = SelectedTexture;
                 TextureStale = true;
             }
         }
         else
         {
-            State = ButtonState.Released;
-            if (Texture != ReleasedTexture)
+            if (State != ButtonState.Released || Texture == null)
             {
+                State = ButtonState.Released;
                 Texture = ReleasedTexture;
                 TextureStale = true;
             }
-        }
-
-        base.Update(gameTime, state, uiSpriteSheet, controllerManager);
-
-        if (previousState != State && EventHandler != null)
-        {
-            EventHandler.Invoke(this, State, previousState);
         }
     }
 }
