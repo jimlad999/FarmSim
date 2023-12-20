@@ -21,8 +21,7 @@ class BuildingSelectorButton : Button
         BuildingKey = buildingKey;
         Metadata = metadata;
         ReleasedTexture = PressedTexture = Texture = "building-panel";
-        // TODO: different selected state
-        SelectedTexture = "building-panel";
+        SelectedTexture = "building-panel-selected";
         var children = new List<UIElement>();
         var hasExteriorWall = metadata.ExteriorWall != null;
         var hasInteriorWall = metadata.InteriorWall != null;

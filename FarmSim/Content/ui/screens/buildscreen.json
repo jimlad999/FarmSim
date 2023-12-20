@@ -4,7 +4,7 @@
       "$type": "UI.TabContainer, UI",
       "tabContentPanel": {
         "$type": "UI.Panel, UI",
-        "width": "80%",
+        "width": "84%",
         "height": "80%",
         "verticalAlignment": "Center",
         "horizontalAlignment": "Center",
@@ -12,7 +12,7 @@
       },
       "tabs": {
         "top": 32,
-        "left": "10%",
+        "left": "8%",
         "Children": [
           {
             "$type": "UI.Tab, UI",

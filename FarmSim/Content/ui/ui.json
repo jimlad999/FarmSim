@@ -24,6 +24,9 @@
     },
     "building-panel": {
       "source": "building-panel.png"
+    },
+    "building-panel-selected": {
+      "source": "building-panel-selected.png"
     }
   }
 }
