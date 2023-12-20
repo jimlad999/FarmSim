@@ -1,4 +1,5 @@
-﻿using FarmSim.Rendering;
+﻿using FarmSim.Player;
+using FarmSim.Rendering;
 using FarmSim.Terrain;
 using FarmSim.UI;
 using FarmSim.Utils;
@@ -114,6 +115,7 @@ public class Game1 : Game
             _terrainManager,
             _tileset,
             _uiOverlay);
+        _terrainManager.UpdateSightInit(tileX: _player.TileX, tileY: _player.TileY, Player.Player.SightRadius);
         _viewportManager.Tracking = _player;
         _viewportManager.UIOverlay = _uiOverlay;
         _renderer = new Renderer(

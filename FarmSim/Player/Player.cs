@@ -12,6 +12,7 @@ namespace FarmSim.Player;
 class Player
 {
     private const double MovementSpeed = 200;
+    public const int SightRadius = 12;//tiles
 
     private readonly ControllerManager _controllerManager;
     private readonly ViewportManager _viewportManager;
@@ -22,10 +23,14 @@ class Player
     public string EntitySpriteKey = "player";
     public FacingDirection FacingDirection { get; private set; } = FacingDirection.Down;
 
+    // world position
     public double X;
     public int XInt;
+    public int TileX;
+    // world position
     public double Y;
     public int YInt;
+    public int TileY;
 
     public Player(
         ControllerManager controllerManager,
@@ -74,30 +79,43 @@ class Player
     private void UpdateMovement(GameTime gameTime)
     {
         var movementPerFrame = gameTime.ElapsedGameTime.TotalSeconds * MovementSpeed;
+        var playerHasMoved = false;
         // normalise vector for diagnoal movement?
         if (_controllerManager.IsKeyDown(Keys.W))
         {
             Y -= movementPerFrame;
             YInt = (int)Y;
             FacingDirection = FacingDirection.Up;
+            playerHasMoved = true;
         }
         if (_controllerManager.IsKeyDown(Keys.S))
         {
             Y += movementPerFrame;
             YInt = (int)Y;
             FacingDirection = FacingDirection.Down;
+            playerHasMoved = true;
         }
         if (_controllerManager.IsKeyDown(Keys.A))
         {
             X -= movementPerFrame;
             XInt = (int)X;
             FacingDirection = FacingDirection.Left;
+            playerHasMoved = true;
         }
         if (_controllerManager.IsKeyDown(Keys.D))
         {
             X += movementPerFrame;
             XInt = (int)X;
             FacingDirection = FacingDirection.Right;
+            playerHasMoved = true;
+        }
+        if (playerHasMoved)
+        {
+            TileX = XInt / Renderer.TileSize;
+            if (XInt < 0) --TileX;
+            TileY = YInt / Renderer.TileSize;
+            if (YInt < 0) --TileY;
+            _terrainManager.UpdateSight(tileX: TileX, tileY: TileY, SightRadius);
         }
     }
 

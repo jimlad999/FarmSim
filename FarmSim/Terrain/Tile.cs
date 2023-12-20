@@ -11,6 +11,7 @@ class Tile
     public string Trees { get; init; }
     public string Ores { get; init; }
     public Buildings Buildings { get; init; }
+    public bool InSight { get; set; }
 
     public Tile(
         Chunk chunk,

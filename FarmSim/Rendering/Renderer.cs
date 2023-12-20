@@ -8,7 +8,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Utils.Rendering;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace FarmSim.Rendering;
 
@@ -32,6 +31,8 @@ class Renderer
     private static readonly Color PartialBuildingInvalidColor = new Color(255, 0, 0, 255);
     private static readonly Color PartialBuildingExteriorWallTransparencyColor = new Color(127, 127, 127, 127);
     private static readonly Color PartialBuildingInvalidExteriorWallTransparencyColor = new Color(255, 0, 0, 127);
+    private static readonly Color FogOfWarColor = new Color(15, 15, 15, 255);
+    private static readonly Color FogOfWarInteriorColor = new Color(7, 7, 7, 255);
 
     private readonly ViewportManager _viewportManager;
     private readonly TerrainManager _terrainManager;
@@ -108,11 +109,7 @@ class Renderer
             }
         }
 
-        var playerXTile = _player.XInt / TileSize;
-        if (_player.XInt < 0) --playerXTile;
-        var playerYTile = _player.YInt / TileSize;
-        if (_player.YInt < 0) --playerYTile;
-        var playerIsInsideBuilding = _terrainManager.GetTile(tileX: playerXTile, tileY: playerYTile).Buildings.Any(BuildingData.BuildingIsEnclosed);
+        var playerIsInsideBuilding = _terrainManager.GetTile(tileX: _player.TileX, tileY: _player.TileY).Buildings.Any(BuildingData.BuildingIsEnclosed);
 
         spriteBatch.GraphicsDevice.Clear(Color.CornflowerBlue);
         spriteBatch.Begin();
@@ -145,7 +142,7 @@ class Renderer
                 }
                 else
                 {
-                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, _player.TilePlacement, playerIsInsideBuilding);
+                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, _player.TilePlacement, playerIsInsideBuilding, renderFogOfWar: true);
                     xDraw += zoomedTileSize;
                 }
             }
@@ -157,7 +154,7 @@ class Renderer
                 {
                     var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
                     var leftXPoint = tileX * TileSize;
-                    var entitiesToRenderThisTile = playerYTile == tileY && playerXTile == tileX
+                    var entitiesToRenderThisTile = _player.TileY == tileY && _player.TileX == tileX
                         ? new[] { _player }.OrderBy(e => e.Y).ToArray()
                         : Array.Empty<Player.Player>();
                     var entitiesAlreadyRendered = 0;
@@ -231,7 +228,7 @@ class Renderer
                 float xDraw = 0;
                 foreach (var tile in row)
                 {
-                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: ChunkTerrainLODZoomLevel, tilePlacement: null, playerIsInsideBuilding: false);
+                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: ChunkTerrainLODZoomLevel, tilePlacement: null, playerIsInsideBuilding: false, renderFogOfWar: false);
                     xDraw += zoomedTileSize;
                 }
                 yDraw += zoomedTileSize;
@@ -240,7 +237,7 @@ class Renderer
         return chunkPrerender;
     }
 
-    private void DrawTileTerrain(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, float scale, ITilePlacement tilePlacement, bool playerIsInsideBuilding)
+    private void DrawTileTerrain(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, float scale, ITilePlacement tilePlacement, bool playerIsInsideBuilding, bool renderFogOfWar)
     {
         var tilePlacementHasFloor = tilePlacement != null && BuildingData.BuildingHasFloor(tilePlacement.BuildingKey);
         string tileAboveFloor;
@@ -257,6 +254,9 @@ class Renderer
         }
         string thisTileFloor;
         var thisTileInRangeOfPlacement = tilePlacementHasFloor && tilePlacement.TileInRange(tileX: tile.X, tileY: tile.Y);
+        var defaultColor = renderFogOfWar && !tile.InSight
+            ? FogOfWarColor
+            : Color.White;
         if (thisTileInRangeOfPlacement)
         {
             thisTileFloor = tilePlacement.BuildingKey;
@@ -273,7 +273,7 @@ class Renderer
                 xDraw: xDraw,
                 yDraw: yDraw,
                 scale: scale,
-                Color.White);
+                color: defaultColor);
         }
         if (tile.Buildings.Any())
         {
@@ -281,13 +281,15 @@ class Renderer
             {
                 var building = GlobalState.BuildingData.Buildings[buildingKey];
                 string tilesetKey = null;
-                Color color = Color.White;
+                var color = defaultColor;
                 if (building.Floor != null && !thisTileInRangeOfPlacement)
                 {
                     tilesetKey = building.Floor;
                     if (!playerIsInsideBuilding)
                     {
-                        color = IndoorWhilePlayerIsOutsideColor;
+                        color = renderFogOfWar
+                            ? FogOfWarInteriorColor
+                            : IndoorWhilePlayerIsOutsideColor;
                     }
                 }
                 // TODO: build stations
@@ -303,7 +305,7 @@ class Renderer
                         xDraw: xDraw,
                         yDraw: yDraw,
                         scale: scale,
-                        color);
+                        color: color);
                 }
             }
             if (thisTileFloor != null)
@@ -331,7 +333,11 @@ class Renderer
                             xDraw: xDraw,
                             yDraw: yDraw - TileSizeFloat * scale,
                             scale: scale,
-                            playerIsInsideBuilding ? Color.White : IndoorWhilePlayerIsOutsideColor);
+                            color: playerIsInsideBuilding
+                                ? defaultColor
+                                : renderFogOfWar
+                                ? FogOfWarInteriorColor
+                                : IndoorWhilePlayerIsOutsideColor);
                     }
                 }
                 else if (!playerIsInsideBuilding && tileBelowFloor != null)
@@ -346,7 +352,7 @@ class Renderer
                             xDraw: xDraw,
                             yDraw: yDraw - WallHeightFloat * scale,
                             scale: scale,
-                            Color.White);
+                            color: defaultColor);
                     }
                 }
             }
@@ -364,7 +370,9 @@ class Renderer
                     xDraw: xDraw,
                     yDraw: yDraw - TileSizeFloat * scale,
                     scale: scale,
-                    playerIsInsideBuilding ? ExteriorWallTransparency : Color.White);
+                    color: playerIsInsideBuilding
+                        ? ExteriorWallTransparency
+                        : defaultColor);
             }
             if (!playerIsInsideBuilding)
             {
@@ -377,7 +385,7 @@ class Renderer
                         xDraw: xDraw,
                         yDraw: yDraw - (WallPlusTileSizeFloat) * scale,
                         scale: scale,
-                        Color.White);
+                        color: defaultColor);
                 }
             }
         }

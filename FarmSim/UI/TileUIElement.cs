@@ -3,7 +3,6 @@ using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using UI;
-using static System.Formats.Asn1.AsnWriter;
 using UIUtils = UI.Utils;
 
 namespace FarmSim.UI;

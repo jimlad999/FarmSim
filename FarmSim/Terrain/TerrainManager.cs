@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using Utils;
 
 namespace FarmSim.Terrain;
 
@@ -90,6 +92,41 @@ class TerrainManager
                 GetTile(tileX: tileX, tileY: tileY)
                     .Buildings
                     .Add(buildingType, buildingKey);
+            }
+        }
+    }
+
+    public void UpdateSightInit(int tileX, int tileY, int radius)
+    {
+        UpdateSightInternal(tileX: tileX, tileY: tileY, radius: radius, init: true);
+    }
+
+    public void UpdateSight(int tileX, int tileY, int radius)
+    {
+        UpdateSightInternal(tileX: tileX, tileY: tileY, radius: radius, init: false);
+    }
+
+    private void UpdateSightInternal(int tileX, int tileY, int radius, bool init)
+    {
+        var radius3 = radius * 3;
+        // + a little buffer so we avoid diamond shapes
+        var radiusPow2 = radius * radius + radius;
+        var startY = tileY - radius - 1;
+        var endY = tileY + radius + 1;
+        var startX = tileX - radius - 1;
+        var endX = tileX + radius + 1;
+        for (int y = startY; y <= endY; ++y)
+        {
+            var yDiff = y < tileY ? tileY - y : y - tileY;
+            for (int x = startX; x <= endX; ++x)
+            {
+                var xDiff = x < tileX ? tileX - x : x - tileX;
+                var radiusDiff = xDiff * xDiff + yDiff * yDiff - radiusPow2;
+                // only diff around the edges since that is where the changes will happen
+                if (Math.Abs(radiusDiff) < radius3 || init)
+                {
+                    GetTile(tileX: x, tileY: y).InSight = radiusDiff <= 0;
+                }
             }
         }
     }
