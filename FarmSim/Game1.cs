@@ -62,6 +62,9 @@ public class Game1 : Game
 
         Text.Normal = Content.Load<SpriteFont>("fonts/GameFont");
         Text.Bold = Content.Load<SpriteFont>("fonts/GameFontBold");
+        var fogOfWarEffect = Content.Load<Effect>("shaders/fog-of-war");
+        var fogOfWarOverlay = Content.Load<Texture2D>("fog-of-war-overlay");
+        var pixel = Content.Load<Texture2D>("pixel");
 
         GlobalState.BuildingData = JsonConvert.DeserializeObject<BuildingData>(File.ReadAllText("Content/tilesets/buildings/buildings.json"));
 
@@ -125,7 +128,10 @@ public class Game1 : Game
             _tileset,
             _entitySpriteSheet,
             _player,
-            _mobManager);
+            _mobManager,
+            fogOfWarEffect,
+            fogOfWarOverlay,
+            pixel);
     }
 
     protected override void Update(GameTime gameTime)
@@ -170,7 +176,6 @@ public class Game1 : Game
             System.Diagnostics.Debug.WriteLine(("Running slow", gameTime.ElapsedGameTime.TotalSeconds));
 #endif
         _renderer.Draw(_spriteBatch);
-
         // should UIOverlay be inside the Renderer instead?
         _spriteBatch.Begin();
         _uiOverlay.Draw(_spriteBatch, _screensToDraw);

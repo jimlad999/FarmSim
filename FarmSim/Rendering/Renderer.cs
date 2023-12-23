@@ -33,8 +33,7 @@ class Renderer
     private static readonly Color PartialBuildingInvalidColor = new Color(255, 0, 0, 255);
     private static readonly Color PartialBuildingExteriorWallTransparencyColor = new Color(127, 127, 127, 127);
     private static readonly Color PartialBuildingInvalidExteriorWallTransparencyColor = new Color(255, 0, 0, 127);
-    private static readonly Color FogOfWarColor = new Color(15, 15, 15, 255);
-    private static readonly Color FogOfWarInteriorColor = new Color(7, 7, 7, 255);
+    private static readonly Color FogOfWarColor = new Color(0, 0, 0, 200);
 
     private readonly ViewportManager _viewportManager;
     private readonly TerrainManager _terrainManager;
@@ -42,6 +41,9 @@ class Renderer
     private readonly EntitySpriteSheet _entitySpriteSheet;
     private readonly Player.Player _player;
     private readonly MobManager _mobManager;
+    private readonly Effect _fogOfWarEffect;
+    private readonly Texture2D _fogOfWarOverlay;
+    private readonly Texture2D _pixel;
     private Dictionary<Chunk, RenderTarget2D> _chunkTilePrerender = new();
 
     public Renderer(
@@ -50,7 +52,10 @@ class Renderer
         Tileset tileset,
         EntitySpriteSheet entitySpriteSheet,
         Player.Player player,
-        MobManager mobManager)
+        MobManager mobManager,
+        Effect fogOfWarEffect,
+        Texture2D fogOfWarOverlay,
+        Texture2D pixel)
     {
         _viewportManager = viewportManager;
         _terrainManager = terrainManager;
@@ -58,6 +63,9 @@ class Renderer
         _entitySpriteSheet = entitySpriteSheet;
         _player = player;
         _mobManager = mobManager;
+        _fogOfWarEffect = fogOfWarEffect;
+        _fogOfWarOverlay = fogOfWarOverlay;
+        _pixel = pixel;
     }
 
     public void ClearLODCache()
@@ -119,11 +127,24 @@ class Renderer
             .GroupBy(mob => mob.TileY, (key, mobs) => (Key: key, Value: mobs.ToLookup(mob => mob.TileX)))
             .ToDictionary(g => g.Key, g => g.Value);
 
+        // can set once globally?
+        _fogOfWarEffect.Parameters["HalfScreenWidth"].SetValue(spriteBatch.GraphicsDevice.Viewport.Width / 2f);
+        _fogOfWarEffect.Parameters["HalfScreenHeight"].SetValue(spriteBatch.GraphicsDevice.Viewport.Height / 2f);
+        var fogOfWarRadius = Player.Player.SightRadius * TileSize * _viewportManager.Zoom;
+        var fogOfWarRadiusPlusBuffer = fogOfWarRadius + 30 * _viewportManager.Zoom;
+        var fogOfWarRadiusPlusBufferPow2 = fogOfWarRadiusPlusBuffer * fogOfWarRadiusPlusBuffer;
+        _fogOfWarEffect.Parameters["FogOfWarRadiusPow2"].SetValue(fogOfWarRadiusPlusBufferPow2);
+        var fogOfWarStartClipRadiusPlusBuffer = fogOfWarRadius - 30 * _viewportManager.Zoom;
+        var fogOfWarStartClipRadiusPlusBufferPow2 = fogOfWarStartClipRadiusPlusBuffer * fogOfWarStartClipRadiusPlusBuffer;
+        _fogOfWarEffect.Parameters["FogOfWarStartClipRadiusPow2"].SetValue(fogOfWarStartClipRadiusPlusBufferPow2);
+        _fogOfWarEffect.Parameters["FogOfWarRadiusPow2Diff"].SetValue(fogOfWarRadiusPlusBufferPow2 - fogOfWarStartClipRadiusPlusBufferPow2);
+        var canSeeFogOfWarEdges = _viewportManager.Zoom < 1;
+
         spriteBatch.GraphicsDevice.Clear(Color.CornflowerBlue);
-        spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
         float yDraw = (int)yDrawOffset;
         for (var tileY = yTileStart; tileY < yTileEnd; ++tileY)
         {
+            spriteBatch.Begin();
             float xDraw = (int)xDrawOffset;
             var processedYSkip = true;
             var yTilesSkipped = 0;
@@ -150,13 +171,15 @@ class Renderer
                 }
                 else
                 {
-                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, _player.TilePlacement, playerIsInsideBuilding, renderFogOfWar: true);
+                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, _player.TilePlacement, playerIsInsideBuilding);
                     xDraw += zoomedTileSize;
                 }
             }
+            spriteBatch.End();
             // render entities after the terrain has finished so we don't clip the sprite when rendering the next tile over
             if (shouldRenderEntities)
             {
+                spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: canSeeFogOfWarEdges ? _fogOfWarEffect : null);
                 var successMobLookup = mobLookupByTile.TryGetValue(tileY, out var mobsAtYLevel);
                 xDraw = (int)xDrawOffset;
                 for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
@@ -190,10 +213,23 @@ class Renderer
                     if (_player.TilePlacement != null
                         && _player.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
                     {
-                        DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, _player.TilePlacement, playerIsInsideBuilding);
+                        if (canSeeFogOfWarEdges)
+                        {
+                            spriteBatch.End();
+                            spriteBatch.Begin();
+                            DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, _player.TilePlacement, playerIsInsideBuilding);
+                            spriteBatch.End();
+                            spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: canSeeFogOfWarEdges ? _fogOfWarEffect : null);
+                        }
+                        else
+                        {
+                            // no need to start new batch if cannot see fog of war
+                            DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, _player.TilePlacement, playerIsInsideBuilding);
+                        }
                     }
                     xDraw += zoomedTileSize;
                 }
+                spriteBatch.End();
             }
             yDraw += zoomedTileSize;
             if (yTilesSkipped != 0)
@@ -202,8 +238,56 @@ class Renderer
                 yDraw += zoomedTileSize * yTilesSkipped;
             }
         }
-        spriteBatch.End();
-
+        if (canSeeFogOfWarEdges)
+        {
+            var screenWidth = spriteBatch.GraphicsDevice.Viewport.Width;
+            var screenHeight = spriteBatch.GraphicsDevice.Viewport.Height;
+            spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
+            var fogOfWarRadiusInt = (int)fogOfWarRadius;
+            var fogOfWarRadiusInt2 = fogOfWarRadiusInt * 2;
+            var fogOfWarOverlayDestination = new Rectangle(
+                x: screenWidth / 2 - fogOfWarRadiusInt,
+                y: screenHeight / 2 - fogOfWarRadiusInt,
+                width: fogOfWarRadiusInt2,
+                height: fogOfWarRadiusInt2);
+            spriteBatch.Draw(
+                _fogOfWarOverlay,
+                fogOfWarOverlayDestination,
+                color: FogOfWarColor);
+            var fogOfWarLeft = fogOfWarOverlayDestination.Left;
+            if (fogOfWarLeft > 0)
+            {
+                spriteBatch.Draw(
+                    _pixel,
+                    new Rectangle(x: 0, y: 0, width: fogOfWarLeft, height: screenHeight),
+                    color: FogOfWarColor);
+            }
+            var fogOfWarRight = fogOfWarOverlayDestination.Right;
+            if (fogOfWarRight < screenWidth)
+            {
+                spriteBatch.Draw(
+                    _pixel,
+                    new Rectangle(x: fogOfWarRight, y: 0, width: screenWidth - fogOfWarRight, height: screenHeight),
+                    color: FogOfWarColor);
+            }
+            var fogOfWarTop = fogOfWarOverlayDestination.Top;
+            if (fogOfWarTop > 0)
+            {
+                spriteBatch.Draw(
+                    _pixel,
+                    new Rectangle(x: fogOfWarOverlayDestination.X, y: 0, width: fogOfWarOverlayDestination.Width, height: fogOfWarTop),
+                    color: FogOfWarColor);
+            }
+            var fogOfWarBottom = fogOfWarOverlayDestination.Bottom;
+            if (fogOfWarBottom < screenHeight)
+            {
+                spriteBatch.Draw(
+                    _pixel,
+                    new Rectangle(x: fogOfWarOverlayDestination.X, y: fogOfWarBottom, width: fogOfWarOverlayDestination.Width, height: screenHeight - fogOfWarBottom),
+                    color: FogOfWarColor);
+            }
+            spriteBatch.End();
+        }
     }
 
     private void DrawChunk(SpriteBatch spriteBatch, Chunk chunk, float xDraw, float yDraw)
@@ -240,7 +324,7 @@ class Renderer
                 float xDraw = 0;
                 foreach (var tile in row)
                 {
-                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: ChunkTerrainLODZoomLevel, tilePlacement: null, playerIsInsideBuilding: false, renderFogOfWar: false);
+                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: ChunkTerrainLODZoomLevel, tilePlacement: null, playerIsInsideBuilding: false);
                     xDraw += zoomedTileSize;
                 }
                 yDraw += zoomedTileSize;
@@ -249,7 +333,7 @@ class Renderer
         return chunkPrerender;
     }
 
-    private void DrawTileTerrain(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, float scale, ITilePlacement tilePlacement, bool playerIsInsideBuilding, bool renderFogOfWar)
+    private void DrawTileTerrain(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, float scale, ITilePlacement tilePlacement, bool playerIsInsideBuilding)
     {
         var tilePlacementHasFloor = tilePlacement != null && BuildingData.BuildingHasFloor(tilePlacement.BuildingKey);
         string tileAboveFloor;
@@ -266,9 +350,7 @@ class Renderer
         }
         string thisTileFloor;
         var thisTileInRangeOfPlacement = tilePlacementHasFloor && tilePlacement.TileInRange(tileX: tile.X, tileY: tile.Y);
-        var defaultColor = /*renderFogOfWar && !tile.InSight
-            ? FogOfWarColor
-            : */Color.White;
+        var defaultColor = Color.White;
         if (thisTileInRangeOfPlacement)
         {
             thisTileFloor = tilePlacement.BuildingKey;
@@ -299,9 +381,7 @@ class Renderer
                     tilesetKey = building.Floor;
                     if (!playerIsInsideBuilding)
                     {
-                        color = renderFogOfWar
-                            ? FogOfWarInteriorColor
-                            : IndoorWhilePlayerIsOutsideColor;
+                        color = IndoorWhilePlayerIsOutsideColor;
                     }
                 }
                 // TODO: build stations
@@ -347,8 +427,6 @@ class Renderer
                             scale: scale,
                             color: playerIsInsideBuilding
                                 ? defaultColor
-                                : renderFogOfWar
-                                ? FogOfWarInteriorColor
                                 : IndoorWhilePlayerIsOutsideColor);
                     }
                 }
