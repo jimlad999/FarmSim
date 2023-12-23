@@ -124,8 +124,7 @@ class Renderer
 
         var playerIsInsideBuilding = _terrainManager.GetTile(tileX: _player.TileX, tileY: _player.TileY).Buildings.Any(BuildingData.BuildingIsEnclosed);
         var mobLookupByTile = _mobManager.GetEntitiesInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
-            .GroupBy(mob => mob.TileY, (key, mobs) => (Key: key, Value: mobs.ToLookup(mob => mob.TileX)))
-            .ToDictionary(g => g.Key, g => g.Value);
+            .ToLookup(mob => mob.TileY);
 
         // can set once globally?
         _fogOfWarEffect.Parameters["HalfScreenWidth"].SetValue(spriteBatch.GraphicsDevice.Viewport.Width / 2f);
@@ -180,54 +179,45 @@ class Renderer
             if (shouldRenderEntities)
             {
                 spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: canSeeFogOfWarEdges ? _fogOfWarEffect : null);
-                var successMobLookup = mobLookupByTile.TryGetValue(tileY, out var mobsAtYLevel);
                 xDraw = (int)xDrawOffset;
-                for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
+                var entities = mobLookupByTile[tileY];
+                if (_player.TileY == tileY)
                 {
-                    var entities = successMobLookup ? mobsAtYLevel[tileX] : Enumerable.Empty<Entity>();
-                    if (_player.TileY == tileY && _player.TileX == tileX)
+                    entities = entities.Append(_player);
+                }
+                entities = entities.Concat(
+                    Enumerable.Range(xTileStart, xTileEnd - xTileStart)
+                        .SelectMany(tileX => _terrainManager.GetTile(tileX: tileX, tileY: tileY).GetEntities())
+                    );
+                var leftXPoint = xTileStart * TileSize;
+                var entitiesToRenderThisTile = entities.OrderBy(e => e.Y).ToArray();
+                foreach (var entity in entitiesToRenderThisTile)
+                {
+                    var drawXDiff = (leftXPoint - entity.XInt) * _viewportManager.Zoom;
+                    var drawYDiff = (topYPoint - entity.YInt) * _viewportManager.Zoom;
+                    DrawEntity(spriteBatch, entity, xDraw: xDraw - drawXDiff, yDraw: yDraw - drawYDiff, zoomScale: _viewportManager.Zoom);
+                }
+                if (_player.TilePlacement != null)
+                {
+                    if (canSeeFogOfWarEdges)
                     {
-                        entities = entities.Append(_player);
+                        spriteBatch.End();
+                        spriteBatch.Begin();
                     }
-                    var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
-                    var leftXPoint = tileX * TileSize;
-                    var entitiesToRenderThisTile = entities.OrderBy(e => e.Y).ToArray();
-                    var entitiesAlreadyRendered = 0;
-                    foreach (var entity in entitiesToRenderThisTile)
+                    for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
                     {
-                        var entityDiffFromTopOfRow = topYPoint - entity.YInt;
-                        if (entityDiffFromTopOfRow > 0.5)
-                            break;
-                        var drawXDiff = (leftXPoint - entity.XInt) * _viewportManager.Zoom;
-                        var drawYDiff = entityDiffFromTopOfRow * _viewportManager.Zoom;
-                        DrawEntity(spriteBatch, entity, xDraw: xDraw - drawXDiff, yDraw: yDraw - drawYDiff, zoomScale: _viewportManager.Zoom);
-                        ++entitiesAlreadyRendered;
-                    }
-                    DrawTileObjects(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw);
-                    foreach (var entity in entitiesToRenderThisTile.Skip(entitiesAlreadyRendered))
-                    {
-                        var drawXDiff = (leftXPoint - entity.XInt) * _viewportManager.Zoom;
-                        var drawYDiff = (topYPoint - entity.YInt) * _viewportManager.Zoom;
-                        DrawEntity(spriteBatch, entity, xDraw: xDraw - drawXDiff, yDraw: yDraw - drawYDiff, zoomScale: _viewportManager.Zoom);
-                    }
-                    if (_player.TilePlacement != null
-                        && _player.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
-                    {
-                        if (canSeeFogOfWarEdges)
+                        if (_player.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
                         {
-                            spriteBatch.End();
-                            spriteBatch.Begin();
-                            DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, _player.TilePlacement, playerIsInsideBuilding);
-                            spriteBatch.End();
-                            spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: canSeeFogOfWarEdges ? _fogOfWarEffect : null);
-                        }
-                        else
-                        {
-                            // no need to start new batch if cannot see fog of war
+                            var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
                             DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, _player.TilePlacement, playerIsInsideBuilding);
                         }
+                        xDraw += zoomedTileSize;
                     }
-                    xDraw += zoomedTileSize;
+                    if (canSeeFogOfWarEdges)
+                    {
+                        spriteBatch.End();
+                        spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: canSeeFogOfWarEdges ? _fogOfWarEffect : null);
+                    }
                 }
                 spriteBatch.End();
             }
@@ -478,32 +468,6 @@ class Renderer
                         color: defaultColor);
                 }
             }
-        }
-    }
-
-    private void DrawTileObjects(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw)
-    {
-        if (tile.Trees != null)
-        {
-            var tree = _tileset[tile.Trees];
-            DrawTileset(
-                spriteBatch,
-                tree,
-                xDraw: xDraw,
-                yDraw: yDraw,
-                scale: _viewportManager.Zoom,
-                Color.White);
-        }
-        if (tile.Ores != null)
-        {
-            var ore = _tileset[tile.Ores];
-            DrawTileset(
-                spriteBatch,
-                ore,
-                xDraw: xDraw,
-                yDraw: yDraw,
-                scale: _viewportManager.Zoom,
-                Color.White);
         }
     }
 

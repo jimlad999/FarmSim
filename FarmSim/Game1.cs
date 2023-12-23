@@ -52,6 +52,7 @@ public class Game1 : Game
         _controllerManager = new ControllerManager();
         GlobalState.TerrainManager = _terrainManager = new TerrainManager(Rand.Next());
         _viewportManager = ViewportManager.CenteredOnZeroZero(_controllerManager, _graphics);
+        _graphics.SynchronizeWithVerticalRetrace = false;
 
         base.Initialize();
     }

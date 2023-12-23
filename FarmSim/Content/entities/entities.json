@@ -54,6 +54,36 @@
           "y": 288
         }
       }
+    },
+    "tree-pine": {
+      "source": "objects/tree-pine.png",
+      "origin": {
+        "x": 32,
+        "y": 114
+      },
+      "frameWidth": 64,
+      "frameHeight": 128,
+      "directionFrames": {
+        "Down": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    "ore-coal": {
+      "source": "objects/ore-coal.png",
+      "origin": {
+        "x": 32,
+        "y": 40
+      },
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "directionFrames": {
+        "Down": {
+          "x": 0,
+          "y": 0
+        }
+      }
     }
   }
 }

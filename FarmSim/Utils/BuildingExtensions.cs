@@ -11,9 +11,9 @@ static class BuildingExtensions
     {
         yield return tile.Terrain;
         if (tile.Trees != null)
-            yield return tile.Trees;
+            yield return tile.Trees.EntitySpriteKey;
         if (tile.Ores != null)
-            yield return tile.Ores;
+            yield return tile.Ores.EntitySpriteKey;
     }
 
     public static bool IsBuildable(this ProcessedTileData tileData, ICollection<Zoning> buildable)

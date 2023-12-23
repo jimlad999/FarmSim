@@ -26,16 +26,6 @@
     "ice": {
       "source": "terrain/ice.png"
     },
-    "tree-pine": {
-      "source": "objects/tree-pine.png",
-      "origin": {
-        "x": 0,
-        "y": 64
-      }
-    },
-    "ore-coal": {
-      "source": "objects/ore-coal.png"
-    },
     "wood-floor": {
       "source": "buildings/wood-floor.png"
     },
