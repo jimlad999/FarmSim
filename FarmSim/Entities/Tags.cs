@@ -2,6 +2,9 @@
 
 enum Tags
 {
+    //special placeholder for chance resulting in no tags
+    None,
+
     //food
     Edible,
     Poisonous,
@@ -48,6 +51,14 @@ enum Tags
     Tail,
     Wings,
 
+    //color
+    White,
+    Black,
+    Red,
+    Green,
+    Blue,
+    Yellow,
+
     //movement
     Stationary, //does not change position
     Bipedal,
@@ -80,4 +91,7 @@ enum Tags
     Explodes,
     Petrifies, /*results in*/ Petrified,
     Splits, //produces multiple but reduces in size
+
+    //special
+    Cannibal //give to mobs who eat anything from their own kind (e.g. dragon eats a dragon meat burger). results in more chance of mob fighting its own kind when food is low
 }

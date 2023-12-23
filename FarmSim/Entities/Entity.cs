@@ -1,13 +1,21 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
 
 namespace FarmSim.Entities;
 
 abstract class Entity
 {
-    public List<Tags> Tags { get; init; } = new();
-    public Vector2 Position { get; private set; }
-    public FacingDirection FacingDirection { get; private set; }
-    public Color? Color { get; private set; }
+    public FacingDirection FacingDirection = FacingDirection.Down;
 
+    // world position
+    public double X;
+    public int XInt;
+    public int TileX;
+    // world position
+    public double Y;
+    public int YInt;
+    public int TileY;
+
+    public string EntitySpriteKey;
+    public Color Color = Color.White;
+    public float Scale = 1f;
 }

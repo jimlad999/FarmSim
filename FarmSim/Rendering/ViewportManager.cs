@@ -11,6 +11,7 @@ internal class ViewportManager
 {
     private const float MaxZoom = 1f;
     private const float MinZoom = 1f / 64f;
+    private const float DefaultZoom = 1f;
     private readonly ControllerManager _controllerManager;
     private double _x;
     private double _y;
@@ -131,8 +132,8 @@ internal class ViewportManager
 
     public static ViewportManager CenteredOnZeroZero(ControllerManager controllerManager, GraphicsDeviceManager graphics)
     {
-        var width = (int)(graphics.PreferredBackBufferWidth / MinZoom);
-        var height = (int)(graphics.PreferredBackBufferHeight / MinZoom);
+        var width = (int)(graphics.PreferredBackBufferWidth / DefaultZoom);
+        var height = (int)(graphics.PreferredBackBufferHeight / DefaultZoom);
         return new ViewportManager(
             controllerManager,
             new Viewport(
@@ -141,7 +142,7 @@ internal class ViewportManager
                 width: width,
                 height: height))
         {
-            Zoom = MinZoom
+            Zoom = DefaultZoom
         };
     }
 }

@@ -9,7 +9,7 @@ using Utils;
 
 namespace FarmSim.Player;
 
-class Player
+class Player : Entity
 {
     private const double MovementSpeed = 200;
     public const int SightRadius = 12;//tiles
@@ -19,18 +19,6 @@ class Player
     private readonly TerrainManager _terrainManager;
     private readonly Tileset _tileset;
     private readonly UIOverlay _uiOverlay;
-
-    public string EntitySpriteKey = "player";
-    public FacingDirection FacingDirection { get; private set; } = FacingDirection.Down;
-
-    // world position
-    public double X;
-    public int XInt;
-    public int TileX;
-    // world position
-    public double Y;
-    public int YInt;
-    public int TileY;
 
     public Player(
         ControllerManager controllerManager,
@@ -44,6 +32,7 @@ class Player
         _terrainManager = terrainManager;
         _tileset = tileset;
         _uiOverlay = uiOverlay;
+        EntitySpriteKey = "player";
     }
 
     private string _buildingKey;

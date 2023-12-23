@@ -1,4 +1,5 @@
-﻿using FarmSim.Player;
+﻿using FarmSim.Mobs;
+using FarmSim.Player;
 using FarmSim.Rendering;
 using FarmSim.Terrain;
 using FarmSim.UI;
@@ -20,7 +21,7 @@ namespace FarmSim;
 
 public class Game1 : Game
 {
-    private static readonly Random Rand = new Random();
+    private static readonly Random Rand = new();
 
     private readonly List<string> _screensToDraw = new();
 
@@ -34,6 +35,7 @@ public class Game1 : Game
     private Tileset _tileset;
     private EntitySpriteSheet _entitySpriteSheet;
     private UISpriteSheet _uiSpriteSheet;
+    private MobManager _mobManager;
     private Renderer _renderer;
 
     public Game1()
@@ -48,12 +50,9 @@ public class Game1 : Game
     protected override void Initialize()
     {
         _controllerManager = new ControllerManager();
-        _terrainManager = new TerrainManager(Rand.Next());
+        GlobalState.TerrainManager = _terrainManager = new TerrainManager(Rand.Next());
         _viewportManager = ViewportManager.CenteredOnZeroZero(_controllerManager, _graphics);
 
-        for (int y = -10 * 64; y < 10 * 64; y += 64)
-            for (int x = -20 * 64; x < 20 * 64; x += 64)
-                _terrainManager.GetChunk(x, y);
         base.Initialize();
     }
 
@@ -66,6 +65,7 @@ public class Game1 : Game
 
         GlobalState.BuildingData = JsonConvert.DeserializeObject<BuildingData>(File.ReadAllText("Content/tilesets/buildings/buildings.json"));
 
+        var mobData = JsonConvert.DeserializeObject<MobData[]>(File.ReadAllText("Content/entities/mobs/mobs.json"));
         var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/tilesets/tilesets.json"));
         GlobalState.Tileset = _tileset = new Tileset(_spriteBatch, tilesetData);
         var entitiesData = JsonConvert.DeserializeObject<EntitiesData>(File.ReadAllText("Content/entities/entities.json"));
@@ -115,15 +115,17 @@ public class Game1 : Game
             _terrainManager,
             _tileset,
             _uiOverlay);
-        _terrainManager.UpdateSightInit(tileX: _player.TileX, tileY: _player.TileY, Player.Player.SightRadius);
         _viewportManager.Tracking = _player;
         _viewportManager.UIOverlay = _uiOverlay;
+        _terrainManager.UpdateSightInit(tileX: _player.TileX, tileY: _player.TileY, Player.Player.SightRadius);
+        _mobManager = new MobManager(mobData, _player, _terrainManager);
         _renderer = new Renderer(
             _viewportManager,
             _terrainManager,
             _tileset,
             _entitySpriteSheet,
-            _player);
+            _player,
+            _mobManager);
     }
 
     protected override void Update(GameTime gameTime)
@@ -132,6 +134,7 @@ public class Game1 : Game
         _uiOverlay.Update(gameTime, _screensToDraw);
         _viewportManager.Update(gameTime);
         _player.Update(gameTime);
+        _mobManager.Update(gameTime);
 
         if (_controllerManager.IsKeyInitialPressed(Keys.Escape))
         {
@@ -152,6 +155,8 @@ public class Game1 : Game
         if (_controllerManager.IsKeyInitialPressed(Keys.F12))
         {
             _terrainManager.Reseed(Rand.Next());
+            _terrainManager.UpdateSightInit(tileX: _player.TileX, tileY: _player.TileY, Player.Player.SightRadius);
+            _mobManager.Clear();
             _renderer.ClearLODCache();
         }
 
@@ -161,27 +166,8 @@ public class Game1 : Game
     protected override void Draw(GameTime gameTime)
     {
 #if DEBUG
-        if (_controllerManager.IsLeftMouseDown())
-        {
-            var (x, y) = _viewportManager.ConvertScrenCoordinatesToTileCoordinates(screenX: _controllerManager.CurrentMouseState.X, screenY: _controllerManager.CurrentMouseState.Y);
-            var climateNoiseVal = _terrainManager._terrainGenerator.GetClimateNoiseVal(x, y);
-            var regionNoiseVal = _terrainManager._terrainGenerator.GetRegionNoiseVal(x, y);
-            var tileNoiseVal = _terrainManager._terrainGenerator.GetTileNoiseVal(x, y);
-            System.Diagnostics.Debug.WriteLine((
-                $"(x: {x}, y: {y})",
-                //$"(screenX: {_controllerManager.CurrentMouseState.X}, screenY: {_controllerManager.CurrentMouseState.Y})",
-                //_viewportManager.Viewport,
-                (Math.Sqrt(TerrainGenerator.DistanceSquaredFromCenterOfContinent(x, y)), x.Mod(256), x % 256),
-                ("region noise", regionNoiseVal, TerrainGenerator.GetIntercontinentalRegionType(regionNoiseVal: regionNoiseVal, climateNoiseVal: climateNoiseVal)),
-                ("tile noise", tileNoiseVal)
-            ));
-        }
-        else
-        {
-            System.Diagnostics.Debug.WriteLine(("ElapsedGameTime", gameTime.ElapsedGameTime.TotalSeconds));
-            if (gameTime.ElapsedGameTime.TotalSeconds > 0.02)
-                System.Diagnostics.Debug.WriteLine("=============================================    Running slow    =============================================");
-        }
+        if (gameTime.ElapsedGameTime.TotalSeconds > 0.02)
+            System.Diagnostics.Debug.WriteLine(("Running slow", gameTime.ElapsedGameTime.TotalSeconds));
 #endif
         _renderer.Draw(_spriteBatch);
 

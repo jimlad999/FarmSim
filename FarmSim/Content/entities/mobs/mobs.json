@@ -1,0 +1,48 @@
+[
+  {
+    "class": "FarmSim.Mobs.Slime",
+    "entitySpriteKey": "slime",
+    "minSpawned": 2,
+    "maxSpawned": 5,
+    "hp": 10,
+    "xp": 1,
+    "speed": 50,
+    "spawnable": [ "grass" ],
+    "identifiable": [
+      "Slimy",
+      "Pseudopod"
+    ],
+    "tags": [
+      {
+        "Slimy": 1
+      },
+      {
+        "Pseudopod": 1
+      },
+      {
+        "Disgusting": 10,
+        "Tasteless": 1
+      },
+      {
+        "Stinky": 1,
+        "Odorless": 1,
+        "Aromatic": 1
+      },
+      {
+        "Dye": 1
+      },
+      {
+        "Blue": 1
+      },
+      {
+        "Small": 10,
+        "Medium": 1
+      },
+      {
+        "Placid": 1,
+        "Friendly": 1,
+        "Cowardly": 1
+      }
+    ]
+  }
+]
