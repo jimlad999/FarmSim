@@ -42,7 +42,7 @@ class Renderer
     private readonly Player.Player _player;
     private readonly MobManager _mobManager;
     private readonly Effect _fogOfWarEffect;
-    private readonly Texture2D _fogOfWarOverlay;
+    private readonly Effect _fogOfWarInverseEffect;
     private readonly Texture2D _pixel;
     private Dictionary<Chunk, RenderTarget2D> _chunkTilePrerender = new();
 
@@ -54,7 +54,7 @@ class Renderer
         Player.Player player,
         MobManager mobManager,
         Effect fogOfWarEffect,
-        Texture2D fogOfWarOverlay,
+        Effect fogOfWarInverseEffect,
         Texture2D pixel)
     {
         _viewportManager = viewportManager;
@@ -64,7 +64,7 @@ class Renderer
         _player = player;
         _mobManager = mobManager;
         _fogOfWarEffect = fogOfWarEffect;
-        _fogOfWarOverlay = fogOfWarOverlay;
+        _fogOfWarInverseEffect = fogOfWarInverseEffect;
         _pixel = pixel;
     }
 
@@ -127,16 +127,27 @@ class Renderer
             .ToLookup(mob => mob.TileY);
 
         // can set once globally?
-        _fogOfWarEffect.Parameters["HalfScreenWidth"].SetValue(spriteBatch.GraphicsDevice.Viewport.Width / 2f);
-        _fogOfWarEffect.Parameters["HalfScreenHeight"].SetValue(spriteBatch.GraphicsDevice.Viewport.Height / 2f);
+        var halfScreenWidth = spriteBatch.GraphicsDevice.Viewport.Width / 2f;
+        var halfScreenHeight = spriteBatch.GraphicsDevice.Viewport.Height / 2f;
         var fogOfWarRadius = Player.Player.SightRadius * TileSize * _viewportManager.Zoom;
-        var fogOfWarRadiusPlusBuffer = fogOfWarRadius + 30 * _viewportManager.Zoom;
-        var fogOfWarRadiusPlusBufferPow2 = fogOfWarRadiusPlusBuffer * fogOfWarRadiusPlusBuffer;
-        _fogOfWarEffect.Parameters["FogOfWarRadiusPow2"].SetValue(fogOfWarRadiusPlusBufferPow2);
-        var fogOfWarStartClipRadiusPlusBuffer = fogOfWarRadius - 30 * _viewportManager.Zoom;
-        var fogOfWarStartClipRadiusPlusBufferPow2 = fogOfWarStartClipRadiusPlusBuffer * fogOfWarStartClipRadiusPlusBuffer;
-        _fogOfWarEffect.Parameters["FogOfWarStartClipRadiusPow2"].SetValue(fogOfWarStartClipRadiusPlusBufferPow2);
-        _fogOfWarEffect.Parameters["FogOfWarRadiusPow2Diff"].SetValue(fogOfWarRadiusPlusBufferPow2 - fogOfWarStartClipRadiusPlusBufferPow2);
+        var fogOfWarRadiusWithBuffer = fogOfWarRadius + 30 * _viewportManager.Zoom;
+        var fogOfWarRadiusWithBufferPow2 = fogOfWarRadiusWithBuffer * fogOfWarRadiusWithBuffer;
+        var fogOfWarStartClipRadiusWithBuffer = fogOfWarRadius - 15 * _viewportManager.Zoom;
+        var fogOfWarStartClipRadiusWithBufferPow2 = fogOfWarStartClipRadiusWithBuffer * fogOfWarStartClipRadiusWithBuffer;
+        _fogOfWarEffect.Parameters["HalfScreenWidth"].SetValue(halfScreenWidth);
+        _fogOfWarEffect.Parameters["HalfScreenHeight"].SetValue(halfScreenHeight);
+        _fogOfWarEffect.Parameters["FogOfWarRadiusPow2"].SetValue(fogOfWarRadiusWithBufferPow2);
+        _fogOfWarEffect.Parameters["FogOfWarStartClipRadiusPow2"].SetValue(fogOfWarStartClipRadiusWithBufferPow2);
+        _fogOfWarEffect.Parameters["FogOfWarRadiusPow2Diff"].SetValue(fogOfWarRadiusWithBufferPow2 - fogOfWarStartClipRadiusWithBufferPow2);
+        var fogOfWarInverseRadiusPow2 = fogOfWarRadius * fogOfWarRadius;
+        var fogOfWarInverseStartClipRadiusWithBuffer = fogOfWarRadius - 30 * _viewportManager.Zoom;
+        var fogOfWarInverseStartClipRadiusWithBufferPow2 = fogOfWarInverseStartClipRadiusWithBuffer * fogOfWarInverseStartClipRadiusWithBuffer;
+        _fogOfWarInverseEffect.Parameters["HalfScreenWidth"].SetValue(halfScreenWidth);
+        _fogOfWarInverseEffect.Parameters["HalfScreenHeight"].SetValue(halfScreenHeight);
+        _fogOfWarInverseEffect.Parameters["FogOfWarRadiusPow2"].SetValue(fogOfWarInverseRadiusPow2);
+        _fogOfWarInverseEffect.Parameters["FogOfWarStartClipRadiusPow2"].SetValue(fogOfWarInverseStartClipRadiusWithBufferPow2);
+        _fogOfWarInverseEffect.Parameters["FogOfWarRadiusPow2Diff"].SetValue(fogOfWarInverseRadiusPow2 - fogOfWarInverseStartClipRadiusWithBufferPow2);
+        //specific because the player sight radius is larger than the number of tiles you can see at zoom == 1
         var canSeeFogOfWarEdges = _viewportManager.Zoom < 1;
 
         spriteBatch.GraphicsDevice.Clear(Color.CornflowerBlue);
@@ -230,52 +241,9 @@ class Renderer
         }
         if (canSeeFogOfWarEdges)
         {
-            var screenWidth = spriteBatch.GraphicsDevice.Viewport.Width;
-            var screenHeight = spriteBatch.GraphicsDevice.Viewport.Height;
-            spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
-            var fogOfWarRadiusInt = (int)fogOfWarRadius;
-            var fogOfWarRadiusInt2 = fogOfWarRadiusInt * 2;
-            var fogOfWarOverlayDestination = new Rectangle(
-                x: screenWidth / 2 - fogOfWarRadiusInt,
-                y: screenHeight / 2 - fogOfWarRadiusInt,
-                width: fogOfWarRadiusInt2,
-                height: fogOfWarRadiusInt2);
-            spriteBatch.Draw(
-                _fogOfWarOverlay,
-                fogOfWarOverlayDestination,
-                color: FogOfWarColor);
-            var fogOfWarLeft = fogOfWarOverlayDestination.Left;
-            if (fogOfWarLeft > 0)
-            {
-                spriteBatch.Draw(
-                    _pixel,
-                    new Rectangle(x: 0, y: 0, width: fogOfWarLeft, height: screenHeight),
-                    color: FogOfWarColor);
-            }
-            var fogOfWarRight = fogOfWarOverlayDestination.Right;
-            if (fogOfWarRight < screenWidth)
-            {
-                spriteBatch.Draw(
-                    _pixel,
-                    new Rectangle(x: fogOfWarRight, y: 0, width: screenWidth - fogOfWarRight, height: screenHeight),
-                    color: FogOfWarColor);
-            }
-            var fogOfWarTop = fogOfWarOverlayDestination.Top;
-            if (fogOfWarTop > 0)
-            {
-                spriteBatch.Draw(
-                    _pixel,
-                    new Rectangle(x: fogOfWarOverlayDestination.X, y: 0, width: fogOfWarOverlayDestination.Width, height: fogOfWarTop),
-                    color: FogOfWarColor);
-            }
-            var fogOfWarBottom = fogOfWarOverlayDestination.Bottom;
-            if (fogOfWarBottom < screenHeight)
-            {
-                spriteBatch.Draw(
-                    _pixel,
-                    new Rectangle(x: fogOfWarOverlayDestination.X, y: fogOfWarBottom, width: fogOfWarOverlayDestination.Width, height: screenHeight - fogOfWarBottom),
-                    color: FogOfWarColor);
-            }
+            spriteBatch.Begin(effect: _fogOfWarInverseEffect);
+            var fogOfWarOverlayDestination = new Rectangle(x: 0, y: 0, width: spriteBatch.GraphicsDevice.Viewport.Width, height: spriteBatch.GraphicsDevice.Viewport.Height);
+            spriteBatch.Draw(_pixel, fogOfWarOverlayDestination, color: FogOfWarColor);
             spriteBatch.End();
         }
     }

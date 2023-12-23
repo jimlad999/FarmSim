@@ -64,7 +64,7 @@ public class Game1 : Game
         Text.Normal = Content.Load<SpriteFont>("fonts/GameFont");
         Text.Bold = Content.Load<SpriteFont>("fonts/GameFontBold");
         var fogOfWarEffect = Content.Load<Effect>("shaders/fog-of-war");
-        var fogOfWarOverlay = Content.Load<Texture2D>("fog-of-war-overlay");
+        var fogOfWarInverseEffect = Content.Load<Effect>("shaders/fog-of-war-inverse");
         var pixel = Content.Load<Texture2D>("pixel");
 
         GlobalState.BuildingData = JsonConvert.DeserializeObject<BuildingData>(File.ReadAllText("Content/tilesets/buildings/buildings.json"));
@@ -131,7 +131,7 @@ public class Game1 : Game
             _player,
             _mobManager,
             fogOfWarEffect,
-            fogOfWarOverlay,
+            fogOfWarInverseEffect,
             pixel);
     }
 

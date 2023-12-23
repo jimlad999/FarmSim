@@ -138,9 +138,6 @@
     <None Update="Content\ui\ui.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Content\fog-of-war-overlay.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\UI\UI.csproj" />
@@ -148,7 +145,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Content\obj\DesktopGL\fonts\" />
-    <Folder Include="Content\shaders\" />
   </ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
     <Message Text="Restoring dotnet tools" Importance="High" />
