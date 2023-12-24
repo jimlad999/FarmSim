@@ -1,7 +1,6 @@
 ﻿using FarmSim.Terrain;
 using System.Collections.Generic;
 using System.Linq;
-using static FarmSim.Utils.Tileset;
 
 namespace FarmSim.Utils;
 
@@ -16,9 +15,9 @@ static class BuildingExtensions
             yield return tile.Ores.EntitySpriteKey;
     }
 
-    public static bool IsBuildable(this ProcessedTileData tileData, ICollection<Zoning> buildable)
+    public static bool IsBuildable(this ProcessedSpriteData spriteData, ICollection<Zoning> buildable)
     {
-        return tileData.Buildable.Count > 0
-            && tileData.Buildable.All(buildable.Contains);
+        return spriteData.Buildable.Count > 0
+            && spriteData.Buildable.All(buildable.Contains);
     }
 }

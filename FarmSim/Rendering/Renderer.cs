@@ -37,6 +37,7 @@ class Renderer
 
     private readonly ViewportManager _viewportManager;
     private readonly TerrainManager _terrainManager;
+    private readonly SpriteSheet _aggregateSpriteSheet;
     private readonly Tileset _tileset;
     private readonly EntitySpriteSheet _entitySpriteSheet;
     private readonly Player.Player _player;
@@ -49,8 +50,7 @@ class Renderer
     public Renderer(
         ViewportManager viewportManager,
         TerrainManager terrainManager,
-        Tileset tileset,
-        EntitySpriteSheet entitySpriteSheet,
+        SpriteSheet spriteSheet,
         Player.Player player,
         MobManager mobManager,
         Effect fogOfWarEffect,
@@ -59,8 +59,9 @@ class Renderer
     {
         _viewportManager = viewportManager;
         _terrainManager = terrainManager;
-        _tileset = tileset;
-        _entitySpriteSheet = entitySpriteSheet;
+        _aggregateSpriteSheet = spriteSheet;
+        _tileset = spriteSheet.Tileset;
+        _entitySpriteSheet = spriteSheet.Entities;
         _player = player;
         _mobManager = mobManager;
         _fogOfWarEffect = fogOfWarEffect;
@@ -319,7 +320,7 @@ class Renderer
         }
         if (thisTileFloor == null)
         {
-            DrawTileset(
+            DrawSprite(
                 spriteBatch,
                 _tileset[tile.Terrain],
                 xDraw: xDraw,
@@ -349,7 +350,7 @@ class Renderer
                 //}
                 if (tilesetKey != null)
                 {
-                    DrawTileset(
+                    DrawSprite(
                         spriteBatch,
                         _tileset[tilesetKey],
                         xDraw: xDraw,
@@ -377,7 +378,7 @@ class Renderer
                     var interiorWallTilesetKey = building.InteriorWall;
                     if (interiorWallTilesetKey != null)
                     {
-                        DrawTileset(
+                        DrawSprite(
                             spriteBatch,
                             _tileset[interiorWallTilesetKey],
                             xDraw: xDraw,
@@ -394,7 +395,7 @@ class Renderer
                     var roofTilesetKey = GlobalState.BuildingData.Buildings[tileBelowFloor].Roof;
                     if (roofTilesetKey != null)
                     {
-                        DrawTileset(
+                        DrawSprite(
                             spriteBatch,
                             _tileset[roofTilesetKey],
                             xDraw: xDraw,
@@ -412,7 +413,7 @@ class Renderer
             var exteriorWallTilesetKey = buildingAbove.ExteriorWall;
             if (exteriorWallTilesetKey != null)
             {
-                DrawTileset(
+                DrawSprite(
                     spriteBatch,
                     _tileset[exteriorWallTilesetKey],
                     xDraw: xDraw,
@@ -427,7 +428,7 @@ class Renderer
                 var roofTilesetKey = buildingAbove.Roof;
                 if (roofTilesetKey != null)
                 {
-                    DrawTileset(
+                    DrawSprite(
                         spriteBatch,
                         _tileset[roofTilesetKey],
                         xDraw: xDraw,
@@ -442,7 +443,7 @@ class Renderer
     private void DrawEntity(SpriteBatch spriteBatch, Entity entity, float xDraw, float yDraw, float zoomScale)
     {
         var entitySpriteSheet = _entitySpriteSheet[entity.EntitySpriteKey, entity.FacingDirection];
-        DrawEntity(
+        DrawSprite(
             spriteBatch,
             entitySpriteSheet,
             xDraw: xDraw,
@@ -456,7 +457,7 @@ class Renderer
         var scale = _viewportManager.Zoom;
         var tileIsBuildable = tilePlacement.AllTilesBuildable
             || BuildingExtensions.YieldTilesets(tile)
-                .All(key => _tileset[key].IsBuildable(tilePlacement.Buildable));
+                .All(key => _aggregateSpriteSheet[key].IsBuildable(tilePlacement.Buildable));
         var color = tileIsBuildable
             ? PartialBuildingColor
             : PartialBuildingInvalidColor;
@@ -467,7 +468,7 @@ class Renderer
             var tileAboveHasFloor = tileAbove.Buildings.Any(BuildingData.BuildingHasFloor);
             if (!tileAboveHasFloor && tilePlacement.TileTopOfRange(tileX: tile.X, tileY: tile.Y))
             {
-                DrawTileset(
+                DrawSprite(
                     spriteBatch,
                     _tileset[building.InteriorWall],
                     xDraw: xDraw,
@@ -477,7 +478,7 @@ class Renderer
             }
             if (building.Floor != null)
             {
-                DrawTileset(
+                DrawSprite(
                     spriteBatch,
                     _tileset[building.Floor],
                     xDraw: xDraw,
@@ -491,7 +492,7 @@ class Renderer
                 var tileBelowHasFloor = tileBelow.Buildings.Any(BuildingData.BuildingHasFloor);
                 if (!tileBelowHasFloor && tilePlacement.TileBottomOfRange(tileX: tile.X, tileY: tile.Y))
                 {
-                    DrawTileset(
+                    DrawSprite(
                         spriteBatch,
                         _tileset[building.ExteriorWall],
                         xDraw: xDraw,
@@ -509,7 +510,7 @@ class Renderer
             {
                 if (building.InteriorWall != null)
                 {
-                    DrawTileset(
+                    DrawSprite(
                         spriteBatch,
                         _tileset[building.InteriorWall],
                         xDraw: xDraw,
@@ -519,7 +520,7 @@ class Renderer
                 }
                 if (building.Floor != null)
                 {
-                    DrawTileset(
+                    DrawSprite(
                         spriteBatch,
                         _tileset[building.Floor],
                         xDraw: xDraw,
@@ -530,7 +531,7 @@ class Renderer
             }
             if (tilePlacement.TileBottomOfRange(tileX: tile.X, tileY: tile.Y))
             {
-                DrawTileset(
+                DrawSprite(
                     spriteBatch,
                     _tileset[building.ExteriorWall],
                     xDraw: xDraw,
@@ -540,7 +541,7 @@ class Renderer
             }
             if (building.Roof != null)
             {
-                DrawTileset(
+                DrawSprite(
                     spriteBatch,
                     _tileset[building.Roof],
                     xDraw: xDraw,
@@ -551,7 +552,7 @@ class Renderer
         }
         else if (building.Floor != null)
         {
-            DrawTileset(
+            DrawSprite(
                 spriteBatch,
                 _tileset[building.Floor],
                 xDraw: xDraw,
@@ -561,29 +562,9 @@ class Renderer
         }
     }
 
-    private static void DrawTileset(
+    private static void DrawSprite(
         SpriteBatch spriteBatch,
-        Tileset.ProcessedTileData tileset,
-        float xDraw,
-        float yDraw,
-        float scale,
-        Color color)
-    {
-        spriteBatch.Draw(
-            texture: tileset.Texture,
-            position: new Vector2(xDraw, yDraw),
-            sourceRectangle: tileset.SourceRectangle,
-            color: color,
-            rotation: 0f,
-            origin: tileset.Origin,
-            scale: scale,
-            effects: SpriteEffects.None,
-            layerDepth: 0f);
-    }
-
-    private static void DrawEntity(
-        SpriteBatch spriteBatch,
-        EntitySpriteSheet.ProcessedEntityData entity,
+        ProcessedSpriteData entity,
         float xDraw,
         float yDraw,
         float scale,

@@ -17,20 +17,20 @@ class Player : Entity
     private readonly ControllerManager _controllerManager;
     private readonly ViewportManager _viewportManager;
     private readonly TerrainManager _terrainManager;
-    private readonly Tileset _tileset;
+    private readonly SpriteSheet _spriteSheet;
     private readonly UIOverlay _uiOverlay;
 
     public Player(
         ControllerManager controllerManager,
         ViewportManager viewportManager,
         TerrainManager terrainManager,
-        Tileset tileset,
+        SpriteSheet spriteSheet,
         UIOverlay uiOverlay)
     {
         _controllerManager = controllerManager;
         _viewportManager = viewportManager;
         _terrainManager = terrainManager;
-        _tileset = tileset;
+        _spriteSheet = spriteSheet;
         _uiOverlay = uiOverlay;
         EntitySpriteKey = "player";
     }
@@ -114,7 +114,7 @@ class Player : Entity
         {
             var tilePosition = GetHoveredTileCoordinates();
             var tileTerrain = _terrainManager.GetTile(tilePosition.X, tilePosition.Y).Terrain;
-            var terrain = _tileset[tileTerrain];
+            var terrain = _spriteSheet.Tileset[tileTerrain];
             if (terrain.IsBuildable(TilePlacement.Buildable))
             {
                 // TODO: identify point placement vs range placement depending on what is being built
@@ -129,7 +129,7 @@ class Player : Entity
             TilePlacement.Update(
                 tilePlacementPosition,
                 _terrainManager,
-                _tileset);
+                _spriteSheet);
 
             if (TilePlacement.CommittedToBuild
                 && _controllerManager.IsLeftMouseUp())
@@ -154,7 +154,7 @@ class Player : Entity
                 TilePlacement.Update(
                     tilePlacementPosition,
                     _terrainManager,
-                    _tileset);
+                    _spriteSheet);
             }
         }
     }

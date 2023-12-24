@@ -32,8 +32,7 @@ public class Game1 : Game
     private UIOverlay _uiOverlay;
     private Player.Player _player;
     private SpriteBatch _spriteBatch;
-    private Tileset _tileset;
-    private EntitySpriteSheet _entitySpriteSheet;
+    private SpriteSheet _spriteSheet;
     private UISpriteSheet _uiSpriteSheet;
     private MobManager _mobManager;
     private Renderer _renderer;
@@ -71,9 +70,9 @@ public class Game1 : Game
 
         var mobData = JsonConvert.DeserializeObject<MobData[]>(File.ReadAllText("Content/entities/mobs/mobs.json"));
         var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/tilesets/tilesets.json"));
-        GlobalState.Tileset = _tileset = new Tileset(_spriteBatch, tilesetData);
+        var tileset = GlobalState.Tileset = new Tileset(_spriteBatch, tilesetData);
         var entitiesData = JsonConvert.DeserializeObject<EntitiesData>(File.ReadAllText("Content/entities/entities.json"));
-        _entitySpriteSheet = new EntitySpriteSheet(_spriteBatch, entitiesData);
+        var entitySpriteSheet = new EntitySpriteSheet(_spriteBatch, entitiesData);
         var uiSpriteData = JsonConvert.DeserializeObject<UISpriteData>(File.ReadAllText("Content/ui/ui.json"));
         _uiSpriteSheet = new UISpriteSheet(_spriteBatch, uiSpriteData);
         var screenData = JsonConvert.DeserializeObject<ScreensData>(File.ReadAllText("Content/ui/screens.json"));
@@ -113,11 +112,12 @@ public class Game1 : Game
                 }
             };
         }
+        _spriteSheet = new SpriteSheet(tileset, entitySpriteSheet);
         _player = new Player.Player(
             _controllerManager,
             _viewportManager,
             _terrainManager,
-            _tileset,
+            _spriteSheet,
             _uiOverlay);
         _viewportManager.Tracking = _player;
         _viewportManager.UIOverlay = _uiOverlay;
@@ -126,8 +126,7 @@ public class Game1 : Game
         _renderer = new Renderer(
             _viewportManager,
             _terrainManager,
-            _tileset,
-            _entitySpriteSheet,
+            _spriteSheet,
             _player,
             _mobManager,
             fogOfWarEffect,

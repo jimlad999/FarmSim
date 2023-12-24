@@ -28,11 +28,11 @@ readonly struct TileRange
 
     public readonly bool AllTilesAreBuildable(
         ICollection<Zoning> buildable,
-        Tileset tileset)
+        SpriteSheet spriteSheet)
     {
         return Tiles
             .SelectMany(BuildingExtensions.YieldTilesets)
             .Distinct()
-            .All(key => tileset[key].IsBuildable(buildable));
+            .All(key => spriteSheet[key].IsBuildable(buildable));
     }
 }

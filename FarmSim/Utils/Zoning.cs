@@ -6,4 +6,6 @@ enum Zoning
     Normal,
     Rocky,
     Sea,
+    Farm,
+    Tree,
 }

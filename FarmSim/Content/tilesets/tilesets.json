@@ -1,6 +1,6 @@
 {
   "baseFolder": "Content/tilesets",
-  "tilesets": {
+  "data": {
     "grass": {
       "source": "terrain/grass.png",
       "buildable": [ "Normal" ]

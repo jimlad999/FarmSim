@@ -99,15 +99,15 @@ class TileUIElement : UIElement
         }
     }
 
-    private void DrawTile(SpriteBatch spriteBatch, Vector2 position, float scale, Tileset.ProcessedTileData roof)
+    private void DrawTile(SpriteBatch spriteBatch, Vector2 position, float scale, ProcessedSpriteData building)
     {
         spriteBatch.Draw(
-            texture: roof.Texture,
+            texture: building.Texture,
             position: position,
-            sourceRectangle: roof.SourceRectangle,
+            sourceRectangle: building.SourceRectangle,
             color: Color.White,
             rotation: 0f,
-            origin: roof.Origin,
+            origin: building.Origin,
             scale: scale,
             effects: SpriteEffects.None,
             layerDepth: 0f);

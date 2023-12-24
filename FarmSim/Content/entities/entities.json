@@ -1,6 +1,6 @@
 {
   "baseFolder": "Content/entities",
-  "entities": {
+  "data": {
     "player": {
       "source": "player/player.png",
       "origin": {

@@ -1,92 +1,38 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using System.Collections.Generic;
-using Utils;
-using Utils.Rendering;
 
 namespace FarmSim.Utils;
 
-class Tileset
+class Tileset : SpriteSheet<TileData, Tileset.Metadata>
 {
-    private readonly Dictionary<string, Rectangle> _sourceRectangle = new();
-    private readonly Dictionary<string, Vector2> _origin = new();
-    private readonly Dictionary<string, Zoning[]> _buildable = new();
-    private readonly RenderTarget2D _renderTarget;
-
-    public Tileset(
-        SpriteBatch spriteBatch,
-        TilesetData tilesetData)
+    public Tileset(SpriteBatch spriteBatch, TilesetData tilesetData)
     {
-        using (var disposeScope = new DeferredDisposeScope())
+        ProcessData(spriteBatch, tilesetData);
+    }
+
+    protected override Metadata GetMetadata(TileData data, Rectangle destinationRectangle)
+    {
+        return new Metadata
         {
-            var totalWidth = 0;
-            var totalHeight = 0;
-            var sprites = new Dictionary<string, (Texture2D, Rectangle)>();
-            foreach (var data in tilesetData.Tilesets)
-            {
-                _buildable[data.Key] = data.Value.Buildable ?? Array.Empty<Zoning>();
-                var texture = Texture2D.FromFile(spriteBatch.GraphicsDevice, $"{tilesetData.BaseFolder}/{data.Value.Source}");
-                _origin[data.Key] = data.Value.Origin?.Convert() ?? Vector2.Zero;
-                // destinationRectangle to render to _renderTarget.
-                // Will then be used as the sourceRectangle from the _renderTarget.
-                var sourceRectangle = new Rectangle(
-                    x: totalWidth,
-                    y: 0,
-                    width: texture.Width,
-                    height: texture.Height);
-                _sourceRectangle[data.Key] = sourceRectangle;
-                sprites[data.Key] = (texture, sourceRectangle);
-
-                disposeScope.Disposables.Add(texture);
-
-                // +1 so that there is a small gap between sprites so that you don't get bleeding around the edges
-                totalWidth += texture.Width + 1;
-                if (texture.Height > totalHeight)
-                {
-                    totalHeight = texture.Height;
-                }
-            }
-            _renderTarget = new RenderTarget2D(
-                spriteBatch.GraphicsDevice,
-                width: totalWidth,
-                height: totalHeight);
-            using (RenderTargetScope.Create(spriteBatch, _renderTarget))
-            {
-                foreach (var sprite in sprites.Values)
-                {
-                    spriteBatch.Draw(sprite.Item1, destinationRectangle: sprite.Item2, Color.White);
-                }
-            }
-        }
+            Origin = data.Origin?.Convert() ?? Vector2.Zero,
+            SourceRectangle = destinationRectangle,
+            Buildable = data.Buildable,
+        };
     }
 
-    public ProcessedTileData this[string tileset]
+    protected override ProcessedSpriteData CreateProcessedSpriteData(RenderTarget2D renderTarget, Metadata metadata)
     {
-        get => new ProcessedTileData(
-            _renderTarget,
-            _sourceRectangle[tileset],
-            _origin[tileset],
-            _buildable[tileset]);
+        return new ProcessedSpriteData(
+            renderTarget,
+            metadata.SourceRectangle,
+            metadata.Origin,
+            metadata.Buildable);
     }
 
-    public struct ProcessedTileData
+    public struct Metadata
     {
-        public Texture2D Texture;
-        public Rectangle SourceRectangle;
         public Vector2 Origin;
-        public ICollection<Zoning> Buildable;
-
-        public ProcessedTileData(
-            Texture2D texture,
-            Rectangle sourceRectangle,
-            Vector2 origin,
-            Zoning[] buildable)
-        {
-            Texture = texture;
-            SourceRectangle = sourceRectangle;
-            Origin = origin;
-            Buildable = buildable;
-        }
+        public Rectangle SourceRectangle;
+        public Zoning[] Buildable;
     }
 }

@@ -19,7 +19,7 @@ interface ITilePlacement
     void Update(
         (int X, int Y) tilePlacementPosition,
         TerrainManager terrainManager,
-        Tileset tileset);
+        SpriteSheet spriteSheet);
     void PlaceBuildings(TerrainManager terrainManager);
 }
 
@@ -65,12 +65,12 @@ class PointTilePlacement : ITilePlacement
     public void Update(
         (int X, int Y) tilePlacementPosition,
         TerrainManager terrainManager,
-        Tileset tileset)
+        SpriteSheet spriteSheet)
     {
         _tilePlacementPosition = tilePlacementPosition;
         var tile = terrainManager.GetTile(tileX: tilePlacementPosition.X, tileY: tilePlacementPosition.Y);
         AllTilesBuildable = BuildingExtensions.YieldTilesets(tile)
-            .All(key => tileset[key].IsBuildable(Buildable));
+            .All(key => spriteSheet[key].IsBuildable(Buildable));
     }
 
     public void PlaceBuildings(TerrainManager terrainManager)
@@ -132,7 +132,7 @@ class RangeTilePlacement : ITilePlacement
     public void Update(
         (int X, int Y) tilePlacementPosition,
         TerrainManager terrainManager,
-        Tileset tileset)
+        SpriteSheet spriteSheet)
     {
         if (tilePlacementPosition.X < _initialTilePlacementPosition.X)
         {
@@ -159,7 +159,7 @@ class RangeTilePlacement : ITilePlacement
             topLeftY: _topLeftY,
             bottomRightX: _bottomRightX,
             bottomRightY: _bottomRightY);
-        AllTilesBuildable = tileRange.AllTilesAreBuildable(Buildable, tileset);
+        AllTilesBuildable = tileRange.AllTilesAreBuildable(Buildable, spriteSheet);
     }
 
     public void PlaceBuildings(TerrainManager terrainManager)
