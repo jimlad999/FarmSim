@@ -57,9 +57,12 @@ class Player : Entity
 
     public void Update(GameTime gameTime)
     {
+        if (_uiOverlay.State.IsMouseOverElement)
+        {
+            return;
+        }
         UpdateMovement(gameTime);
-        if (BuildingKey != null
-            && !_uiOverlay.State.IsMouseOverElement)
+        if (BuildingKey != null)
         {
             UpdateBuildingPlacement();
         }

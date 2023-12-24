@@ -34,7 +34,7 @@ public class TabContainer : UIElement
         {
             return;
         }
-        if (Children.Length > 0)
+        if (Children.Count > 0)
         {
             if (Tabs == null)
             {
@@ -44,7 +44,7 @@ public class TabContainer : UIElement
             {
                 TabContentPanel = Children.OfType<Panel>().First();
             }
-            Children = Array.Empty<UIElement>();
+            Children = new();
         }
         Tabs.Update(gameTime, state, uiSpriteSheet, controllerManager);
         TabContentPanel.Update(gameTime, state, uiSpriteSheet, controllerManager);

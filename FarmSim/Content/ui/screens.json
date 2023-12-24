@@ -8,6 +8,10 @@
     {
       "screenName": "hud",
       "screenFilename": "screens/hud.json"
+    },
+    {
+      "screenName": "command-console",
+      "screenFilename": "screens/command-console.json"
     }
   ]
 }

@@ -29,7 +29,7 @@ class BuildingSelector : UIElement
                 buildingSelectorButton.EventHandler += EventHandler;
                 buildings.Add(buildingSelectorButton);
             }
-            ItemContainer.Children = buildings.ToArray();
+            ItemContainer.Children = buildings;
         }
 
         base.Update(gameTime, state, uiSpriteSheet, controllerManager);

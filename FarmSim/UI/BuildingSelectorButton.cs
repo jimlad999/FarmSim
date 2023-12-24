@@ -75,6 +75,6 @@ class BuildingSelectorButton : Button
                     });
             }
         }
-        Children = children.ToArray();
+        Children = children;
     }
 }

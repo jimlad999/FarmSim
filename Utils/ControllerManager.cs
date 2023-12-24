@@ -1,13 +1,18 @@
-﻿using Microsoft.Xna.Framework.Input;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
+using System.Collections.Generic;
 
 namespace Utils;
 
 public class ControllerManager
 {
-    public MouseState PreviousMouseState { get; private set; }
-    public MouseState CurrentMouseState { get; private set; }
-    public KeyboardState PreviousKeyboardState { get; private set; }
-    public KeyboardState CurrentKeyboardState { get; private set; }
+    private const double InitialDebounce = 0.7;//seconds
+    private const double RepeatDebounce = 0.2;//seconds
+    private readonly Dictionary<Keys, (double Time, bool Repeated)> HeldKeys = new();
+    public MouseState PreviousMouseState;
+    public MouseState CurrentMouseState;
+    public KeyboardState PreviousKeyboardState;
+    public KeyboardState CurrentKeyboardState;
 
     public ControllerManager()
     {
@@ -18,19 +23,67 @@ public class ControllerManager
         PreviousKeyboardState = CurrentKeyboardState;
     }
 
-    public void Update()
+    public void Update(GameTime gameTime)
     {
         PreviousMouseState = CurrentMouseState;
         CurrentMouseState = Mouse.GetState();
 
         PreviousKeyboardState = CurrentKeyboardState;
         CurrentKeyboardState = Keyboard.GetState();
+        var pressedKeys = CurrentKeyboardState.GetPressedKeys();
+        if (pressedKeys.Length > 0)
+        {
+            foreach (var key in pressedKeys)
+            {
+                if (HeldKeys.TryGetValue(key, out var value))
+                {
+                    HeldKeys[key] = (value.Time + gameTime.ElapsedGameTime.TotalSeconds, value.Repeated);
+                }
+                else
+                {
+                    HeldKeys[key] = (0.0, false);
+                }
+            }
+        }
+        else if (HeldKeys.Count > 0)
+        {
+            HeldKeys.Clear();
+        }
     }
 
     public bool IsKeyInitialPressed(Keys key)
     {
         return PreviousKeyboardState.IsKeyUp(key)
             && CurrentKeyboardState.IsKeyDown(key);
+    }
+
+    public bool IsKeyPressedWithRepeat(Keys key)
+    {
+        if (!HeldKeys.TryGetValue(key, out var value))
+        {
+            return false;
+        }
+        else if (PreviousKeyboardState.IsKeyUp(key))
+        {
+            return true;
+        }
+        else if (value.Repeated)
+        {
+            if (value.Time >= RepeatDebounce)
+            {
+                HeldKeys[key] = (0.0, true);
+                return true;
+            }
+        }
+        else
+        {
+            if (value.Time >= InitialDebounce)
+            {
+                HeldKeys[key] = (0.0, true);
+                return true;
+            }
+        }
+        return false;
     }
 
     public bool IsKeyDown(Keys key)

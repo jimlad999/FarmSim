@@ -36,6 +36,7 @@ public class Game1 : Game
     private UISpriteSheet _uiSpriteSheet;
     private MobManager _mobManager;
     private Renderer _renderer;
+    private TextInput _commandInput;
 
     public Game1()
     {
@@ -64,7 +65,7 @@ public class Game1 : Game
         Text.Bold = Content.Load<SpriteFont>("fonts/GameFontBold");
         var fogOfWarEffect = Content.Load<Effect>("shaders/fog-of-war");
         var fogOfWarInverseEffect = Content.Load<Effect>("shaders/fog-of-war-inverse");
-        var pixel = Content.Load<Texture2D>("pixel");
+        var pixel = ColoredPanel.Pixel = Content.Load<Texture2D>("pixel");
 
         GlobalState.BuildingData = JsonConvert.DeserializeObject<BuildingData>(File.ReadAllText("Content/tilesets/buildings/buildings.json"));
 
@@ -112,6 +113,54 @@ public class Game1 : Game
                 }
             };
         }
+        if (_uiOverlay.TryGetById("command-input", out _commandInput)
+            && _uiOverlay.TryGetById("command-log", out Log commandLog))
+        {
+            _commandInput.EventHandler += (TextInput sender, string value) =>
+            {
+                value = value.Trim();
+                var logOutput = new List<(string, Log.Level)>
+                {
+                    (value, Log.Level.Info)
+                };
+                if (value == "/?")
+                {
+                    logOutput.Add(("Commands:", Log.Level.Debug));
+                    logOutput.Add((" SET", Log.Level.Debug));
+                }
+                else if (value.StartsWith("SET ", StringComparison.OrdinalIgnoreCase))
+                {
+                    var setOperation = value.Substring(4, value.Length - 4).Replace(" ", string.Empty);
+                    if (setOperation == "/?")
+                    {
+                        logOutput.Add(("SET options:", Log.Level.Debug));
+                        logOutput.Add((" RenderFogOfWar : bool", Log.Level.Debug));
+                    }
+                    else if (setOperation.Equals("RenderFogOfWar=false", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Renderer.RenderFogOfWar = false;
+                        logOutput.Add(("Fog of war disabled:", Log.Level.Debug));
+                    }
+                    else if (setOperation.Equals("RenderFogOfWar=true", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Renderer.RenderFogOfWar = true;
+                        logOutput.Add(("Fog of war enabled:", Log.Level.Debug));
+                    }
+                    else
+                    {
+                        logOutput.Add(("Unknow SET operation. Type SET /? for help...", Log.Level.Debug));
+                    }
+                }
+                else
+                {
+                    logOutput.Add(("Unknow command. Type /? for help...", Log.Level.Debug));
+                }
+                _uiOverlay.NextRefresh(() =>
+                {
+                    commandLog.PushText(logOutput);
+                });
+            };
+        }
         _spriteSheet = new SpriteSheet(tileset, entitySpriteSheet);
         _player = new Player.Player(
             _controllerManager,
@@ -123,6 +172,9 @@ public class Game1 : Game
         _viewportManager.UIOverlay = _uiOverlay;
         _terrainManager.UpdateSightInit(tileX: _player.TileX, tileY: _player.TileY, Player.Player.SightRadius);
         _mobManager = new MobManager(mobData, _player, _terrainManager);
+#if DEBUG
+        Renderer.RenderFogOfWar = false;
+#endif
         _renderer = new Renderer(
             _viewportManager,
             _terrainManager,
@@ -136,7 +188,7 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        _controllerManager.Update();
+        _controllerManager.Update(gameTime);
         _uiOverlay.Update(gameTime, _screensToDraw);
         _viewportManager.Update(gameTime);
         _player.Update(gameTime);
@@ -158,7 +210,15 @@ public class Game1 : Game
                 Exit();
             }
         }
-        if (_controllerManager.IsKeyInitialPressed(Keys.F12))
+        else if (_controllerManager.IsKeyInitialPressed(Keys.OemTilde) && !_screensToDraw.Contains("command-console"))
+        {
+            _uiOverlay.NextRefresh(() =>
+            {
+                _screensToDraw.Add("command-console");
+                _commandInput.IgnoreLastKeyPress();
+            });
+        }
+        else if (_controllerManager.IsKeyInitialPressed(Keys.F12))
         {
             _terrainManager.Reseed(Rand.Next());
             _terrainManager.UpdateSightInit(tileX: _player.TileX, tileY: _player.TileY, Player.Player.SightRadius);

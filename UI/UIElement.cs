@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
+using System.Collections.Generic;
 using System.Runtime.Serialization;
 using Utils;
 
@@ -28,7 +28,7 @@ public abstract class UIElement
     [DataMember]
     public string Margin;
     [DataMember]
-    public UIElement[] Children = Array.Empty<UIElement>();
+    public List<UIElement> Children = new();
 
     [IgnoreDataMember]
     public Point? MarginComputed;

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Runtime.Serialization;
 using Utils;
 
@@ -77,6 +78,12 @@ public abstract class SpriteUIElement : UIElement
         {
             return;
         }
+        DrawTexture(spriteBatch);
+        DrawChildren(spriteBatch);
+    }
+
+    protected virtual void DrawTexture(SpriteBatch spriteBatch)
+    {
         if (SpriteSheetData != null)
         {
             var data = SpriteSheetData.Value;
@@ -90,6 +97,5 @@ public abstract class SpriteUIElement : UIElement
                 SpriteEffects.None,
                 layerDepth: 0f);
         }
-        DrawChildren(spriteBatch);
     }
 }

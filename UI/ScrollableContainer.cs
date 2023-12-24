@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Linq;
 using System.Runtime.Serialization;
 using Utils;
 using Utils.Rendering;
@@ -15,6 +16,8 @@ public class ScrollableContainer : SpriteUIElement
     public string ScrollbarBackgroundTexture;
     [DataMember]
     public int ScrollTick = 50;
+    [DataMember]
+    public bool ScrollToBottom;
 
     [IgnoreDataMember]
     protected bool ScrollboxTextureStale = true;
@@ -47,29 +50,40 @@ public class ScrollableContainer : SpriteUIElement
     {
         var updateDrawOffset = false;
         var mousePosition = controllerManager.CurrentMouseState.Position;
-        if (MaxScrollOffset > 0 && TotalAreaCache.Contains(mousePosition))
+        if (!DraggingScrollbox && MaxScrollOffset > 0)
         {
-            if (controllerManager.IsMouseScrollingDown())
+            if (ScrollToBottom && ScrollOffset < MaxScrollOffset)
             {
-                ScrollOffset += ScrollTick;
-                if (ScrollOffset > MaxScrollOffset)
-                {
-                    ScrollOffset = MaxScrollOffset;
-                }
+                ScrollOffset = MaxScrollOffset;
                 updateDrawOffset = true;
             }
-            else if (controllerManager.IsMouseScrollingUp() && ScrollOffset > 0)
+            else if (TotalAreaCache.Contains(mousePosition))
             {
-                ScrollOffset -= ScrollTick;
-                if (ScrollOffset < 0)
+                if (controllerManager.IsMouseScrollingDown())
                 {
-                    ScrollOffset = 0;
+                    ScrollOffset += ScrollTick;
+                    if (ScrollOffset > MaxScrollOffset)
+                    {
+                        ScrollOffset = MaxScrollOffset;
+                        // if you scroll all the way to the bottom, then remain at the bottom (e.g. tail for logs)
+                        ScrollToBottom = true;
+                    }
+                    updateDrawOffset = true;
                 }
-                updateDrawOffset = true;
-            }
-            else if (controllerManager.IsLeftMouseInitialPressed() && ScrollbarDestinationCache.Contains(mousePosition))
-            {
-                DraggingScrollbox = true;
+                else if (controllerManager.IsMouseScrollingUp() && ScrollOffset > 0)
+                {
+                    ScrollOffset -= ScrollTick;
+                    if (ScrollOffset < 0)
+                    {
+                        ScrollOffset = 0;
+                    }
+                    ScrollToBottom = false;
+                    updateDrawOffset = true;
+                }
+                else if (controllerManager.IsLeftMouseInitialPressed() && ScrollbarDestinationCache.Contains(mousePosition))
+                {
+                    DraggingScrollbox = true;
+                }
             }
         }
         if (DraggingScrollbox)
@@ -86,10 +100,16 @@ public class ScrollableContainer : SpriteUIElement
                 if (ScrollOffset < 0)
                 {
                     ScrollOffset = 0;
+                    ScrollToBottom = false;
                 }
                 else if (ScrollOffset > MaxScrollOffset)
                 {
                     ScrollOffset = MaxScrollOffset;
+                    ScrollToBottom = true;
+                }
+                else
+                {
+                    ScrollToBottom = false;
                 }
                 updateDrawOffset = true;
             }
@@ -117,7 +137,9 @@ public class ScrollableContainer : SpriteUIElement
         {
             return;
         }
-        if (DestinationCache == Rectangle.Empty || CachedDrawArea != drawArea || CachedOffset != offset)
+        if (DestinationCache == Rectangle.Empty || CachedDrawArea != drawArea || CachedOffset != offset
+            // automatically resize if the children have resized (i.e. called Resize to set DestinationCache = Rectangle.Empty)
+            || Children.Any(child => child.DestinationCache == Rectangle.Empty))
         {
             CachedDrawArea = drawArea;
             CachedOffset = offset;

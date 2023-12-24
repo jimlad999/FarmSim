@@ -18,7 +18,7 @@ class Renderer
     // Pull these from the tilesets? Should these be configurable?
     public const int TileSize = 64;//px
     public const int TileSizeHalf = TileSize / 2;
-    private const float TileSizeFloat = TileSize;
+    public const float TileSizeFloat = TileSize;
     public const int WallHeight = 96;//px
     public const int WallHeightHalf = WallHeight / 2;
     public const float WallHeightFloat = WallHeight;
@@ -34,6 +34,10 @@ class Renderer
     private static readonly Color PartialBuildingExteriorWallTransparencyColor = new Color(127, 127, 127, 127);
     private static readonly Color PartialBuildingInvalidExteriorWallTransparencyColor = new Color(255, 0, 0, 127);
     private static readonly Color FogOfWarColor = new Color(0, 0, 0, 200);
+
+#pragma warning disable CA2211 // Non-constant fields should not be visible
+    public static bool RenderFogOfWar = true;
+#pragma warning restore CA2211 // Non-constant fields should not be visible
 
     private readonly ViewportManager _viewportManager;
     private readonly TerrainManager _terrainManager;
@@ -149,7 +153,7 @@ class Renderer
         _fogOfWarInverseEffect.Parameters["FogOfWarStartClipRadiusPow2"].SetValue(fogOfWarInverseStartClipRadiusWithBufferPow2);
         _fogOfWarInverseEffect.Parameters["FogOfWarRadiusPow2Diff"].SetValue(fogOfWarInverseRadiusPow2 - fogOfWarInverseStartClipRadiusWithBufferPow2);
         //specific because the player sight radius is larger than the number of tiles you can see at zoom == 1
-        var canSeeFogOfWarEdges = _viewportManager.Zoom < 1;
+        var renderFogOfWar = RenderFogOfWar && _viewportManager.Zoom < 1;
 
         spriteBatch.GraphicsDevice.Clear(Color.CornflowerBlue);
         float yDraw = (int)yDrawOffset;
@@ -190,7 +194,7 @@ class Renderer
             // render entities after the terrain has finished so we don't clip the sprite when rendering the next tile over
             if (shouldRenderEntities)
             {
-                spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: canSeeFogOfWarEdges ? _fogOfWarEffect : null);
+                spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: renderFogOfWar ? _fogOfWarEffect : null);
                 xDraw = (int)xDrawOffset;
                 var entities = mobLookupByTile[tileY];
                 if (_player.TileY == tileY)
@@ -211,7 +215,7 @@ class Renderer
                 }
                 if (_player.TilePlacement != null)
                 {
-                    if (canSeeFogOfWarEdges)
+                    if (renderFogOfWar)
                     {
                         spriteBatch.End();
                         spriteBatch.Begin();
@@ -225,10 +229,10 @@ class Renderer
                         }
                         xDraw += zoomedTileSize;
                     }
-                    if (canSeeFogOfWarEdges)
+                    if (renderFogOfWar)
                     {
                         spriteBatch.End();
-                        spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: canSeeFogOfWarEdges ? _fogOfWarEffect : null);
+                        spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: renderFogOfWar ? _fogOfWarEffect : null);
                     }
                 }
                 spriteBatch.End();
@@ -240,9 +244,9 @@ class Renderer
                 yDraw += zoomedTileSize * yTilesSkipped;
             }
         }
-        if (canSeeFogOfWarEdges)
+        if (renderFogOfWar)
         {
-            spriteBatch.Begin(effect: _fogOfWarInverseEffect);
+            spriteBatch.Begin(effect: shouldRenderEntities ? _fogOfWarInverseEffect : null);
             var fogOfWarOverlayDestination = new Rectangle(x: 0, y: 0, width: spriteBatch.GraphicsDevice.Viewport.Width, height: spriteBatch.GraphicsDevice.Viewport.Height);
             spriteBatch.Draw(_pixel, fogOfWarOverlayDestination, color: FogOfWarColor);
             spriteBatch.End();

@@ -105,6 +105,9 @@
     <None Update="Content\ui\building-panel.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Content\ui\screens\command-console.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Content\ui\screens\hud.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -16,16 +16,15 @@ public class Text : UIElement
         Bold,
     }
 
+    // To avoid text clashing with TagRegex
+    public const char PlaceholderLT = (char)171;//symbol '<<'
+    public const char PlaceholderGT = (char)187;//symbol '>>'
+
     private static readonly Regex TagRegex = new Regex(@"<(\w*)>");
     // should be set in Game.LoadContent()
 #pragma warning disable CA2211 // Non-constant fields should not be visible
     public static SpriteFont Normal;
     public static SpriteFont Bold;
-    public static Color Black = Color.Black;
-    public static Color White = Color.White;
-    public static Color Red = Color.Red;
-    public static Color Green = Color.Green;
-    public static Color Blue = Color.Blue;
 #pragma warning restore CA2211 // Non-constant fields should not be visible
 
     [DataMember]
@@ -33,6 +32,43 @@ public class Text : UIElement
 
     [IgnoreDataMember]
     private ProcessedData[] ParsedValue;
+
+    // For use with TextInput
+    public int AlphaModifier = 255;
+
+    // For use with TextInput
+    public void UpdateValue(string newValue)
+    {
+        Value = newValue;
+        ParseValue();
+    }
+
+    // For use with TextInput
+    public int GetXPosition(int index)
+    {
+        if (index == 0)
+        {
+            return DestinationCache.X;
+        }
+        var sumLength = 0;
+        double sumWidth = DestinationCache.X;
+        foreach (var value in ParsedValue)
+        {
+            var stringValue = value.Value;
+            sumLength += stringValue.Length;
+            if (index < sumLength)
+            {
+                var measurement = GetFont(value.Weight).MeasureString(stringValue.Substring(0, (int)(stringValue.Length - (sumLength - index))));
+                return (int)(sumWidth + measurement.X);
+            }
+            else
+            {
+                var measurement = GetFont(value.Weight).MeasureString(stringValue);
+                sumWidth += measurement.X;
+            }
+        }
+        return (int)sumWidth;
+    }
 
     // Ignore margin since top/bottom/left/right can do it instead
     public override Rectangle PreComputeDestinationCache(Rectangle drawArea, Point offset)
@@ -60,64 +96,58 @@ public class Text : UIElement
     {
         if (ParsedValue == null && !string.IsNullOrEmpty(Value))
         {
-            var weight = FontWeight.Normal;
-            var color = Black;
-            var processed = 0;
-            var remainingValue = Value;
-            var parsedList = new List<ProcessedData>();
-            do
-            {
-                var match = TagRegex.Match(remainingValue);
-                string value = match.Success
-                    ? remainingValue.Substring(0, match.Index)
-                    : remainingValue;
-                if (!string.IsNullOrEmpty(value))
-                {
-                    parsedList.Add(
-                        new ProcessedData(
-                            value: value,
-                            weight: weight,
-                            color: color));
-                    processed += value.Length;
-                }
-                if (match.Success)
-                {
-                    // [1] because [0] will include the brackets
-                    var tag = match.Groups[1].Value;
-                    // + 2 for brackets
-                    var toSkip = 2 + tag.Length;
-                    remainingValue = remainingValue.Substring(toSkip + value.Length);
-                    processed += toSkip;
-                    switch (tag)
-                    {
-                        case "b":
-                            weight = weight == FontWeight.Normal ? FontWeight.Bold : FontWeight.Normal;
-                            break;
-                        case "black":
-                            color = Black;
-                            break;
-                        case "white":
-                            color = color == White ? Black : White;
-                            break;
-                        case "red":
-                            color = color == Red ? Black : Red;
-                            break;
-                        case "green":
-                            color = color == Green ? Black : Green;
-                            break;
-                        case "blue":
-                            color = color == Blue ? Black : Blue;
-                            break;
-                    }
-                }
-                else if (!string.IsNullOrEmpty(value))
-                {
-                    remainingValue = remainingValue.Substring(value.Length);
-                }
-            } while (processed < Value.Length);
-            ParsedValue = parsedList.ToArray();
+            ParseValue();
         }
         base.Update(gameTime, state, uiSpriteSheet, controllerManager);
+    }
+
+    private void ParseValue()
+    {
+        var weight = FontWeight.Normal;
+        var color = ColorPalette.Black;
+        var processed = 0;
+        var remainingValue = Value;
+        var parsedList = new List<ProcessedData>();
+        do
+        {
+            var match = TagRegex.Match(remainingValue);
+            string value = match.Success
+                ? remainingValue.Substring(0, match.Index)
+                : remainingValue;
+            if (!string.IsNullOrEmpty(value))
+            {
+                parsedList.Add(
+                    new ProcessedData(
+                        value: value.Replace(PlaceholderGT, '>').Replace(PlaceholderLT, '<'),
+                        weight: weight,
+                        color: color));
+                processed += value.Length;
+            }
+            if (match.Success)
+            {
+                // [1] because [0] will include the brackets
+                var tag = match.Groups[1].Value;
+                // + 2 for brackets
+                var toSkip = 2 + tag.Length;
+                remainingValue = remainingValue.Substring(toSkip + value.Length);
+                processed += toSkip;
+                switch (tag)
+                {
+                    case "b":
+                        weight = weight == FontWeight.Normal ? FontWeight.Bold : FontWeight.Normal;
+                        break;
+                    default:
+                        var newColor = ColorPalette.Parse(tag);
+                        color = color == newColor ? ColorPalette.Black : newColor;
+                        break;
+                }
+            }
+            else if (!string.IsNullOrEmpty(value))
+            {
+                remainingValue = remainingValue.Substring(value.Length);
+            }
+        } while (processed < Value.Length);
+        ParsedValue = parsedList.ToArray();
     }
 
     public override void Draw(SpriteBatch spriteBatch, Rectangle drawArea, Point offset)
@@ -143,7 +173,14 @@ public class Text : UIElement
             var font = GetFont(value.Weight);
             var measurement = font.MeasureString(value.Value);
             var yDiff = DestinationCache.Height - measurement.Y;
-            spriteBatch.DrawString(font, value.Value, new Vector2(x: x, y: y + yDiff), value.Color);
+            if (AlphaModifier != 255)
+            {
+                spriteBatch.DrawString(font, value.Value, new Vector2(x: x, y: y + yDiff), new Color(value.Color, AlphaModifier));
+            }
+            else
+            {
+                spriteBatch.DrawString(font, value.Value, new Vector2(x: x, y: y + yDiff), value.Color);
+            }
             x += measurement.X;
         }
     }

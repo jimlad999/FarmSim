@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UI;
 
@@ -42,7 +43,30 @@ public static class Utils
             var fraction = float.Parse(positionValue.Substring(0, positionValue.Length - 1)) / 100f;
             return (int)(parentDimensionSize * fraction);
         }
-        return int.Parse(positionValue);
+        if (int.TryParse(positionValue, out var intValue))
+        {
+            return intValue;
+        }
+        if (positionValue.Contains('-'))
+        {
+            return positionValue.Split("-")
+                .Select(value => ToPixels(value.Trim(), parentDimensionSize))
+                .Aggregate((agg, value) => agg - value);
+        }
+        if (positionValue.Contains('+'))
+        {
+            return positionValue.Split("+", System.StringSplitOptions.RemoveEmptyEntries)
+                .Select(value => ToPixels(value.Trim(), parentDimensionSize))
+                .Aggregate((agg, value) => agg - value);
+        }
+        // currently falls into the default case. empty is expected for "-x +/- y" as this will result in "", "x", "y"
+        //if (string.IsNullOrEmpty(positionValue))
+        //{
+        //    return 0;
+        //}
+
+        // Just draw something
+        return 0;
     }
 
     public static int ToPixels(Alignment alignment, int thisDimensionSize, int parentDimensionSize)
@@ -83,7 +107,7 @@ public static class Utils
         Point offset)
     {
         childOffsetCache = new();
-        if (element.Children.Length == 0)
+        if (element.Children.Count == 0)
         {
             return drawArea;
         }
