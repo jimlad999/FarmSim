@@ -4,12 +4,11 @@ using FarmSim.Terrain;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace FarmSim.Mobs;
 
-class MobManager
+class MobManager : EntityManager<Mob>
 {
     private static readonly Matrix Rotate120 = Matrix.CreateRotationZ(2.0944f);
     private static readonly Color MobLightBlue = Color.FromNonPremultiplied(0, 120, 210, 255);
@@ -19,14 +18,13 @@ class MobManager
     private const int SpawnRadius = Player.Player.SightRadius + 4;//tiles
     private const int SpawnRadius2Plus1 = SpawnRadius + SpawnRadius + 1;//tiles
     private const int SpawnRadiusPow2 = SpawnRadius * SpawnRadius;
-    private const int DespawnRadius = SpawnRadius + 10;//tiles
+    // Public because despawn radius of projectiles same as mobs
+    public const int DespawnRadius = SpawnRadius + 10;//tiles
 
     private readonly MobData[] _mobData;
     private readonly Player.Player _player;
     private readonly TerrainManager _terrainManager;
-    private readonly MobFactory _mobFactor;
-
-    private List<Mob> _mobs = new();
+    private readonly EntityFactory<Mob, MobData> _mobFactor;
 
     private double _waitTimeMilliseconds;
 
@@ -38,36 +36,46 @@ class MobManager
         _mobData = mobData;
         _player = player;
         _terrainManager = terrainManager;
-        _mobFactor = new MobFactory(mobData);
+        _mobFactor = new EntityFactory<Mob, MobData>(mobData);
 #if !DEBUG
         ResetSpawnWaitTime();
 #endif
     }
 
-    internal void Clear()
-    {
-        _mobs = new();
 #if DEBUG
-        _waitTimeMilliseconds = 0;
-#endif
-    }
-
-    public IEnumerable<Entity> GetEntitiesInRange(int xTileStart, int xTileEnd, int yTileStart, int yTileEnd)
+    public override void Clear()
     {
-        return _mobs.Where(mob =>
-            xTileStart <= mob.TileX && mob.TileX <= xTileEnd
-            && yTileStart <= mob.TileY && mob.TileY <= yTileEnd);
+        base.Clear();
+        _waitTimeMilliseconds = 0;
+    }
+#endif
+
+    public bool DetectCollision(Projectile projectile)
+    {
+        foreach (var mob in Entities)
+        {
+            if (projectile.DetectCollision(mob))
+            {
+                // TODO: health and drops
+                mob.FlagForDespawning = true;
+                return true;
+            }
+        }
+        return false;
     }
 
     public void Update(GameTime gameTime)
     {
-        foreach (var mob in _mobs)
+        foreach (var mob in Entities)
         {
             mob.Update(gameTime);
-            mob.FlagForDespawning = Math.Abs(mob.TileX - _player.TileX) > DespawnRadius
-                || Math.Abs(mob.TileY - _player.TileY) > DespawnRadius;
+            if (Math.Abs(mob.TileX - _player.TileX) > DespawnRadius
+                || Math.Abs(mob.TileY - _player.TileY) > DespawnRadius)
+            {
+                mob.FlagForDespawning = true;
+            }
         }
-        _mobs.RemoveAll(mob => mob.FlagForDespawning);
+        Entities.RemoveAll(mob => mob.FlagForDespawning);
         if (_waitTimeMilliseconds > 0)
         {
             _waitTimeMilliseconds -= gameTime.ElapsedGameTime.TotalMilliseconds;
@@ -130,6 +138,8 @@ class MobManager
                     { Tags.Blue, () => newMob.Color = newMob.Scale < 1f ? MobLightBlue : Color.Blue },
                     { Tags.Yellow, () => newMob.Color = Color.Yellow },
                 });
+                // TODO: modify based on metadata (currently 256 = 16*16 (i.e. 16^2))
+                newMob.HitRadiusPow2 = (int)(256 * newMob.Scale);
                 newMob.EntitySpriteKey = mobToSpawn.EntitySpriteKey;
                 newMob.HP = mobToSpawn.hp;
                 newMob.TileX = spawnTileX;
@@ -138,8 +148,9 @@ class MobManager
                 newMob.TileY = spawnTileY;
                 newMob.Y = spawnY;
                 newMob.YInt = spawnY;
+                newMob.HitboxYOffset = -16;
                 newMob.Init();
-                _mobs.Add(newMob);
+                Entities.Add(newMob);
             }
         }
     }

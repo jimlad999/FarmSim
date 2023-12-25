@@ -1,12 +1,10 @@
 ﻿using FarmSim.Entities;
-using FarmSim.Mobs;
 using FarmSim.Player;
 using FarmSim.Terrain;
 using FarmSim.UI;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Utils.Rendering;
@@ -44,8 +42,7 @@ class Renderer
     private readonly SpriteSheet _aggregateSpriteSheet;
     private readonly Tileset _tileset;
     private readonly EntitySpriteSheet _entitySpriteSheet;
-    private readonly Player.Player _player;
-    private readonly MobManager _mobManager;
+    private readonly EntityManager _entityManager;
     private readonly Effect _fogOfWarEffect;
     private readonly Effect _fogOfWarInverseEffect;
     private readonly Texture2D _pixel;
@@ -55,8 +52,7 @@ class Renderer
         ViewportManager viewportManager,
         TerrainManager terrainManager,
         SpriteSheet spriteSheet,
-        Player.Player player,
-        MobManager mobManager,
+        EntityManager entityManager,
         Effect fogOfWarEffect,
         Effect fogOfWarInverseEffect,
         Texture2D pixel)
@@ -66,8 +62,7 @@ class Renderer
         _aggregateSpriteSheet = spriteSheet;
         _tileset = spriteSheet.Tileset;
         _entitySpriteSheet = spriteSheet.Entities;
-        _player = player;
-        _mobManager = mobManager;
+        _entityManager = entityManager;
         _fogOfWarEffect = fogOfWarEffect;
         _fogOfWarInverseEffect = fogOfWarInverseEffect;
         _pixel = pixel;
@@ -127,8 +122,9 @@ class Renderer
             }
         }
 
-        var playerIsInsideBuilding = _terrainManager.GetTile(tileX: _player.TileX, tileY: _player.TileY).Buildings.Any(BuildingData.BuildingIsEnclosed);
-        var mobLookupByTile = _mobManager.GetEntitiesInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
+        var player = _entityManager.Player;
+        var playerIsInsideBuilding = _terrainManager.GetTile(tileX: player.TileX, tileY: player.TileY).Buildings.Any(BuildingData.BuildingIsEnclosed);
+        var mobLookupByTile = _entityManager.GetEntitiesInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
             .ToLookup(mob => mob.TileY);
 
         // can set once globally?
@@ -186,7 +182,7 @@ class Renderer
                 }
                 else
                 {
-                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, _player.TilePlacement, playerIsInsideBuilding);
+                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, player.TilePlacement, playerIsInsideBuilding);
                     xDraw += zoomedTileSize;
                 }
             }
@@ -197,10 +193,6 @@ class Renderer
                 spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: renderFogOfWar ? _fogOfWarEffect : null);
                 xDraw = (int)xDrawOffset;
                 var entities = mobLookupByTile[tileY];
-                if (_player.TileY == tileY)
-                {
-                    entities = entities.Append(_player);
-                }
                 entities = entities.Concat(
                     Enumerable.Range(xTileStart, xTileEnd - xTileStart)
                         .SelectMany(tileX => _terrainManager.GetTile(tileX: tileX, tileY: tileY).GetEntities())
@@ -213,7 +205,7 @@ class Renderer
                     var drawYDiff = (topYPoint - entity.YInt) * _viewportManager.Zoom;
                     DrawEntity(spriteBatch, entity, xDraw: xDraw - drawXDiff, yDraw: yDraw - drawYDiff, zoomScale: _viewportManager.Zoom);
                 }
-                if (_player.TilePlacement != null)
+                if (player.TilePlacement != null)
                 {
                     if (renderFogOfWar)
                     {
@@ -222,10 +214,10 @@ class Renderer
                     }
                     for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
                     {
-                        if (_player.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
+                        if (player.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
                         {
                             var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
-                            DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, _player.TilePlacement, playerIsInsideBuilding);
+                            DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, player.TilePlacement, playerIsInsideBuilding);
                         }
                         xDraw += zoomedTileSize;
                     }

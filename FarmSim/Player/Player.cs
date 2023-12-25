@@ -4,6 +4,7 @@ using FarmSim.Terrain;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System;
 using UI;
 using Utils;
 
@@ -33,6 +34,9 @@ class Player : Entity
         _spriteSheet = spriteSheet;
         _uiOverlay = uiOverlay;
         EntitySpriteKey = "player";
+        // intentionally smaller than the player sprite so player can dodge more easily
+        HitRadiusPow2 = 64;//8*8 (i.e. 8^2)
+        HitboxYOffset = -50;
     }
 
     private string _buildingKey;
@@ -55,6 +59,8 @@ class Player : Entity
     }
     public ITilePlacement TilePlacement;
 
+    private IAction PrimaryAction = new FireProjectileActions();
+
     public void Update(GameTime gameTime)
     {
         if (_uiOverlay.State.IsMouseOverElement)
@@ -62,9 +68,14 @@ class Player : Entity
             return;
         }
         UpdateMovement(gameTime);
+        UpdateFacingDirectionToMouse();
         if (BuildingKey != null)
         {
             UpdateBuildingPlacement();
+        }
+        else
+        {
+            UpdateAction();
         }
     }
 
@@ -76,61 +87,84 @@ class Player : Entity
         if (_controllerManager.IsKeyDown(Keys.W))
         {
             Y -= movementPerFrame;
-            YInt = (int)Y;
-            FacingDirection = FacingDirection.Up;
             playerHasMoved = true;
         }
         if (_controllerManager.IsKeyDown(Keys.S))
         {
             Y += movementPerFrame;
-            YInt = (int)Y;
-            FacingDirection = FacingDirection.Down;
             playerHasMoved = true;
         }
         if (_controllerManager.IsKeyDown(Keys.A))
         {
             X -= movementPerFrame;
-            XInt = (int)X;
-            FacingDirection = FacingDirection.Left;
             playerHasMoved = true;
         }
         if (_controllerManager.IsKeyDown(Keys.D))
         {
             X += movementPerFrame;
-            XInt = (int)X;
-            FacingDirection = FacingDirection.Right;
             playerHasMoved = true;
         }
         if (playerHasMoved)
         {
-            TileX = XInt / Renderer.TileSize;
-            if (XInt < 0) --TileX;
-            TileY = YInt / Renderer.TileSize;
-            if (YInt < 0) --TileY;
+            XInt = (int)X;
+            YInt = (int)Y;
+            UpdateTilePosition();
             _terrainManager.UpdateSight(tileX: TileX, tileY: TileY, SightRadius);
         }
+    }
+
+    private void UpdateFacingDirectionToMouse()
+    {
+        var mouseScreenPosition = _controllerManager.CurrentMouseState.Position;
+        var moouseWorldPosition = _viewportManager.ConvertScreenCoordinatesToWorldCoordinates(mouseScreenPosition.X, mouseScreenPosition.Y);
+        UpdateFacingDirection(directionX: moouseWorldPosition.X - XInt, directionY: moouseWorldPosition.Y - YInt);
+    }
+
+    private void UpdateAction()
+    {
+        if (_controllerManager.IsLeftMouseInitialPressed())
+        {
+            var mouseScreenPosition = _controllerManager.CurrentMouseState.Position;
+            var moouseWorldPosition = _viewportManager.ConvertScreenCoordinatesToWorldCoordinates(mouseScreenPosition.X, mouseScreenPosition.Y);
+            var xOffset = FacingDirection == FacingDirection.Left ? -32
+                : FacingDirection == FacingDirection.Right ? 32
+                : 0;
+            var yOffset = HitboxYOffset;
+            var shootingDirection = new Vector2(x: moouseWorldPosition.X - XInt - xOffset, y: moouseWorldPosition.Y - YInt - yOffset);
+            shootingDirection.Normalize();
+            PrimaryAction.Invoke(
+                this,
+                xOffset: xOffset,
+                yOffset: yOffset,
+                shootingDirection);
+        }
+    }
+
+    private void PerformPrimaryAction()
+    {
+        throw new NotImplementedException();
     }
 
     private void UpdateBuildingPlacement()
     {
         if (_controllerManager.IsLeftMouseInitialPressed())
         {
-            var tilePosition = GetHoveredTileCoordinates();
-            var tileTerrain = _terrainManager.GetTile(tilePosition.X, tilePosition.Y).Terrain;
+            var mouseTilePosition = GetHoveredTileCoordinates();
+            var tileTerrain = _terrainManager.GetTile(mouseTilePosition.X, mouseTilePosition.Y).Terrain;
             var terrain = _spriteSheet.Tileset[tileTerrain];
             if (terrain.IsBuildable(TilePlacement.Buildable))
             {
                 // TODO: identify point placement vs range placement depending on what is being built
                 // buildings are range, stations are single
-                TilePlacement = new RangeTilePlacement(TilePlacement.BuildingType, BuildingKey, TilePlacement.Buildable, tilePosition);
+                TilePlacement = new RangeTilePlacement(TilePlacement.BuildingType, BuildingKey, TilePlacement.Buildable, mouseTilePosition);
                 TilePlacement.CommittedToBuild = true;
             }
         }
         if (TilePlacement != null)
         {
-            var tilePlacementPosition = GetHoveredTileCoordinates();
+            var mouseTilePosition = GetHoveredTileCoordinates();
             TilePlacement.Update(
-                tilePlacementPosition,
+                mouseTilePosition,
                 _terrainManager,
                 _spriteSheet);
 
@@ -155,7 +189,7 @@ class Player : Entity
                 var tilePlacementBuildable = TilePlacement.Buildable;
                 TilePlacement = new PointTilePlacement(TilePlacement.BuildingType, BuildingKey, tilePlacementBuildable);
                 TilePlacement.Update(
-                    tilePlacementPosition,
+                    mouseTilePosition,
                     _terrainManager,
                     _spriteSheet);
             }
@@ -165,7 +199,7 @@ class Player : Entity
     private (int X, int Y) GetHoveredTileCoordinates()
     {
         var screenPosition = _controllerManager.CurrentMouseState.Position;
-        var tilePosition = _viewportManager.ConvertScrenCoordinatesToTileCoordinates(screenPosition.X, screenPosition.Y);
+        var tilePosition = _viewportManager.ConvertScreenCoordinatesToTileCoordinates(screenPosition.X, screenPosition.Y);
         return tilePosition;
     }
 }

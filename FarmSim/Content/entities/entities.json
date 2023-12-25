@@ -84,6 +84,33 @@
           "y": 0
         }
       }
+    },
+    "magic-missile": {
+      "source": "projectiles/magic-missile.png",
+      "origin": {
+        "x": 16,
+        "y": 16
+      },
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "directionFrames": {
+        "Up": {
+          "x": 0,
+          "y": 0
+        },
+        "Down": {
+          "x": 0,
+          "y": 0
+        },
+        "Left": {
+          "x": 0,
+          "y": 0
+        },
+        "Right": {
+          "x": 0,
+          "y": 0
+        }
+      }
     }
   }
 }

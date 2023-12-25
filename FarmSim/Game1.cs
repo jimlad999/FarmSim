@@ -1,4 +1,5 @@
-﻿using FarmSim.Mobs;
+﻿using FarmSim.Entities;
+using FarmSim.Mobs;
 using FarmSim.Player;
 using FarmSim.Rendering;
 using FarmSim.Terrain;
@@ -35,6 +36,8 @@ public class Game1 : Game
     private SpriteSheet _spriteSheet;
     private UISpriteSheet _uiSpriteSheet;
     private MobManager _mobManager;
+    private ProjectileManager _projectileManager;
+    private EntityManager _entityManager;
     private Renderer _renderer;
     private TextInput _commandInput;
 
@@ -50,7 +53,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         _controllerManager = new ControllerManager();
-        GlobalState.TerrainManager = _terrainManager = new TerrainManager(Rand.Next());
+        _terrainManager = GlobalState.TerrainManager = new TerrainManager(Rand.Next());
         _viewportManager = ViewportManager.CenteredOnZeroZero(_controllerManager, _graphics);
         _graphics.SynchronizeWithVerticalRetrace = false;
 
@@ -172,6 +175,11 @@ public class Game1 : Game
         _viewportManager.UIOverlay = _uiOverlay;
         _terrainManager.UpdateSightInit(tileX: _player.TileX, tileY: _player.TileY, Player.Player.SightRadius);
         _mobManager = new MobManager(mobData, _player, _terrainManager);
+        _projectileManager = GlobalState.ProjectileManager = new ProjectileManager(_player, _mobManager);
+        _entityManager = new EntityManager(
+            _player,
+            _mobManager,
+            _projectileManager);
 #if DEBUG
         Renderer.RenderFogOfWar = false;
 #endif
@@ -179,8 +187,7 @@ public class Game1 : Game
             _viewportManager,
             _terrainManager,
             _spriteSheet,
-            _player,
-            _mobManager,
+            _entityManager,
             fogOfWarEffect,
             fogOfWarInverseEffect,
             pixel);
@@ -191,8 +198,7 @@ public class Game1 : Game
         _controllerManager.Update(gameTime);
         _uiOverlay.Update(gameTime, _screensToDraw);
         _viewportManager.Update(gameTime);
-        _player.Update(gameTime);
-        _mobManager.Update(gameTime);
+        _entityManager.Update(gameTime);
 
         if (_controllerManager.IsKeyInitialPressed(Keys.Escape))
         {

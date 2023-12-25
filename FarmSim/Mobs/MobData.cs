@@ -6,10 +6,10 @@ using System.Linq;
 
 namespace FarmSim.Mobs;
 
-class MobData
+class MobData : IClassData
 {
     // with assembly: "namespace.class, assembly"
-    public string Class;
+    public string Class { get; set; }
     public string EntitySpriteKey;
     public int MinSpawned;
     public int MaxSpawned;

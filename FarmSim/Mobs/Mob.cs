@@ -33,17 +33,12 @@ abstract class Mob : Entity
         var newX = X + normalizedDirection.X * movementPerFrame;
         var newY = Y + normalizedDirection.Y * movementPerFrame;
         // TODO: detect collision or unpassable terrain and return false
-        FacingDirection = normalizedDirection.X > normalizedDirection.Y
-            ? (xDirectionPositive ? FacingDirection.Right : FacingDirection.Left)
-            : (yDirectionPositive ? FacingDirection.Down : FacingDirection.Up);
         X = newX;
         XInt = (int)X;
         Y = newY;
         YInt = (int)Y;
-        TileX = XInt / Renderer.TileSize;
-        if (XInt < 0) --TileX;
-        TileY = YInt / Renderer.TileSize;
-        if (YInt < 0) --TileY;
+        UpdateTilePosition();
+        UpdateFacingDirection(directionX: normalizedDirection.X, directionY: normalizedDirection.Y);
         return (xDirectionPositive ? XInt < targetX : XInt > targetX)
             && (yDirectionPositive ? YInt < targetY : YInt > targetY);
     }

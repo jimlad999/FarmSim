@@ -11,7 +11,7 @@ internal class ViewportManager
 {
     private const float MaxZoom = 1f;
     private const float MinZoom = 1f / 64f;
-    private const float DefaultZoom = 1f;
+    private const float DefaultZoom = 1f / 2f;
     private readonly ControllerManager _controllerManager;
     private double _x;
     private double _y;
@@ -122,7 +122,15 @@ internal class ViewportManager
         }
     }
 
-    internal (int X, int Y) ConvertScrenCoordinatesToTileCoordinates(int screenX, int screenY)
+    internal (int X, int Y) ConvertScreenCoordinatesToWorldCoordinates(int screenX, int screenY)
+    {
+        return (
+            X: (int)(screenX / Zoom + Viewport.X),
+            Y: (int)(screenY / Zoom + Viewport.Y)
+        );
+    }
+
+    internal (int X, int Y) ConvertScreenCoordinatesToTileCoordinates(int screenX, int screenY)
     {
         return (
             X: (int)Math.Floor((screenX / Zoom + Viewport.X) / Renderer.TileSize),
