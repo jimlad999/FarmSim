@@ -11,4 +11,5 @@ static class GlobalState
     public static Tileset Tileset;
     public static TerrainManager TerrainManager;
     public static ProjectileManager ProjectileManager;
+    public static ItemManager ItemManager;
 }

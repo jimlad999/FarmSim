@@ -25,6 +25,7 @@ class Renderer
     private const float ChunkLODFloat = ChunkLOD;
     private const float ChunkTerrainLODZoomLevel = 1f / 8f;
     private const float ChunkObjectLODZoomLevel = 1f / 16f;
+    private static readonly Color ItemShadow = new Color(0, 0, 0, 127);
     private static readonly Color ExteriorWallTransparency = new Color(15, 15, 15, 127);
     private static readonly Color IndoorWhilePlayerIsOutsideColor = new Color(127, 127, 127, 255);
     private static readonly Color PartialBuildingColor = new Color(127, 127, 127, 255);
@@ -439,12 +440,24 @@ class Renderer
     private void DrawEntity(SpriteBatch spriteBatch, Entity entity, float xDraw, float yDraw, float zoomScale)
     {
         var entitySpriteSheet = _entitySpriteSheet[entity.EntitySpriteKey, entity.FacingDirection];
+        var heightOffset = entity is IHasHeight entityHasHeight ? -entityHasHeight.HeightOffGroundInt : 0;
+        var zoomedEntityScale = zoomScale * entity.Scale;
+        if (heightOffset != 0)
+        {
+            DrawSprite(
+                spriteBatch,
+                entitySpriteSheet,
+                xDraw: xDraw,
+                yDraw: yDraw,
+                scale: new Vector2(x: zoomedEntityScale, zoomedEntityScale / 2),
+                color: ItemShadow);
+        }
         DrawSprite(
             spriteBatch,
             entitySpriteSheet,
             xDraw: xDraw,
-            yDraw: yDraw,
-            scale: zoomScale * entity.Scale,
+            yDraw: yDraw + heightOffset,
+            scale: zoomedEntityScale,
             color: entity.Color);
     }
 
@@ -564,6 +577,26 @@ class Renderer
         float xDraw,
         float yDraw,
         float scale,
+        Color color)
+    {
+        spriteBatch.Draw(
+            texture: entity.Texture,
+            position: new Vector2(xDraw, yDraw),
+            sourceRectangle: entity.SourceRectangle,
+            color: color,
+            rotation: 0f,
+            origin: entity.Origin,
+            scale: scale,
+            effects: SpriteEffects.None,
+            layerDepth: 0f);
+    }
+
+    private static void DrawSprite(
+        SpriteBatch spriteBatch,
+        ProcessedSpriteData entity,
+        float xDraw,
+        float yDraw,
+        Vector2 scale,
         Color color)
     {
         spriteBatch.Draw(

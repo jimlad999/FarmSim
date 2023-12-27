@@ -10,22 +10,26 @@ class EntityManager
     public readonly Player.Player Player;
     public readonly MobManager MobManager;
     public readonly ProjectileManager ProjectileManager;
+    public readonly ItemManager ItemManager;
 
     public EntityManager(
         Player.Player player,
         MobManager mobManager,
-        ProjectileManager projectileManager)
+        ProjectileManager projectileManager,
+        ItemManager itemManager)
     {
         Player = player;
         MobManager = mobManager;
         ProjectileManager = projectileManager;
+        ItemManager = itemManager;
     }
 
     public void Update(GameTime gameTime)
     {
         // player should always win initiative
         Player.Update(gameTime);
-        // projectiles next so that player projectiles can hit mobs
+        ItemManager.Update(gameTime);
+        // projectiles before mobs so that player projectiles can hit mobs
         ProjectileManager.Update(gameTime);
         // mobs last
         MobManager.Update(gameTime);
@@ -41,6 +45,7 @@ class EntityManager
     {
         return MobManager.GetEntitiesInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
             .Concat(ProjectileManager.GetEntitiesInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd))
+            .Concat(ItemManager.GetEntitiesInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd))
             .Append(Player);
     }
 }

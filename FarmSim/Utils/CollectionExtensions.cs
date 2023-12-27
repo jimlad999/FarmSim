@@ -22,15 +22,15 @@ static class CollectionExtensions
         return list[Rand.Next(list.Count)];
     }
 
-    public static void Match<T>(this IEnumerable<T> enumerable, Dictionary<T, Action> actions)
+    public static TOut Match<TIn, TOut>(this IEnumerable<TIn> enumerable, Dictionary<TIn, Func<TOut>> returns, TOut defaultValue = default)
     {
         foreach (var value in enumerable)
         {
-            if (actions.TryGetValue(value, out var action))
+            if (returns.TryGetValue(value, out var returnFunc))
             {
-                action();
-                return;
+                return returnFunc();
             }
         }
+        return defaultValue;
     }
 }

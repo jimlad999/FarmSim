@@ -12,8 +12,11 @@ namespace FarmSim.Player;
 
 class Player : Entity
 {
-    private const double MovementSpeed = 200;
     public const int SightRadius = 12;//tiles
+    private const double MovementSpeed = 200;
+    private const int PickUpDistancePow2 = Renderer.TileSize * Renderer.TileSize;//pick up within 1 tile
+
+    public readonly Inventory Inventory;
 
     private readonly ControllerManager _controllerManager;
     private readonly ViewportManager _viewportManager;
@@ -22,12 +25,14 @@ class Player : Entity
     private readonly UIOverlay _uiOverlay;
 
     public Player(
+        Inventory inventory,
         ControllerManager controllerManager,
         ViewportManager viewportManager,
         TerrainManager terrainManager,
         SpriteSheet spriteSheet,
         UIOverlay uiOverlay)
     {
+        Inventory = inventory;
         _controllerManager = controllerManager;
         _viewportManager = viewportManager;
         _terrainManager = terrainManager;
@@ -60,6 +65,19 @@ class Player : Entity
     public ITilePlacement TilePlacement;
 
     private IAction PrimaryAction = new FireProjectileActions();
+
+    public bool TryPickUpItem(Item item)
+    {
+        var itemXDiff = XInt - item.XInt;
+        var itemYDiff = YInt - item.YInt;
+        var itemDistancePow2 = itemXDiff * itemXDiff + itemYDiff * itemYDiff;
+        if (itemDistancePow2 <= PickUpDistancePow2)
+        {
+            Inventory.AddItem(item.InstanceInfo);
+            return true;
+        }
+        return false;
+    }
 
     public void Update(GameTime gameTime)
     {
@@ -138,11 +156,6 @@ class Player : Entity
                 yOffset: yOffset,
                 shootingDirection);
         }
-    }
-
-    private void PerformPrimaryAction()
-    {
-        throw new NotImplementedException();
     }
 
     private void UpdateBuildingPlacement()

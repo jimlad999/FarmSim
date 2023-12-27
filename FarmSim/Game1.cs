@@ -35,6 +35,7 @@ public class Game1 : Game
     private SpriteBatch _spriteBatch;
     private SpriteSheet _spriteSheet;
     private UISpriteSheet _uiSpriteSheet;
+    private ItemManager _itemManager;
     private MobManager _mobManager;
     private ProjectileManager _projectileManager;
     private EntityManager _entityManager;
@@ -72,6 +73,8 @@ public class Game1 : Game
 
         GlobalState.BuildingData = JsonConvert.DeserializeObject<BuildingData>(File.ReadAllText("Content/tilesets/buildings/buildings.json"));
 
+        var itemData = JsonConvert.DeserializeObject<ItemData[]>(File.ReadAllText("Content/entities/items/items.json"))
+            .ToDictionary(i => i.Id);
         var mobData = JsonConvert.DeserializeObject<MobData[]>(File.ReadAllText("Content/entities/mobs/mobs.json"));
         var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/tilesets/tilesets.json"));
         var tileset = GlobalState.Tileset = new Tileset(_spriteBatch, tilesetData);
@@ -166,6 +169,8 @@ public class Game1 : Game
         }
         _spriteSheet = new SpriteSheet(tileset, entitySpriteSheet);
         _player = new Player.Player(
+            // TODO: Pull this from save state (once saving has been implemented)
+            new Inventory(new()),
             _controllerManager,
             _viewportManager,
             _terrainManager,
@@ -174,12 +179,14 @@ public class Game1 : Game
         _viewportManager.Tracking = _player;
         _viewportManager.UIOverlay = _uiOverlay;
         _terrainManager.UpdateSightInit(tileX: _player.TileX, tileY: _player.TileY, Player.Player.SightRadius);
-        _mobManager = new MobManager(mobData, _player, _terrainManager);
+        _itemManager = GlobalState.ItemManager = new ItemManager(_player, itemData);
+        _mobManager = new MobManager(mobData, _player, _itemManager, _terrainManager);
         _projectileManager = GlobalState.ProjectileManager = new ProjectileManager(_player, _mobManager);
         _entityManager = new EntityManager(
             _player,
             _mobManager,
-            _projectileManager);
+            _projectileManager,
+            _itemManager);
 #if DEBUG
         Renderer.RenderFogOfWar = false;
 #endif

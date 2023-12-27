@@ -1,6 +1,6 @@
 ﻿using FarmSim.Entities;
-using FarmSim.Rendering;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace FarmSim.Mobs;
 
@@ -41,5 +41,10 @@ abstract class Mob : Entity
         UpdateFacingDirection(directionX: normalizedDirection.X, directionY: normalizedDirection.Y);
         return (xDirectionPositive ? XInt < targetX : XInt > targetX)
             && (yDirectionPositive ? YInt < targetY : YInt > targetY);
+    }
+
+    public IEnumerable<string> GetDrops()
+    {
+        return Metadata.Drops.PickItems();
     }
 }

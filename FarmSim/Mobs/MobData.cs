@@ -1,8 +1,6 @@
 ﻿using FarmSim.Entities;
 using FarmSim.Utils;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace FarmSim.Mobs;
 
@@ -10,6 +8,7 @@ class MobData : IClassData
 {
     // with assembly: "namespace.class, assembly"
     public string Class { get; set; }
+
     public string EntitySpriteKey;
     public int MinSpawned;
     public int MaxSpawned;
@@ -21,34 +20,6 @@ class MobData : IClassData
     public string[] Spawnable = Array.Empty<string>();
     // Tags that must match to be identifiable to this creature
     public Tags[] Identifiable = Array.Empty<Tags>();
-    // higher number = higher chance of being Tag chosen from set. Base of 1. 2 = twice as likely, etc.
-    public Dictionary<Tags, int>[] Tags = Array.Empty<Dictionary<Tags, int>>();
-
-    public Tags[] GetTags()
-    {
-        if (Tags.Length == 0)
-        {
-            return Array.Empty<Tags>();
-        }
-        var tags = new Tags[Tags.Length];
-        for (var i = 0; i < tags.Length; ++i)
-        {
-            var tagChances = Tags[i];
-            if (tagChances.Count == 1)
-            {
-                tags[i] = tagChances.Keys.First();
-            }
-            else
-            {
-                var tagSet = new List<Tags>();
-                foreach (var (tag, chance) in tagChances)
-                {
-                    tagSet.AddRange(Enumerable.Repeat(tag, chance));
-                }
-                tagSet.Shuffle();
-                tags[i] = tagSet.PickRandom();
-            }
-        }
-        return tags;
-    }
+    public TagSet[] Tags = Array.Empty<TagSet>();
+    public ItemSet Drops = new ItemSet();
 }

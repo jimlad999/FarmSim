@@ -1,7 +1,6 @@
 ﻿using FarmSim.Rendering;
 using Microsoft.Xna.Framework;
 using System;
-using Utils;
 
 namespace FarmSim.Entities;
 

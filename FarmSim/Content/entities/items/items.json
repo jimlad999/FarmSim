@@ -1,0 +1,81 @@
+[
+  {
+    "id": "blue-slime",
+    "entitySpriteKey": "item-slime",
+    "quality": {
+      "min": 10,
+      "max": 20
+    },
+    "tags": [
+      {
+        "Slimy": 1
+      },
+      {
+        "Liquid": 1
+      },
+      {
+        "Evaporates": 1
+      },
+      {
+        "Medium": 1
+      },
+      {
+        "Blue": 1
+      },
+      {
+        "Dye": 1
+      },
+      {
+        "Drink": 1
+      },
+      {
+        "Disgusting": 1
+      },
+      {
+        "Poisonous": 1
+      },
+      {
+        "Stinky": 1,
+        "Odorless": 4
+      }
+    ]
+  },
+  {
+    "id": "blue-slime-core",
+    "entitySpriteKey": "item-slime-core",
+    "quality": {
+      "min": 10,
+      "max": 20
+    },
+    "tags": [
+      {
+        "Slimy": 1
+      },
+      {
+        "Liquifies": 50,
+        "Explodes": 1
+      },
+      {
+        "Medium": 1
+      },
+      {
+        "Blue": 1
+      },
+      {
+        "Dye": 1
+      },
+      {
+        "Gem": 1
+      },
+      {
+        "Disgusting": 1
+      },
+      {
+        "Poisonous": 1
+      },
+      {
+        "Odorless": 1
+      }
+    ]
+  }
+]

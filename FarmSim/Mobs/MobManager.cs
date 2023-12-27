@@ -24,6 +24,7 @@ class MobManager : EntityManager<Mob>
     private readonly MobData[] _mobData;
     private readonly Player.Player _player;
     private readonly TerrainManager _terrainManager;
+    private readonly ItemManager _itemManager;
     private readonly EntityFactory<Mob, MobData> _mobFactor;
 
     private double _waitTimeMilliseconds;
@@ -31,10 +32,12 @@ class MobManager : EntityManager<Mob>
     public MobManager(
         MobData[] mobData,
         Player.Player player,
+        ItemManager itemManager,
         TerrainManager terrainManager)
     {
         _mobData = mobData;
         _player = player;
+        _itemManager = itemManager;
         _terrainManager = terrainManager;
         _mobFactor = new EntityFactory<Mob, MobData>(mobData);
 #if !DEBUG
@@ -58,6 +61,14 @@ class MobManager : EntityManager<Mob>
             {
                 // TODO: health and drops
                 mob.FlagForDespawning = true;
+                foreach (var drop in mob.GetDrops())
+                {
+                    _itemManager.CreateNewItem(
+                        itemId: drop,
+                        originX: mob.XInt,
+                        originY: mob.YInt,
+                        normalizedDirection: RandomUtil.RandomNormalizedDirection());
+                }
                 return true;
             }
         }
@@ -120,24 +131,24 @@ class MobManager : EntityManager<Mob>
             {
                 var newMob = _mobFactor.Create(mobToSpawn.Class);
                 newMob.Metadata = mobToSpawn;
-                newMob.Tags = mobToSpawn.GetTags();
-                newMob.Tags.Match(new()
+                newMob.Tags = mobToSpawn.Tags.PickTags();
+                newMob.Scale = newMob.Tags.Match(new()
                 {
-                    { Tags.Gigantic, () => newMob.Scale = 2f },
-                    { Tags.Large, () => newMob.Scale = 1.5f },
-                    { Tags.Medium, () => newMob.Scale = 1f },
-                    { Tags.Small, () => newMob.Scale = 0.9f },
-                    { Tags.Tiny, () => newMob.Scale = 0.8f },
-                });
-                newMob.Tags.Match(new()
+                    { Tags.Gigantic, () => 2f },
+                    { Tags.Large, () => 1.5f },
+                    { Tags.Medium, () => 1f },
+                    { Tags.Small, () => 0.9f },
+                    { Tags.Tiny, () => 0.8f },
+                }, defaultValue: 1f);
+                newMob.Color = newMob.Tags.Match(new()
                 {
-                    { Tags.White, () => newMob.Color = Color.White },
-                    { Tags.Black, () => newMob.Color = Color.Black },
-                    { Tags.Red, () => newMob.Color = Color.Red },
-                    { Tags.Green, () => newMob.Color = Color.Green },
-                    { Tags.Blue, () => newMob.Color = newMob.Scale < 1f ? MobLightBlue : Color.Blue },
-                    { Tags.Yellow, () => newMob.Color = Color.Yellow },
-                });
+                    { Tags.White, () => Color.White },
+                    { Tags.Black, () => Color.Black },
+                    { Tags.Red, () => Color.Red },
+                    { Tags.Green, () => Color.Green },
+                    { Tags.Blue, () => newMob.Scale < 1f ? MobLightBlue : Color.Blue },
+                    { Tags.Yellow, () => Color.Yellow },
+                }, defaultValue: Color.White);
                 // TODO: modify based on metadata (currently 256 = 16*16 (i.e. 16^2))
                 newMob.HitRadiusPow2 = (int)(256 * newMob.Scale);
                 newMob.EntitySpriteKey = mobToSpawn.EntitySpriteKey;

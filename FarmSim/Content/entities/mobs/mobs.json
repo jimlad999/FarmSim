@@ -43,6 +43,24 @@
         "Friendly": 1,
         "Cowardly": 1
       }
+    ],
+    "drops": [
+      {
+        "id": "blue-slime",
+        "count": 1,
+        // 1 in [chance]
+        "chance": 1 //i.e. 1 in 1 (i.e. 100%)
+      },
+      {
+        "id": "blue-slime",
+        "count": 1,
+        "chance": 4 //i.e. 1 in 4 (i.e. 25%)
+      },
+      {
+        "id": "blue-slime-core",
+        "count": 1,
+        "chance": 500 //i.e. 1 in 500 (i.e. 0.2%)
+      }
     ]
   }
 ]

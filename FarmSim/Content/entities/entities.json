@@ -111,6 +111,36 @@
           "y": 0
         }
       }
+    },
+    "item-slime": {
+      "source": "items/slime.png",
+      "origin": {
+        "x": 16,
+        "y": 21
+      },
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "directionFrames": {
+        "Down": {
+          "x": 0,
+          "y": 0
+        }
+      }
+    },
+    "item-slime-core": {
+      "source": "items/slime-core.png",
+      "origin": {
+        "x": 16,
+        "y": 30
+      },
+      "frameWidth": 32,
+      "frameHeight": 32,
+      "directionFrames": {
+        "Down": {
+          "x": 0,
+          "y": 0
+        }
+      }
     }
   }
 }
