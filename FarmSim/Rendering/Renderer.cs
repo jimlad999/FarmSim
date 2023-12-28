@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
 using Utils.Rendering;
+using Effect = Microsoft.Xna.Framework.Graphics.Effect;
 
 namespace FarmSim.Rendering;
 
@@ -39,11 +40,8 @@ class Renderer
 #pragma warning restore CA2211 // Non-constant fields should not be visible
 
     private readonly ViewportManager _viewportManager;
-    private readonly TerrainManager _terrainManager;
-    private readonly SpriteSheet _aggregateSpriteSheet;
     private readonly Tileset _tileset;
     private readonly EntitySpriteSheet _entitySpriteSheet;
-    private readonly EntityManager _entityManager;
     private readonly Effect _fogOfWarEffect;
     private readonly Effect _fogOfWarInverseEffect;
     private readonly Texture2D _pixel;
@@ -51,19 +49,15 @@ class Renderer
 
     public Renderer(
         ViewportManager viewportManager,
-        TerrainManager terrainManager,
-        SpriteSheet spriteSheet,
-        EntityManager entityManager,
+        Tileset tileset,
+        EntitySpriteSheet entitySpriteSheet,
         Effect fogOfWarEffect,
         Effect fogOfWarInverseEffect,
         Texture2D pixel)
     {
         _viewportManager = viewportManager;
-        _terrainManager = terrainManager;
-        _aggregateSpriteSheet = spriteSheet;
-        _tileset = spriteSheet.Tileset;
-        _entitySpriteSheet = spriteSheet.Entities;
-        _entityManager = entityManager;
+        _tileset = tileset;
+        _entitySpriteSheet = entitySpriteSheet;
         _fogOfWarEffect = fogOfWarEffect;
         _fogOfWarInverseEffect = fogOfWarInverseEffect;
         _pixel = pixel;
@@ -104,7 +98,7 @@ class Renderer
             int yTilesSkipped = 0;
             for (var tileX = xTileStart; tileX < xTileEnd;)
             {
-                var chunk = _terrainManager.GetChunk(tileX: tileX, tileY: tileY);
+                var chunk = GlobalState.TerrainManager.GetChunk(tileX: tileX, tileY: tileY);
                 if (!_chunkTilePrerender.TryGetValue(chunk, out var _))
                 {
                     _chunkTilePrerender[chunk] = GenerateChunkPrerender(spriteBatch, chunk);
@@ -123,9 +117,9 @@ class Renderer
             }
         }
 
-        var player = _entityManager.Player;
-        var playerIsInsideBuilding = _terrainManager.GetTile(tileX: player.TileX, tileY: player.TileY).Buildings.Any(BuildingData.BuildingIsEnclosed);
-        var mobLookupByTile = _entityManager.GetEntitiesInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
+        var activePlayer = GlobalState.PlayerManager.ActivePlayer;
+        var playerIsInsideBuilding = GlobalState.TerrainManager.GetTile(tileX: activePlayer.TileX, tileY: activePlayer.TileY).Buildings.Any(BuildingData.BuildingIsEnclosed);
+        var spriteAnimationLookupByTile = GlobalState.AnimationManager.GetAnimationsInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
             .ToLookup(mob => mob.TileY);
 
         // can set once globally?
@@ -163,7 +157,7 @@ class Renderer
             var topYPoint = tileY * TileSize;
             for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
             {
-                var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
+                var tile = GlobalState.TerrainManager.GetTile(tileX: tileX, tileY: tileY);
                 var (xChunkIndex, yChunkIndex) = tile.Chunk.GetIndices(tileX: tileX, tileY: tileY);
                 var chunkSize = tile.Chunk.ChunkSize;
                 if (shouldRenderChunks)
@@ -183,7 +177,7 @@ class Renderer
                 }
                 else
                 {
-                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, player.TilePlacement, playerIsInsideBuilding);
+                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, activePlayer.TilePlacement, playerIsInsideBuilding);
                     xDraw += zoomedTileSize;
                 }
             }
@@ -193,20 +187,16 @@ class Renderer
             {
                 spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: renderFogOfWar ? _fogOfWarEffect : null);
                 xDraw = (int)xDrawOffset;
-                var entities = mobLookupByTile[tileY];
-                entities = entities.Concat(
-                    Enumerable.Range(xTileStart, xTileEnd - xTileStart)
-                        .SelectMany(tileX => _terrainManager.GetTile(tileX: tileX, tileY: tileY).GetEntities())
-                    );
+                var animations = spriteAnimationLookupByTile[tileY];
                 var leftXPoint = xTileStart * TileSize;
-                var entitiesToRenderThisTile = entities.OrderBy(e => e.Y).ToArray();
-                foreach (var entity in entitiesToRenderThisTile)
+                var animationsToRenderThisTile = animations.OrderBy(e => e.Y).ToArray();
+                foreach (var animation in animationsToRenderThisTile)
                 {
-                    var drawXDiff = (leftXPoint - entity.XInt) * _viewportManager.Zoom;
-                    var drawYDiff = (topYPoint - entity.YInt) * _viewportManager.Zoom;
-                    DrawEntity(spriteBatch, entity, xDraw: xDraw - drawXDiff, yDraw: yDraw - drawYDiff, zoomScale: _viewportManager.Zoom);
+                    var drawXDiff = (leftXPoint - animation.XInt) * _viewportManager.Zoom;
+                    var drawYDiff = (topYPoint - animation.YInt) * _viewportManager.Zoom;
+                    DrawSpriteAnimation(spriteBatch, animation, xDraw: xDraw - drawXDiff, yDraw: yDraw - drawYDiff, zoomScale: _viewportManager.Zoom);
                 }
-                if (player.TilePlacement != null)
+                if (activePlayer.TilePlacement != null)
                 {
                     if (renderFogOfWar)
                     {
@@ -215,10 +205,10 @@ class Renderer
                     }
                     for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
                     {
-                        if (player.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
+                        if (activePlayer.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
                         {
-                            var tile = _terrainManager.GetTile(tileX: tileX, tileY: tileY);
-                            DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, player.TilePlacement, playerIsInsideBuilding);
+                            var tile = GlobalState.TerrainManager.GetTile(tileX: tileX, tileY: tileY);
+                            DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, activePlayer.TilePlacement, playerIsInsideBuilding);
                         }
                         xDraw += zoomedTileSize;
                     }
@@ -292,17 +282,17 @@ class Renderer
     private void DrawTileTerrain(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, float scale, ITilePlacement tilePlacement, bool playerIsInsideBuilding)
     {
         var tilePlacementHasFloor = tilePlacement != null && BuildingData.BuildingHasFloor(tilePlacement.BuildingKey);
-        string tileAboveFloor;
+        string tileAboveFloorBuildingKey;
         var tileAboveInRangeOfPlacement = tilePlacementHasFloor && tilePlacement.TileInRange(tileX: tile.X, tileY: tile.Y - 1);
         // prefer rendering tile placement preview over placed tiles
         if (tileAboveInRangeOfPlacement)
         {
-            tileAboveFloor = tilePlacement.BuildingKey;
+            tileAboveFloorBuildingKey = tilePlacement.BuildingKey;
         }
         else
         {
-            var tileAbove = _terrainManager.GetTile(tileX: tile.X, tileY: tile.Y - 1);
-            tileAboveFloor = tileAbove.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
+            var tileAbove = GlobalState.TerrainManager.GetTile(tileX: tile.X, tileY: tile.Y - 1);
+            tileAboveFloorBuildingKey = tileAbove.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
         }
         string thisTileFloor;
         var thisTileInRangeOfPlacement = tilePlacementHasFloor && tilePlacement.TileInRange(tileX: tile.X, tileY: tile.Y);
@@ -319,7 +309,7 @@ class Renderer
         {
             DrawSprite(
                 spriteBatch,
-                _tileset[tile.Terrain],
+                _tileset[GlobalState.AnimationManager.TilesetAnimations[tile.Terrain]],
                 xDraw: xDraw,
                 yDraw: yDraw,
                 scale: scale,
@@ -330,11 +320,11 @@ class Renderer
             foreach (var buildingKey in tile.Buildings)
             {
                 var building = GlobalState.BuildingData.Buildings[buildingKey];
-                string tilesetKey = null;
+                Animation buildingAnimation = null;
                 var color = defaultColor;
                 if (building.Floor != null && !thisTileInRangeOfPlacement)
                 {
-                    tilesetKey = building.Floor;
+                    buildingAnimation = building.FloorAnimation;
                     if (!playerIsInsideBuilding)
                     {
                         color = IndoorWhilePlayerIsOutsideColor;
@@ -345,11 +335,11 @@ class Renderer
                 //{
                 //    get station tileset key
                 //}
-                if (tilesetKey != null)
+                if (buildingAnimation != null)
                 {
                     DrawSprite(
                         spriteBatch,
-                        _tileset[tilesetKey],
+                        _tileset[buildingAnimation],
                         xDraw: xDraw,
                         yDraw: yDraw,
                         scale: scale,
@@ -358,26 +348,25 @@ class Renderer
             }
             if (thisTileFloor != null)
             {
-                string tileBelowFloor;
+                string tileBelowFloorBuildingKey;
                 var tileBelowInRangeOfPlacement = tilePlacementHasFloor && tilePlacement.TileInRange(tileX: tile.X, tileY: tile.Y + 1);
                 if (tileBelowInRangeOfPlacement)
                 {
-                    tileBelowFloor = tilePlacement.BuildingKey;
+                    tileBelowFloorBuildingKey = tilePlacement.BuildingKey;
                 }
                 else
                 {
-                    var tileBelow = _terrainManager.GetTile(tileX: tile.X, tileY: tile.Y + 1);
-                    tileBelowFloor = tileBelow.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
+                    var tileBelow = GlobalState.TerrainManager.GetTile(tileX: tile.X, tileY: tile.Y + 1);
+                    tileBelowFloorBuildingKey = tileBelow.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
                 }
                 var building = GlobalState.BuildingData.Buildings[thisTileFloor];
-                if ((playerIsInsideBuilding || (building.HasTransparency && tileBelowFloor == null)) && tileAboveFloor == null)
+                if ((playerIsInsideBuilding || (building.HasTransparency && tileBelowFloorBuildingKey == null)) && tileAboveFloorBuildingKey == null)
                 {
-                    var interiorWallTilesetKey = building.InteriorWall;
-                    if (interiorWallTilesetKey != null)
+                    if (building.InteriorWallAnimation != null)
                     {
                         DrawSprite(
                             spriteBatch,
-                            _tileset[interiorWallTilesetKey],
+                            _tileset[building.InteriorWallAnimation],
                             xDraw: xDraw,
                             yDraw: yDraw - TileSizeFloat * scale,
                             scale: scale,
@@ -386,15 +375,15 @@ class Renderer
                                 : IndoorWhilePlayerIsOutsideColor);
                     }
                 }
-                else if (!playerIsInsideBuilding && tileBelowFloor != null)
+                else if (!playerIsInsideBuilding && tileBelowFloorBuildingKey != null)
                 {
                     // defer the roof tile for exterior wall until the exterior wall is drawn
-                    var roofTilesetKey = GlobalState.BuildingData.Buildings[tileBelowFloor].Roof;
-                    if (roofTilesetKey != null)
+                    var buildingBelow = GlobalState.BuildingData.Buildings[tileBelowFloorBuildingKey];
+                    if (buildingBelow.RoofAnimation != null)
                     {
                         DrawSprite(
                             spriteBatch,
-                            _tileset[roofTilesetKey],
+                            _tileset[buildingBelow.RoofAnimation],
                             xDraw: xDraw,
                             yDraw: yDraw - WallHeightFloat * scale,
                             scale: scale,
@@ -404,15 +393,14 @@ class Renderer
             }
         }
         // defer drawing exterior walls so that they are always rendered over any entities inside
-        if (thisTileFloor == null && tileAboveFloor != null && !tileAboveInRangeOfPlacement)
+        if (thisTileFloor == null && tileAboveFloorBuildingKey != null && !tileAboveInRangeOfPlacement)
         {
-            var buildingAbove = GlobalState.BuildingData.Buildings[tileAboveFloor];
-            var exteriorWallTilesetKey = buildingAbove.ExteriorWall;
-            if (exteriorWallTilesetKey != null)
+            var buildingAbove = GlobalState.BuildingData.Buildings[tileAboveFloorBuildingKey];
+            if (buildingAbove.ExteriorWallAnimation != null)
             {
                 DrawSprite(
                     spriteBatch,
-                    _tileset[exteriorWallTilesetKey],
+                    _tileset[buildingAbove.ExteriorWallAnimation],
                     xDraw: xDraw,
                     yDraw: yDraw - TileSizeFloat * scale,
                     scale: scale,
@@ -422,12 +410,11 @@ class Renderer
             }
             if (!playerIsInsideBuilding)
             {
-                var roofTilesetKey = buildingAbove.Roof;
-                if (roofTilesetKey != null)
+                if (buildingAbove.Roof != null)
                 {
                     DrawSprite(
                         spriteBatch,
-                        _tileset[roofTilesetKey],
+                        _tileset[buildingAbove.RoofAnimation],
                         xDraw: xDraw,
                         yDraw: yDraw - (WallPlusTileSizeFloat) * scale,
                         scale: scale,
@@ -437,11 +424,11 @@ class Renderer
         }
     }
 
-    private void DrawEntity(SpriteBatch spriteBatch, Entity entity, float xDraw, float yDraw, float zoomScale)
+    private void DrawSpriteAnimation(SpriteBatch spriteBatch, Animation animation, float xDraw, float yDraw, float zoomScale)
     {
-        var entitySpriteSheet = _entitySpriteSheet[entity.EntitySpriteKey, entity.FacingDirection];
-        var heightOffset = entity is IHasHeight entityHasHeight ? -entityHasHeight.HeightOffGroundInt : 0;
-        var zoomedEntityScale = zoomScale * entity.Scale;
+        var entitySpriteSheet = _entitySpriteSheet[animation];
+        var heightOffset = animation is IEntityAnimation entityAnimation && entityAnimation.Entity is IHasHeight entityHasHeight ? -entityHasHeight.HeightOffGroundInt : 0;
+        var zoomedEntityScale = zoomScale * animation.Scale;
         if (heightOffset != 0)
         {
             DrawSprite(
@@ -449,7 +436,7 @@ class Renderer
                 entitySpriteSheet,
                 xDraw: xDraw,
                 yDraw: yDraw,
-                scale: new Vector2(x: zoomedEntityScale, zoomedEntityScale / 2),
+                scale: new Vector2(x: zoomedEntityScale.X, zoomedEntityScale.Y / 2),
                 color: ItemShadow);
         }
         DrawSprite(
@@ -458,7 +445,7 @@ class Renderer
             xDraw: xDraw,
             yDraw: yDraw + heightOffset,
             scale: zoomedEntityScale,
-            color: entity.Color);
+            color: animation.Color);
     }
 
     private void DrawPartialBuilding(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, ITilePlacement tilePlacement, bool playerIsInsideBuilding)
@@ -466,44 +453,44 @@ class Renderer
         var scale = _viewportManager.Zoom;
         var tileIsBuildable = tilePlacement.AllTilesBuildable
             || BuildingExtensions.YieldTilesets(tile)
-                .All(key => _aggregateSpriteSheet[key].IsBuildable(tilePlacement.Buildable));
+                .All(key => GlobalState.ConsolidatedZoningData[key].IsBuildable(tilePlacement.Buildable));
         var color = tileIsBuildable
             ? PartialBuildingColor
             : PartialBuildingInvalidColor;
         var building = GlobalState.BuildingData.Buildings[tilePlacement.BuildingKey];
-        if (playerIsInsideBuilding && building.InteriorWall != null)
+        if (playerIsInsideBuilding && building.InteriorWallAnimation != null)
         {
-            var tileAbove = _terrainManager.GetTile(tileX: tile.X, tileY: tile.Y - 1);
+            var tileAbove = GlobalState.TerrainManager.GetTile(tileX: tile.X, tileY: tile.Y - 1);
             var tileAboveHasFloor = tileAbove.Buildings.Any(BuildingData.BuildingHasFloor);
             if (!tileAboveHasFloor && tilePlacement.TileTopOfRange(tileX: tile.X, tileY: tile.Y))
             {
                 DrawSprite(
                     spriteBatch,
-                    _tileset[building.InteriorWall],
+                    _tileset[building.InteriorWallAnimation],
                     xDraw: xDraw,
                     yDraw: yDraw - (TileSize) * scale,
                     scale: scale,
                     color);
             }
-            if (building.Floor != null)
+            if (building.FloorAnimation != null)
             {
                 DrawSprite(
                     spriteBatch,
-                    _tileset[building.Floor],
+                    _tileset[building.FloorAnimation],
                     xDraw: xDraw,
                     yDraw: yDraw,
                     scale: scale,
                     color);
             }
-            if (tileAboveHasFloor && building.ExteriorWall != null)
+            if (tileAboveHasFloor && building.ExteriorWallAnimation != null)
             {
-                var tileBelow = _terrainManager.GetTile(tileX: tile.X, tileY: tile.Y + 1);
+                var tileBelow = GlobalState.TerrainManager.GetTile(tileX: tile.X, tileY: tile.Y + 1);
                 var tileBelowHasFloor = tileBelow.Buildings.Any(BuildingData.BuildingHasFloor);
                 if (!tileBelowHasFloor && tilePlacement.TileBottomOfRange(tileX: tile.X, tileY: tile.Y))
                 {
                     DrawSprite(
                         spriteBatch,
-                        _tileset[building.ExteriorWall],
+                        _tileset[building.ExteriorWallAnimation],
                         xDraw: xDraw,
                         yDraw: yDraw,
                         scale: scale,
@@ -513,25 +500,25 @@ class Renderer
                 }
             }
         }
-        else if (building.ExteriorWall != null)
+        else if (building.ExteriorWallAnimation != null)
         {
             if (building.HasTransparency)
             {
-                if (building.InteriorWall != null)
+                if (building.InteriorWallAnimation != null)
                 {
                     DrawSprite(
                         spriteBatch,
-                        _tileset[building.InteriorWall],
+                        _tileset[building.InteriorWallAnimation],
                         xDraw: xDraw,
                         yDraw: yDraw - (TileSize) * scale,
                         scale: scale,
                         color);
                 }
-                if (building.Floor != null)
+                if (building.FloorAnimation != null)
                 {
                     DrawSprite(
                         spriteBatch,
-                        _tileset[building.Floor],
+                        _tileset[building.FloorAnimation],
                         xDraw: xDraw,
                         yDraw: yDraw,
                         scale: scale,
@@ -542,28 +529,28 @@ class Renderer
             {
                 DrawSprite(
                     spriteBatch,
-                    _tileset[building.ExteriorWall],
+                    _tileset[building.ExteriorWallAnimation],
                     xDraw: xDraw,
                     yDraw: yDraw,
                     scale: scale,
                     color);
             }
-            if (building.Roof != null)
+            if (building.RoofAnimation != null)
             {
                 DrawSprite(
                     spriteBatch,
-                    _tileset[building.Roof],
+                    _tileset[building.RoofAnimation],
                     xDraw: xDraw,
                     yDraw: yDraw - (WallHeightFloat) * scale,
                     scale: scale,
                     color);
             }
         }
-        else if (building.Floor != null)
+        else if (building.FloorAnimation != null)
         {
             DrawSprite(
                 spriteBatch,
-                _tileset[building.Floor],
+                _tileset[building.FloorAnimation],
                 xDraw: xDraw,
                 yDraw: yDraw,
                 scale: scale,

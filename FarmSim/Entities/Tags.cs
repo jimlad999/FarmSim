@@ -33,6 +33,7 @@ enum Tags
     //category
     Meat,
     Plant,
+    Wood,
     Drink,
     Rock,
     Ore,

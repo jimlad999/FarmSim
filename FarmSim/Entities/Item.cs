@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FarmSim.Entities;
 
-class Item : Entity, IHasHeight
+class Item : Entity, IHasHeight, IDespawnble
 {
     // Consider making this variable based on item?
     private const double InitialHorizontalSpeed = 100;
@@ -31,7 +31,7 @@ class Item : Entity, IHasHeight
     // This is what is added to the player inventory.
     public ItemInfo InstanceInfo;
     public double SecondsInWorld;
-    public bool FlagForDespawning;
+    public bool FlagForDespawning { get; set; } = false;
 
     public Item()
     {
@@ -54,7 +54,7 @@ class Item : Entity, IHasHeight
         Y += NormalizedDirection.Y * distancePerFrame;
         XInt = (int)X;
         YInt = (int)Y;
-        UpdateTilePosition();
+        this.UpdateTileIndex();
         HeightOffGround += VerticalSpeed * gameTime.ElapsedGameTime.TotalSeconds;
         HeightOffGroundInt = (int)HeightOffGround;
         VerticalSpeed -= Gavity * gameTime.ElapsedGameTime.TotalSeconds;

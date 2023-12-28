@@ -26,13 +26,11 @@ readonly struct TileRange
         BottomRightY = bottomRightY;
     }
 
-    public readonly bool AllTilesAreBuildable(
-        ICollection<Zoning> buildable,
-        SpriteSheet spriteSheet)
+    public readonly bool AllTilesAreBuildable(ICollection<Zoning> buildable)
     {
         return Tiles
             .SelectMany(BuildingExtensions.YieldTilesets)
             .Distinct()
-            .All(key => spriteSheet[key].IsBuildable(buildable));
+            .All(key => GlobalState.ConsolidatedZoningData[key].IsBuildable(buildable));
     }
 }

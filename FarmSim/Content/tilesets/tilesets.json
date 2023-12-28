@@ -3,79 +3,337 @@
   "data": {
     "grass": {
       "source": "terrain/grass.png",
-      "buildable": [ "Normal" ]
+      "buildable": [ "Normal" ],
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
     },
     "water": {
-      "source": "terrain/water.png"
+      "source": "terrain/water.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
     },
     "rock": {
-      "source": "terrain/rock.png"
+      "source": "terrain/rock.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
     },
     "sand": {
-      "source": "terrain/sand.png"
+      "source": "terrain/sand.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
     },
     "void": {
-      "source": "terrain/void.png"
+      "source": "terrain/void.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
     },
     "lava": {
-      "source": "terrain/lava.png"
+      "source": "terrain/lava.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
     },
     "snow": {
-      "source": "terrain/snow.png"
+      "source": "terrain/snow.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
     },
     "ice": {
-      "source": "terrain/ice.png"
+      "source": "terrain/ice.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
+    },
+    "farm-land": {
+      "source": "terrain/farm-land.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
     },
     "wood-floor": {
-      "source": "buildings/wood-floor.png"
+      "source": "buildings/wood-floor.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
     },
     "wood-exterior-wall": {
       "source": "buildings/wood-exterior-wall.png",
-      "origin": {
-        "x": 0,
-        "y": 32
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 0,
+            "y": 32
+          },
+          "frameWidth": 64,
+          "frameHeight": 96,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
       }
     },
     "wood-interior-wall": {
       "source": "buildings/wood-interior-wall.png",
-      "origin": {
-        "x": 0,
-        "y": 32
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 0,
+            "y": 32
+          },
+          "frameWidth": 64,
+          "frameHeight": 96,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
       }
     },
     "wood-exterior-window": {
       "source": "buildings/wood-exterior-window.png",
-      "origin": {
-        "x": 0,
-        "y": 32
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 0,
+            "y": 32
+          },
+          "frameWidth": 64,
+          "frameHeight": 96,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
       }
     },
     "wood-interior-window": {
       "source": "buildings/wood-interior-window.png",
-      "origin": {
-        "x": 0,
-        "y": 32
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 0,
+            "y": 32
+          },
+          "frameWidth": 64,
+          "frameHeight": 96,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
       }
     },
     "wood-exterior-door": {
       "source": "buildings/wood-exterior-door.png",
-      "origin": {
-        "x": 0,
-        "y": 32
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 0,
+            "y": 32
+          },
+          "frameWidth": 64,
+          "frameHeight": 96,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
       }
     },
     "wood-interior-door": {
       "source": "buildings/wood-interior-door.png",
-      "origin": {
-        "x": 0,
-        "y": 32
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 0,
+            "y": 32
+          },
+          "frameWidth": 64,
+          "frameHeight": 96,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
       }
     },
     "wood-roof": {
       "source": "buildings/wood-roof.png",
-      "origin": {
-        "x": 0,
-        "y": 4
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 0,
+            "y": 4
+          },
+          "frameWidth": 64,
+          "frameHeight": 72,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
       }
     }
   }

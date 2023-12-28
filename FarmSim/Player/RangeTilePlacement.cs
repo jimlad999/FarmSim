@@ -16,11 +16,8 @@ interface ITilePlacement
     bool TileInRange(int tileX, int tileY);
     bool TileTopOfRange(int tileX, int tileY);
     bool TileBottomOfRange(int tileX, int tileY);
-    void Update(
-        (int X, int Y) tilePlacementPosition,
-        TerrainManager terrainManager,
-        SpriteSheet spriteSheet);
-    void PlaceBuildings(TerrainManager terrainManager);
+    void Update((int X, int Y) tilePlacementPosition);
+    void PlaceBuildings();
 }
 
 // can be used for placing individual tiles + preview of placements
@@ -62,20 +59,17 @@ class PointTilePlacement : ITilePlacement
             && _tilePlacementPosition.Y == tileY;
     }
 
-    public void Update(
-        (int X, int Y) tilePlacementPosition,
-        TerrainManager terrainManager,
-        SpriteSheet spriteSheet)
+    public void Update((int X, int Y) tilePlacementPosition)
     {
         _tilePlacementPosition = tilePlacementPosition;
-        var tile = terrainManager.GetTile(tileX: tilePlacementPosition.X, tileY: tilePlacementPosition.Y);
+        var tile = GlobalState.TerrainManager.GetTile(tileX: tilePlacementPosition.X, tileY: tilePlacementPosition.Y);
         AllTilesBuildable = BuildingExtensions.YieldTilesets(tile)
-            .All(key => spriteSheet[key].IsBuildable(Buildable));
+            .All(key => GlobalState.ConsolidatedZoningData[key].IsBuildable(Buildable));
     }
 
-    public void PlaceBuildings(TerrainManager terrainManager)
+    public void PlaceBuildings()
     {
-        terrainManager.PlaceBuilding(
+        GlobalState.TerrainManager.PlaceBuilding(
             BuildingType,
             BuildingKey,
             topLeftX: _tilePlacementPosition.X,
@@ -129,10 +123,7 @@ class RangeTilePlacement : ITilePlacement
             && tileY == _bottomRightY;
     }
 
-    public void Update(
-        (int X, int Y) tilePlacementPosition,
-        TerrainManager terrainManager,
-        SpriteSheet spriteSheet)
+    public void Update((int X, int Y) tilePlacementPosition)
     {
         if (tilePlacementPosition.X < _initialTilePlacementPosition.X)
         {
@@ -154,17 +145,17 @@ class RangeTilePlacement : ITilePlacement
             _topLeftY = _initialTilePlacementPosition.Y;
             _bottomRightY = tilePlacementPosition.Y;
         }
-        var tileRange = terrainManager.GetRange(
+        var tileRange = GlobalState.TerrainManager.GetRange(
             topLeftX: _topLeftX,
             topLeftY: _topLeftY,
             bottomRightX: _bottomRightX,
             bottomRightY: _bottomRightY);
-        AllTilesBuildable = tileRange.AllTilesAreBuildable(Buildable, spriteSheet);
+        AllTilesBuildable = tileRange.AllTilesAreBuildable(Buildable);
     }
 
-    public void PlaceBuildings(TerrainManager terrainManager)
+    public void PlaceBuildings()
     {
-        terrainManager.PlaceBuilding(
+        GlobalState.TerrainManager.PlaceBuilding(
             BuildingType,
             BuildingKey,
             topLeftX: _topLeftX,

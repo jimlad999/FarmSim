@@ -24,8 +24,8 @@ float4 MainPS(float4 position : SV_Position, float4 color : COLOR0, float2 texCo
 	float1 x = position.x - HalfScreenWidth;
 	float1 y = position.y - HalfScreenHeight;
 	float1 xyPow2 = x * x + y * y;
-    float1 clipRadius = xyPow2 - FogOfWarRadiusPow2;
-    float1 startClipRadius = xyPow2 - FogOfWarStartClipRadiusPow2;
+	float1 clipRadius = xyPow2 - FogOfWarRadiusPow2;
+	float1 startClipRadius = xyPow2 - FogOfWarStartClipRadiusPow2;
 	float1 alpha = (clipRadius + startClipRadius) / FogOfWarRadiusPow2Diff;
 	float1 alphaClamp = alpha > 1 ? 1 : alpha < 0 ? 0 : alpha;
 	float4 res = tex2D(SpriteTextureSampler, texCoord);

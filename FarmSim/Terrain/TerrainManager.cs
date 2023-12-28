@@ -1,20 +1,25 @@
-﻿using System;
+﻿using FarmSim.Entities;
+using FarmSim.Rendering;
+using FarmSim.Utils;
 using System.Collections.Generic;
-using Utils;
 
 namespace FarmSim.Terrain;
 
 class TerrainManager
 {
-    internal readonly TerrainGenerator _terrainGenerator;
+    private readonly TerrainGenerator _terrainGenerator;
+    private readonly Dictionary<string, ResourceData> _resourceData;
 
     private Dictionary<int, Dictionary<int, Chunk>> _chunks = new();
 
     public int ChunkSize { get; private set; } = 64;
 
-    public TerrainManager(int seed)
+    public TerrainManager(
+        int seed,
+        Dictionary<string, ResourceData> resourceData)
     {
         _chunks = new();
+        _resourceData = resourceData;
         _terrainGenerator = new TerrainGenerator(chunkSize: ChunkSize, seed: seed);
     }
 
@@ -96,38 +101,37 @@ class TerrainManager
         }
     }
 
-    public void UpdateSightInit(int tileX, int tileY, int radius)
+    public Tile GetTileWithinRange(PointRange range)
     {
-        UpdateSightInternal(tileX: tileX, tileY: tileY, radius: radius, init: true);
+        var reachTileX = range.ReachX / Renderer.TileSize;
+        if (range.ReachX < 0) --reachTileX;
+        var reachTileY = range.ReachY / Renderer.TileSize;
+        if (range.ReachY < 0) --reachTileY;
+        var tile = GetTile(tileX: reachTileX, tileY: reachTileY);
+        return tile;
     }
 
-    public void UpdateSight(int tileX, int tileY, int radius)
+    public void HavestResource(Resource resource, int harvestMultipler)
     {
-        UpdateSightInternal(tileX: tileX, tileY: tileY, radius: radius, init: false);
-    }
-
-    private void UpdateSightInternal(int tileX, int tileY, int radius, bool init)
-    {
-        var radius3 = radius * 3;
-        // + a little buffer so we avoid diamond shapes
-        var radiusPow2 = radius * radius + radius;
-        var startY = tileY - radius - 1;
-        var endY = tileY + radius + 1;
-        var startX = tileX - radius - 1;
-        var endX = tileX + radius + 1;
-        for (int y = startY; y <= endY; ++y)
+        var tile = GetTile(tileX: resource.TileX, tileY: resource.TileY);
+        resource.FlagForDespawning = true;
+        tile.RemoveResource(resource);
+        // TODO: Added variance (i.e. generate arbitrary number of items based on config)
+        var numberToGenerate = harvestMultipler;
+        for (int i = 0; i < numberToGenerate; ++i)
         {
-            var yDiff = y < tileY ? tileY - y : y - tileY;
-            for (int x = startX; x <= endX; ++x)
-            {
-                var xDiff = x < tileX ? tileX - x : x - tileX;
-                var radiusDiff = xDiff * xDiff + yDiff * yDiff - radiusPow2;
-                // only diff around the edges since that is where the changes will happen
-                if (Math.Abs(radiusDiff) < radius3 || init)
-                {
-                    GetTile(tileX: x, tileY: y).InSight = radiusDiff <= 0;
-                }
-            }
+            GlobalState.ItemManager.CreateNewItem(resource.ItemId, originX: resource.XInt, originY: resource.YInt, normalizedDirection: RandomUtil.RandomNormalizedDirection());
         }
+    }
+
+    public void ChangeTile(Tile tile, string newTerrain)
+    {
+        tile.Terrain = newTerrain;
+    }
+
+    public Resource CreateResource(string tilesetKey, int tileX, int tileY)
+    {
+        var resourceData = _resourceData[tilesetKey];
+        return new Resource(itemId: resourceData.ItemId, primaryTag: resourceData.PrimaryTag, tilesetKey: tilesetKey, tileX: tileX, tileY: tileY);
     }
 }

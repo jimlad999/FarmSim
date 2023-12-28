@@ -1,0 +1,10 @@
+{
+  "tree-pine": {
+    "itemId": "wood",
+    "primaryTag": "Wood"
+  },
+  "ore-coal": {
+    "itemId": "coal",
+    "primaryTag": "Ore"
+  }
+}

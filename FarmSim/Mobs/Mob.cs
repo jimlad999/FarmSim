@@ -4,20 +4,31 @@ using System.Collections.Generic;
 
 namespace FarmSim.Mobs;
 
-abstract class Mob : Entity
+abstract class Mob : Entity, IDespawnble
 {
     public MobData Metadata;
     public Tags[] Tags;
     public int HP;
-    public bool FlagForDespawning = false;
+    public bool FlagForDespawning { get; set; } = false;
+    public bool Hit;
 
     protected Behaviour[] _behaviours;
 
     // called after construction
-    public abstract void Init();
+    public abstract void InitBehaviours();
 
     public void Update(GameTime gameTime)
     {
+        if (Hit)
+        {
+            if (UpdateForces(gameTime))
+            {
+                XInt = (int)X;
+                YInt = (int)Y;
+                this.UpdateTileIndex();
+            }
+            return;
+        }
         foreach (var behaviour in _behaviours)
         {
             if (behaviour.TryExecute(this, gameTime))
@@ -34,10 +45,11 @@ abstract class Mob : Entity
         var newY = Y + normalizedDirection.Y * movementPerFrame;
         // TODO: detect collision or unpassable terrain and return false
         X = newX;
-        XInt = (int)X;
         Y = newY;
+        UpdateForces(gameTime);
+        XInt = (int)X;
         YInt = (int)Y;
-        UpdateTilePosition();
+        this.UpdateTileIndex();
         UpdateFacingDirection(directionX: normalizedDirection.X, directionY: normalizedDirection.Y);
         return (xDirectionPositive ? XInt < targetX : XInt > targetX)
             && (yDirectionPositive ? YInt < targetY : YInt > targetY);

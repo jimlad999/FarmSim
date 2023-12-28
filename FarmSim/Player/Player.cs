@@ -1,16 +1,13 @@
 ﻿using FarmSim.Entities;
 using FarmSim.Rendering;
-using FarmSim.Terrain;
-using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using System;
 using UI;
 using Utils;
 
 namespace FarmSim.Player;
 
-class Player : Entity
+class Player : Entity, IHasMultiTool
 {
     public const int SightRadius = 12;//tiles
     private const double MovementSpeed = 200;
@@ -20,29 +17,14 @@ class Player : Entity
 
     private readonly ControllerManager _controllerManager;
     private readonly ViewportManager _viewportManager;
-    private readonly TerrainManager _terrainManager;
-    private readonly SpriteSheet _spriteSheet;
     private readonly UIOverlay _uiOverlay;
 
-    public Player(
-        Inventory inventory,
-        ControllerManager controllerManager,
-        ViewportManager viewportManager,
-        TerrainManager terrainManager,
-        SpriteSheet spriteSheet,
-        UIOverlay uiOverlay)
-    {
-        Inventory = inventory;
-        _controllerManager = controllerManager;
-        _viewportManager = viewportManager;
-        _terrainManager = terrainManager;
-        _spriteSheet = spriteSheet;
-        _uiOverlay = uiOverlay;
-        EntitySpriteKey = "player";
-        // intentionally smaller than the player sprite so player can dodge more easily
-        HitRadiusPow2 = 64;//8*8 (i.e. 8^2)
-        HitboxYOffset = -50;
-    }
+    public ITilePlacement TilePlacement;
+
+    public MultiTool MultiTool { get; set; } = new MultiTool();
+
+    private IAction PrimaryAction = new MultiToolActions();//DEBUG
+    //private IAction PrimaryAction = new FireProjectileActions();//DEBUG
 
     private string _buildingKey;
     public string BuildingKey
@@ -57,14 +39,30 @@ class Player : Entity
             }
             else
             {
-                var building = GlobalState.BuildingData.Buildings[BuildingKey];
-                TilePlacement = new PointTilePlacement(building.Type, BuildingKey, building.Buildable);
+                var building = GlobalState.BuildingData.Buildings[_buildingKey];
+                TilePlacement = new PointTilePlacement(building.Type, _buildingKey, building.Buildable);
             }
         }
     }
-    public ITilePlacement TilePlacement;
 
-    private IAction PrimaryAction = new FireProjectileActions();
+    public Player(
+        Inventory inventory,
+        ControllerManager controllerManager,
+        ViewportManager viewportManager,
+        UIOverlay uiOverlay)
+    {
+        Inventory = inventory;
+        _controllerManager = controllerManager;
+        _viewportManager = viewportManager;
+        _uiOverlay = uiOverlay;
+        // intentionally smaller than the player sprite so player can dodge more easily
+        HitRadiusPow2 = 64;//8*8 (i.e. 8^2)
+        HitboxYOffset = -50;
+        // TODO: set up player correctly from metadat files
+        EntitySpriteKey = "player";
+        DefaultAnimationKey = "idle";
+        InitDefaultAnimation();
+    }
 
     public bool TryPickUpItem(Item item)
     {
@@ -87,7 +85,7 @@ class Player : Entity
         }
         UpdateMovement(gameTime);
         UpdateFacingDirectionToMouse();
-        if (BuildingKey != null)
+        if (_buildingKey != null)
         {
             UpdateBuildingPlacement();
         }
@@ -100,6 +98,15 @@ class Player : Entity
     private void UpdateMovement(GameTime gameTime)
     {
         var movementPerFrame = gameTime.ElapsedGameTime.TotalSeconds * MovementSpeed;
+        if (_controllerManager.IsKeyDown(Keys.LeftShift))
+        {
+#if DEBUG
+            movementPerFrame *= 5;
+#else
+            movementPerFrame *= 2;
+            // TODO: consume hunger faster
+#endif
+        }
         var playerHasMoved = false;
         // normalise vector for diagnoal movement?
         if (_controllerManager.IsKeyDown(Keys.W))
@@ -122,12 +129,12 @@ class Player : Entity
             X += movementPerFrame;
             playerHasMoved = true;
         }
+        playerHasMoved |= UpdateForces(gameTime);
         if (playerHasMoved)
         {
             XInt = (int)X;
             YInt = (int)Y;
-            UpdateTilePosition();
-            _terrainManager.UpdateSight(tileX: TileX, tileY: TileY, SightRadius);
+            this.UpdateTileIndex();
         }
     }
 
@@ -142,14 +149,7 @@ class Player : Entity
     {
         if (_controllerManager.IsLeftMouseInitialPressed())
         {
-            var mouseScreenPosition = _controllerManager.CurrentMouseState.Position;
-            var moouseWorldPosition = _viewportManager.ConvertScreenCoordinatesToWorldCoordinates(mouseScreenPosition.X, mouseScreenPosition.Y);
-            var xOffset = FacingDirection == FacingDirection.Left ? -32
-                : FacingDirection == FacingDirection.Right ? 32
-                : 0;
-            var yOffset = HitboxYOffset;
-            var shootingDirection = new Vector2(x: moouseWorldPosition.X - XInt - xOffset, y: moouseWorldPosition.Y - YInt - yOffset);
-            shootingDirection.Normalize();
+            var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection();
             PrimaryAction.Invoke(
                 this,
                 xOffset: xOffset,
@@ -158,35 +158,53 @@ class Player : Entity
         }
     }
 
+    private (int xOffset, int yOffset, Vector2 shootingDirection) GetActionOffsetsAndDirection()
+    {
+        var mouseScreenPosition = _controllerManager.CurrentMouseState.Position;
+        var moouseWorldPosition = _viewportManager.ConvertScreenCoordinatesToWorldCoordinates(mouseScreenPosition.X, mouseScreenPosition.Y);
+        var xOffset = PrimaryAction.CreatesProjectile
+            ? FacingDirection == FacingDirection.Left ? -32
+            : FacingDirection == FacingDirection.Right ? 32
+            : 0
+            : 0;
+        var yOffset = PrimaryAction.CreatesProjectile || FacingDirection != FacingDirection.Down
+            ? HitboxYOffset
+            : HitboxYOffset / 2;
+        var shootingDirection = new Vector2(x: moouseWorldPosition.X - XInt - xOffset, y: moouseWorldPosition.Y - YInt - yOffset);
+        shootingDirection.Normalize();
+        return (xOffset, yOffset, shootingDirection);
+    }
+
+#if DEBUG
+    public ArcRange GetWeaponRange(out int xOffsetOut, out int yOffsetOut)
+    {
+        var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection();
+        xOffsetOut = xOffset;
+        yOffsetOut = yOffset;
+        return MultiTool.WeaponRange(this, xOffset: xOffset, yOffset: yOffset, shootingDirection);
+    }
+#endif
+
     private void UpdateBuildingPlacement()
     {
-        if (_controllerManager.IsLeftMouseInitialPressed())
-        {
-            var mouseTilePosition = GetHoveredTileCoordinates();
-            var tileTerrain = _terrainManager.GetTile(mouseTilePosition.X, mouseTilePosition.Y).Terrain;
-            var terrain = _spriteSheet.Tileset[tileTerrain];
-            if (terrain.IsBuildable(TilePlacement.Buildable))
-            {
-                // TODO: identify point placement vs range placement depending on what is being built
-                // buildings are range, stations are single
-                TilePlacement = new RangeTilePlacement(TilePlacement.BuildingType, BuildingKey, TilePlacement.Buildable, mouseTilePosition);
-                TilePlacement.CommittedToBuild = true;
-            }
-        }
         if (TilePlacement != null)
         {
             var mouseTilePosition = GetHoveredTileCoordinates();
-            TilePlacement.Update(
-                mouseTilePosition,
-                _terrainManager,
-                _spriteSheet);
+            TilePlacement.Update(mouseTilePosition);
 
-            if (TilePlacement.CommittedToBuild
-                && _controllerManager.IsLeftMouseUp())
+            if (TilePlacement.AllTilesBuildable && _controllerManager.IsLeftMouseInitialPressed())
+            {
+                // TODO: identify point placement vs range placement depending on what is being built
+                // buildings are range, stations are single
+                TilePlacement = new RangeTilePlacement(TilePlacement.BuildingType, _buildingKey, TilePlacement.Buildable, mouseTilePosition);
+                TilePlacement.CommittedToBuild = true;
+                TilePlacement.Update(mouseTilePosition);
+            }
+            else if (TilePlacement.CommittedToBuild && _controllerManager.IsLeftMouseUp())
             {
                 if (TilePlacement.AllTilesBuildable)
                 {
-                    TilePlacement.PlaceBuildings(_terrainManager);
+                    TilePlacement.PlaceBuildings();
 
                     // TODO: Notify renderer to drop chunk pre-renders
                 }
@@ -200,11 +218,8 @@ class Player : Entity
                 // * clear building command
                 // * start next building with current selection (currently what is below)
                 var tilePlacementBuildable = TilePlacement.Buildable;
-                TilePlacement = new PointTilePlacement(TilePlacement.BuildingType, BuildingKey, tilePlacementBuildable);
-                TilePlacement.Update(
-                    mouseTilePosition,
-                    _terrainManager,
-                    _spriteSheet);
+                TilePlacement = new PointTilePlacement(TilePlacement.BuildingType, _buildingKey, tilePlacementBuildable);
+                TilePlacement.Update(mouseTilePosition);
             }
         }
     }

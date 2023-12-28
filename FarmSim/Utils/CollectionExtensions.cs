@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace FarmSim.Utils;
 
-static class CollectionExtensions
+static partial class CollectionExtensions
 {
     private static readonly Random Rand = new();
 
@@ -22,7 +22,19 @@ static class CollectionExtensions
         return list[Rand.Next(list.Count)];
     }
 
-    public static TOut Match<TIn, TOut>(this IEnumerable<TIn> enumerable, Dictionary<TIn, Func<TOut>> returns, TOut defaultValue = default)
+    public static void Match<TIn>(this IEnumerable<TIn> enumerable, Dictionary<TIn, Action> actions)
+    {
+        foreach (var value in enumerable)
+        {
+            if (actions.TryGetValue(value, out var action))
+            {
+                action();
+                return;
+            }
+        }
+    }
+
+    public static TOut Match<TIn, TOut>(this IEnumerable<TIn> enumerable, Dictionary<TIn, Func<TOut>> returns, TOut defaultValue)
     {
         foreach (var value in enumerable)
         {

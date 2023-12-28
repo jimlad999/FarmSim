@@ -39,6 +39,12 @@
 /processorParam:TextureFormat=Color
 /build:pixel.png
 
+#begin shaders/debug-arc-range.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:shaders/debug-arc-range.fx
+
 #begin shaders/fog-of-war-inverse.fx
 /importer:EffectImporter
 /processor:EffectProcessor

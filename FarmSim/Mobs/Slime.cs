@@ -2,7 +2,7 @@
 
 class Slime : Mob
 {
-    public override void Init()
+    public override void InitBehaviours()
     {
         _behaviours = new[]
         {

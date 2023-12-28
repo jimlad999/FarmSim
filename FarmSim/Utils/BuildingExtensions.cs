@@ -15,9 +15,9 @@ static class BuildingExtensions
             yield return tile.Ores.EntitySpriteKey;
     }
 
-    public static bool IsBuildable(this ProcessedSpriteData spriteData, ICollection<Zoning> buildable)
+    public static bool IsBuildable(this IBuildableData buildableData, ICollection<Zoning> buildable)
     {
-        return spriteData.Buildable.Count > 0
-            && spriteData.Buildable.All(buildable.Contains);
+        return buildableData.Buildable.Length > 0
+            && buildableData.Buildable.All(buildable.Contains);
     }
 }

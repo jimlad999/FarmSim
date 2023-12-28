@@ -10,18 +10,18 @@ namespace FarmSim.UI;
 class TileUIElement : UIElement
 {
     private const float DefaultScale = 0.5f;
-    private string Roof;
-    private string ExteriorWall;
-    private string InteriorWall;
-    private string Floor;
+    private Animation Roof;
+    private Animation ExteriorWall;
+    private Animation InteriorWall;
+    private Animation Floor;
     private bool HasTransparency;
     private bool FloorOnly;
 
     public TileUIElement(
-        string roof,
-        string exteriorWall,
-        string interiorWall,
-        string floor,
+        Animation roof,
+        Animation exteriorWall,
+        Animation interiorWall,
+        Animation floor,
         bool hasTransparency)
     {
         Roof = roof;

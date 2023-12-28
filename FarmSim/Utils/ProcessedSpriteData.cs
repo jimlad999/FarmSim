@@ -9,6 +9,7 @@ struct ProcessedSpriteData
     public Texture2D Texture;
     public Rectangle SourceRectangle;
     public Vector2 Origin;
+    // SPEED HACK: to avoid double lookups when rendering building placement preview
     public ICollection<Zoning> Buildable;
 
     public ProcessedSpriteData(

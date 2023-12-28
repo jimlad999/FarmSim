@@ -1,42 +1,65 @@
-﻿using FarmSim.Rendering;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 
 namespace FarmSim.Entities;
 
-abstract class Entity
+abstract class Entity : IPositionable
 {
+    private const int MinForcePow2 = 10 * 10;
+
     public FacingDirection FacingDirection = FacingDirection.Down;
 
     public int HitRadiusPow2;
 
     // world position
-    public double X;
-    public int XInt;
-    public int TileX;
-    // world position
-    public double Y;
-    public int YInt;
-    public int TileY;
+    public double X { get; set; }
+    public double Y { get; set; }
+    public int XInt { get; set; }
+    public int YInt { get; set; }
+    // tile index
+    public int TileX { get; set; }
+    public int TileY { get; set; }
 
     public string EntitySpriteKey;
-    public Color Color = Color.White;
+    public string DefaultAnimationKey;
     public float Scale = 1f;
+    public Color Color = Color.White;
+
     public int HitboxXOffset = 0;
     public int HitboxYOffset = 0;
 
-    public void UpdateTilePosition()
-    {
-        TileX = XInt / Renderer.TileSize;
-        if (XInt < 0) --TileX;
-        TileY = YInt / Renderer.TileSize;
-        if (YInt < 0) --TileY;
-    }
+    private Vector2 ExternalForce;
 
     protected void UpdateFacingDirection(double directionX, double directionY)
     {
         FacingDirection = Math.Abs(directionX) > Math.Abs(directionY)
             ? directionX < 0 ? FacingDirection.Left : FacingDirection.Right
             : directionY < 0 ? FacingDirection.Up : FacingDirection.Down;
+    }
+
+    public void InitDefaultAnimation()
+    {
+        GlobalState.AnimationManager.InitDefault(this);
+    }
+
+    public void ApplyForce(Vector2 externalForce)
+    {
+        ExternalForce = externalForce;
+    }
+
+    protected bool UpdateForces(GameTime gameTime)
+    {
+        if (ExternalForce == Vector2.Zero)
+        {
+            return false;
+        }
+        X += ExternalForce.X * gameTime.ElapsedGameTime.TotalSeconds;
+        Y += ExternalForce.Y * gameTime.ElapsedGameTime.TotalSeconds;
+        ExternalForce *= 0.8f;
+        if (ExternalForce.LengthSquared() < MinForcePow2)
+        {
+            ExternalForce = Vector2.Zero;
+        }
+        return true;
     }
 }

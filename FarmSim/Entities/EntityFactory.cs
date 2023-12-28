@@ -6,8 +6,7 @@ using System.Reflection;
 
 namespace FarmSim.Entities;
 
-class EntityFactory<TEntity, TData>
-    where TEntity : Entity
+class EntityFactory<T, TData>
     where TData : IClassData
 {
     private readonly Dictionary<string, ConstructorInfo> _constructors;
@@ -22,8 +21,8 @@ class EntityFactory<TEntity, TData>
                 className => Type.GetType(className).GetConstructor(Array.Empty<Type>()));
     }
 
-    public TEntity Create(string className)
+    public T Create(string className)
     {
-        return (TEntity)_constructors[className].Invoke(Array.Empty<object>());
+        return (T)_constructors[className].Invoke(Array.Empty<object>());
     }
 }

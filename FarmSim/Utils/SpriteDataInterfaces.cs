@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Utils.Data;
 
 namespace FarmSim.Utils;
 
@@ -13,7 +12,8 @@ interface ISpriteSheetData<T>
 interface ISpriteData
 {
     string Source { get; }
-    OriginData Origin { get; }
+    public string DefaultAnimationKey { get; }
+    public Dictionary<string, AnimationData> Animations { get; }
 }
 
 interface IBuildableData

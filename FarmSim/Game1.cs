@@ -1,6 +1,7 @@
 ﻿using FarmSim.Entities;
 using FarmSim.Mobs;
 using FarmSim.Player;
+using FarmSim.Projectiles;
 using FarmSim.Rendering;
 using FarmSim.Terrain;
 using FarmSim.UI;
@@ -16,7 +17,9 @@ using System.Linq;
 using UI;
 using UI.Data;
 using Utils;
+using Utils.Rendering;
 using ButtonState = UI.ButtonState;
+using Effect = Microsoft.Xna.Framework.Graphics.Effect;
 
 namespace FarmSim;
 
@@ -28,19 +31,14 @@ public class Game1 : Game
 
     private GraphicsDeviceManager _graphics;
     private ControllerManager _controllerManager;
-    private TerrainManager _terrainManager;
     private ViewportManager _viewportManager;
     private UIOverlay _uiOverlay;
-    private Player.Player _player;
     private SpriteBatch _spriteBatch;
-    private SpriteSheet _spriteSheet;
-    private UISpriteSheet _uiSpriteSheet;
-    private ItemManager _itemManager;
-    private MobManager _mobManager;
-    private ProjectileManager _projectileManager;
-    private EntityManager _entityManager;
     private Renderer _renderer;
     private TextInput _commandInput;
+    private bool _debugArcRange;
+    private Effect _debugArcRangeEffect;
+    private RenderTarget2D _entireScreen;
 
     public Game1()
     {
@@ -54,7 +52,6 @@ public class Game1 : Game
     protected override void Initialize()
     {
         _controllerManager = new ControllerManager();
-        _terrainManager = GlobalState.TerrainManager = new TerrainManager(Rand.Next());
         _viewportManager = ViewportManager.CenteredOnZeroZero(_controllerManager, _graphics);
         _graphics.SynchronizeWithVerticalRetrace = false;
 
@@ -69,19 +66,37 @@ public class Game1 : Game
         Text.Bold = Content.Load<SpriteFont>("fonts/GameFontBold");
         var fogOfWarEffect = Content.Load<Effect>("shaders/fog-of-war");
         var fogOfWarInverseEffect = Content.Load<Effect>("shaders/fog-of-war-inverse");
+        _debugArcRangeEffect = Content.Load<Effect>("shaders/debug-arc-range");
+        _entireScreen = new RenderTarget2D(
+            _spriteBatch.GraphicsDevice,
+            width: _spriteBatch.GraphicsDevice.Viewport.Width,
+            height: _spriteBatch.GraphicsDevice.Viewport.Height);
         var pixel = ColoredPanel.Pixel = Content.Load<Texture2D>("pixel");
 
-        GlobalState.BuildingData = JsonConvert.DeserializeObject<BuildingData>(File.ReadAllText("Content/tilesets/buildings/buildings.json"));
+        GlobalState.AnimationManager = new AnimationManager();
 
+        var resourceData = JsonConvert.DeserializeObject<Dictionary<string, ResourceData>>(File.ReadAllText("Content/entities/items/resources.json"));
         var itemData = JsonConvert.DeserializeObject<ItemData[]>(File.ReadAllText("Content/entities/items/items.json"))
             .ToDictionary(i => i.Id);
         var mobData = JsonConvert.DeserializeObject<MobData[]>(File.ReadAllText("Content/entities/mobs/mobs.json"));
         var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/tilesets/tilesets.json"));
         var tileset = GlobalState.Tileset = new Tileset(_spriteBatch, tilesetData);
-        var entitiesData = JsonConvert.DeserializeObject<EntitiesData>(File.ReadAllText("Content/entities/entities.json"));
+        foreach (var value in tilesetData.Data)
+        {
+            GlobalState.AnimationManager.GenerateTilesetAnimation(value.Key, value.Value);
+        }
+        var entitiesData = GlobalState.EntitiesData = JsonConvert.DeserializeObject<EntitiesData>(File.ReadAllText("Content/entities/entities.json"));
         var entitySpriteSheet = new EntitySpriteSheet(_spriteBatch, entitiesData);
+
+        GlobalState.BuildingData = JsonConvert.DeserializeObject<BuildingData>(File.ReadAllText("Content/tilesets/buildings/buildings.json"));
+        // Must be initialized before UI is created. Dependency is UI on building animations being set up (see BuildingSelectorButton).
+        foreach (var building in GlobalState.BuildingData.Buildings.Values)
+        {
+            building.InitAnimations(tilesetData);
+        }
+
         var uiSpriteData = JsonConvert.DeserializeObject<UISpriteData>(File.ReadAllText("Content/ui/ui.json"));
-        _uiSpriteSheet = new UISpriteSheet(_spriteBatch, uiSpriteData);
+        var uiSpriteSheet = new UISpriteSheet(_spriteBatch, uiSpriteData);
         var screenData = JsonConvert.DeserializeObject<ScreensData>(File.ReadAllText("Content/ui/screens.json"));
         var screens = screenData.Screens
             .Select(s => (
@@ -95,7 +110,7 @@ public class Game1 : Game
         _screensToDraw.Add("hud");
         _uiOverlay = new UIOverlay(
             screens,
-            _uiSpriteSheet,
+            uiSpriteSheet,
             _controllerManager);
         // TODO: find a better place for UI interactions to sit (should sit within the Game, i.e. not the library)
         if (_uiOverlay.TryGetById("build-button", out Button buildButton))
@@ -114,7 +129,7 @@ public class Game1 : Game
             {
                 if (previousState != ButtonState.Pressed && state == ButtonState.Pressed && sender is BuildingSelectorButton buildingSelectorButton)
                 {
-                    _player.BuildingKey = buildingSelectorButton.BuildingKey;
+                    GlobalState.PlayerManager.ActivePlayer.BuildingKey = buildingSelectorButton.BuildingKey;
                     _uiOverlay.NextRefresh(() => _screensToDraw.Remove("buildscreen"));
                 }
             };
@@ -141,16 +156,17 @@ public class Game1 : Game
                     {
                         logOutput.Add(("SET options:", Log.Level.Debug));
                         logOutput.Add((" RenderFogOfWar : bool", Log.Level.Debug));
+                        logOutput.Add((" DebugArcRange : bool", Log.Level.Debug));
                     }
-                    else if (setOperation.Equals("RenderFogOfWar=false", StringComparison.OrdinalIgnoreCase))
+                    else if (setOperation.StartsWith("RenderFogOfWar=", StringComparison.OrdinalIgnoreCase))
                     {
-                        Renderer.RenderFogOfWar = false;
-                        logOutput.Add(("Fog of war disabled:", Log.Level.Debug));
+                        Renderer.RenderFogOfWar = setOperation.EndsWith("true", StringComparison.OrdinalIgnoreCase);
+                        logOutput.Add(($"Fog of war {(Renderer.RenderFogOfWar ? "enabled" : "disabled")}.", Log.Level.Debug));
                     }
-                    else if (setOperation.Equals("RenderFogOfWar=true", StringComparison.OrdinalIgnoreCase))
+                    else if (setOperation.StartsWith("DebugArcRange=", StringComparison.OrdinalIgnoreCase))
                     {
-                        Renderer.RenderFogOfWar = true;
-                        logOutput.Add(("Fog of war enabled:", Log.Level.Debug));
+                        _debugArcRange = setOperation.EndsWith("true", StringComparison.OrdinalIgnoreCase);
+                        logOutput.Add(($"Debug arc range {(_debugArcRange ? "enabled" : "disabled")}.", Log.Level.Debug));
                     }
                     else
                     {
@@ -167,34 +183,37 @@ public class Game1 : Game
                 });
             };
         }
-        _spriteSheet = new SpriteSheet(tileset, entitySpriteSheet);
-        _player = new Player.Player(
+        GlobalState.ConsolidatedZoningData = new();
+        foreach (var buildableData in tilesetData.Data)
+        {
+            GlobalState.ConsolidatedZoningData.Add(buildableData.Key, buildableData.Value);
+        }
+        foreach (var buildableData in entitiesData.Data)
+        {
+            GlobalState.ConsolidatedZoningData.Add(buildableData.Key, buildableData.Value);
+        }
+        GlobalState.TerrainManager = new TerrainManager(Rand.Next(), resourceData);
+        GlobalState.ItemManager = new ItemManager(itemData, entitiesData.Data);
+        GlobalState.MobManager = new MobManager(mobData, entitiesData.Data);
+        GlobalState.ProjectileManager = new ProjectileManager(entitiesData.Data);
+        GlobalState.PlayerManager = new PlayerManager();
+
+        var player = GlobalState.PlayerManager.ActivePlayer = new Player.Player(
             // TODO: Pull this from save state (once saving has been implemented)
             new Inventory(new()),
             _controllerManager,
             _viewportManager,
-            _terrainManager,
-            _spriteSheet,
             _uiOverlay);
-        _viewportManager.Tracking = _player;
+        GlobalState.PlayerManager.AddPlayer(GlobalState.PlayerManager.ActivePlayer);
+        _viewportManager.Tracking = player;
         _viewportManager.UIOverlay = _uiOverlay;
-        _terrainManager.UpdateSightInit(tileX: _player.TileX, tileY: _player.TileY, Player.Player.SightRadius);
-        _itemManager = GlobalState.ItemManager = new ItemManager(_player, itemData);
-        _mobManager = new MobManager(mobData, _player, _itemManager, _terrainManager);
-        _projectileManager = GlobalState.ProjectileManager = new ProjectileManager(_player, _mobManager);
-        _entityManager = new EntityManager(
-            _player,
-            _mobManager,
-            _projectileManager,
-            _itemManager);
 #if DEBUG
         Renderer.RenderFogOfWar = false;
 #endif
         _renderer = new Renderer(
             _viewportManager,
-            _terrainManager,
-            _spriteSheet,
-            _entityManager,
+            tileset,
+            entitySpriteSheet,
             fogOfWarEffect,
             fogOfWarInverseEffect,
             pixel);
@@ -205,7 +224,8 @@ public class Game1 : Game
         _controllerManager.Update(gameTime);
         _uiOverlay.Update(gameTime, _screensToDraw);
         _viewportManager.Update(gameTime);
-        _entityManager.Update(gameTime);
+        EntityManager.Update(gameTime);
+        GlobalState.AnimationManager.Update(gameTime);
 
         if (_controllerManager.IsKeyInitialPressed(Keys.Escape))
         {
@@ -214,9 +234,9 @@ public class Game1 : Game
             {
                 _screensToDraw.RemoveAt(_screensToDraw.Count - 1);
             }
-            else if (_player.BuildingKey != null)
+            else if (GlobalState.PlayerManager.ActivePlayer.BuildingKey != null)
             {
-                _player.BuildingKey = null;
+                GlobalState.PlayerManager.ActivePlayer.BuildingKey = null;
             }
             else
             {
@@ -233,9 +253,9 @@ public class Game1 : Game
         }
         else if (_controllerManager.IsKeyInitialPressed(Keys.F12))
         {
-            _terrainManager.Reseed(Rand.Next());
-            _terrainManager.UpdateSightInit(tileX: _player.TileX, tileY: _player.TileY, Player.Player.SightRadius);
-            _mobManager.Clear();
+            GlobalState.AnimationManager.Clear();
+            GlobalState.TerrainManager.Reseed(Rand.Next());
+            EntityManager.Reset();
             _renderer.ClearLODCache();
         }
 
@@ -247,8 +267,45 @@ public class Game1 : Game
 #if DEBUG
         if (gameTime.ElapsedGameTime.TotalSeconds > 0.02)
             System.Diagnostics.Debug.WriteLine(("Running slow", gameTime.ElapsedGameTime.TotalSeconds));
+        if (_debugArcRange)
+        {
+            using (RenderTargetScope.Create(_spriteBatch, _entireScreen, begin: false))
+            {
+                _renderer.Draw(_spriteBatch);
+            }
+            var halfScreenWidth = _spriteBatch.GraphicsDevice.Viewport.Width / 2f;
+            var halfScreenHeight = _spriteBatch.GraphicsDevice.Viewport.Height / 2f;
+            var weaponRange = GlobalState.PlayerManager.ActivePlayer.GetWeaponRange(out var xOffset, out var yOffset);
+            _debugArcRangeEffect.Parameters["HalfScreenWidth"].SetValue(halfScreenWidth);
+            _debugArcRangeEffect.Parameters["HalfScreenHeight"].SetValue(halfScreenHeight);
+            _debugArcRangeEffect.Parameters["Scale"].SetValue(_viewportManager.Zoom);
+            _debugArcRangeEffect.Parameters["XOffset"].SetValue(xOffset * _viewportManager.Zoom);
+            _debugArcRangeEffect.Parameters["YOffset"].SetValue(yOffset * _viewportManager.Zoom);
+            _debugArcRangeEffect.Parameters["ReachPow2"].SetValue(weaponRange.ReachPow2 * _viewportManager.Zoom);
+            _debugArcRangeEffect.Parameters["ArcCrosses0"].SetValue(weaponRange.ArcCrosses0);
+            _debugArcRangeEffect.Parameters["FacingDirectionRadiansMin"].SetValue((float)weaponRange.FacingDirectionRadiansMin);
+            _debugArcRangeEffect.Parameters["FacingDirectionRadiansMax"].SetValue((float)weaponRange.FacingDirectionRadiansMax);
+            var mouseDirection = new Vector2(
+                x: _controllerManager.CurrentMouseState.X - halfScreenWidth + xOffset * _viewportManager.Zoom,
+                y: _controllerManager.CurrentMouseState.Y - halfScreenHeight - yOffset * _viewportManager.Zoom);
+            mouseDirection.Normalize();
+            //System.Diagnostics.Debug.WriteLine((
+            //    "facing", weaponRange.FacingDirection,
+            //    "mouse", mouseDirection,
+            //    "atan2(actual)", weaponRange.FacingDirectionRadians,
+            //    "atan2(mouse)", Math.Atan2(y: mouseDirection.Y, x: mouseDirection.X),
+            //    "Min", weaponRange.FacingDirectionRadiansMin,
+            //    "Max", weaponRange.FacingDirectionRadiansMax,
+            //    "ArcCrosses0", weaponRange.ArcCrosses0));
+            _spriteBatch.Begin(blendState: BlendState.AlphaBlend, effect: _debugArcRangeEffect);
+            _spriteBatch.Draw(_entireScreen, _entireScreen.Bounds, Color.White);
+            _spriteBatch.End();
+        }
+        else
 #endif
-        _renderer.Draw(_spriteBatch);
+        {
+            _renderer.Draw(_spriteBatch);
+        }
         // should UIOverlay be inside the Renderer instead?
         _spriteBatch.Begin();
         _uiOverlay.Draw(_spriteBatch, _screensToDraw);

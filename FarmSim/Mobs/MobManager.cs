@@ -1,9 +1,10 @@
 ﻿using FarmSim.Entities;
+using FarmSim.Projectiles;
 using FarmSim.Rendering;
-using FarmSim.Terrain;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace FarmSim.Mobs;
@@ -15,30 +16,23 @@ class MobManager : EntityManager<Mob>
     private const int MinWaitTimeMilliseconds = 10_000;
     private const int MaxWaitTimeMilliseconds = 60_000;
     private const int RandomWaitTimeMilliseconds = MaxWaitTimeMilliseconds - MinWaitTimeMilliseconds;
-    private const int SpawnRadius = Player.Player.SightRadius + 4;//tiles
+    // Public because despawn radius of projectiles same as mobs
+    public const int SpawnRadius = Player.Player.SightRadius + 4;//tiles
     private const int SpawnRadius2Plus1 = SpawnRadius + SpawnRadius + 1;//tiles
     private const int SpawnRadiusPow2 = SpawnRadius * SpawnRadius;
-    // Public because despawn radius of projectiles same as mobs
-    public const int DespawnRadius = SpawnRadius + 10;//tiles
 
     private readonly MobData[] _mobData;
-    private readonly Player.Player _player;
-    private readonly TerrainManager _terrainManager;
-    private readonly ItemManager _itemManager;
+    private readonly Dictionary<string, EntityData> _entityData;
     private readonly EntityFactory<Mob, MobData> _mobFactor;
 
     private double _waitTimeMilliseconds;
 
     public MobManager(
         MobData[] mobData,
-        Player.Player player,
-        ItemManager itemManager,
-        TerrainManager terrainManager)
+        Dictionary<string, EntityData> entityData)
     {
         _mobData = mobData;
-        _player = player;
-        _itemManager = itemManager;
-        _terrainManager = terrainManager;
+        _entityData = entityData;
         _mobFactor = new EntityFactory<Mob, MobData>(mobData);
 #if !DEBUG
         ResetSpawnWaitTime();
@@ -55,24 +49,50 @@ class MobManager : EntityManager<Mob>
 
     public bool DetectCollision(Projectile projectile)
     {
-        foreach (var mob in Entities)
+        foreach (var mob in Entities.Where(projectile.DetectCollision))
         {
-            if (projectile.DetectCollision(mob))
+            // TODO: damage
+            Damage(mob, mob.HP);
+            if (projectile.Effect != null)
             {
-                // TODO: health and drops
+                projectile.Effect.Apply(mob, projectile);
+                GlobalState.AnimationManager.Generate(entity: mob, animationKey: projectile.Effect.AnimationKey, direction: new Vector2(x: 0, y: 1));
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public void Damage(List<Mob> mobs, int damage)
+    {
+        foreach (var mob in mobs)
+        {
+            Damage(mob, damage);
+        }
+    }
+
+    private static void Damage(Mob mob, int damage)
+    {
+        var hitAnimation = GlobalState.AnimationManager.PlayOnce(mob, "hit");
+        mob.Hit = true;
+        mob.HP -= damage;
+        hitAnimation.After(() =>
+        {
+            mob.Hit = false;
+            if (mob.HP <= 0)
+            {
                 mob.FlagForDespawning = true;
+                GlobalState.AnimationManager.Generate(x: mob.XInt, y: mob.YInt, animationKey: "generic-despawn", scale: mob.Scale);
                 foreach (var drop in mob.GetDrops())
                 {
-                    _itemManager.CreateNewItem(
+                    GlobalState.ItemManager.CreateNewItem(
                         itemId: drop,
                         originX: mob.XInt,
                         originY: mob.YInt,
                         normalizedDirection: RandomUtil.RandomNormalizedDirection());
                 }
-                return true;
             }
-        }
-        return false;
+        });
     }
 
     public void Update(GameTime gameTime)
@@ -80,10 +100,11 @@ class MobManager : EntityManager<Mob>
         foreach (var mob in Entities)
         {
             mob.Update(gameTime);
-            if (Math.Abs(mob.TileX - _player.TileX) > DespawnRadius
-                || Math.Abs(mob.TileY - _player.TileY) > DespawnRadius)
+            if (GlobalState.PlayerManager.OutsideDespawnRadius(mob))
             {
                 mob.FlagForDespawning = true;
+                // do we need to generate animations for mobs we shouldn't be able see?
+                GlobalState.AnimationManager.Generate(x: mob.XInt, y: mob.YInt, animationKey: "generic-despawn", scale: mob.Scale);
             }
         }
         Entities.RemoveAll(mob => mob.FlagForDespawning);
@@ -113,55 +134,60 @@ class MobManager : EntityManager<Mob>
             yOffset = -yOffset;
         };
         var offset = new Vector2(x: xOffset, y: yOffset);
-        for (int mobGroups = 0; mobGroups < 3; ++mobGroups, offset = Vector2.Transform(offset, Rotate120))
+        foreach (var player in GlobalState.PlayerManager.Entities)
         {
-            var spawnTileX = _player.TileX + (int)offset.X;
-            var spawnTileY = _player.TileY + (int)offset.Y;
-            var spawnX = spawnTileX * Renderer.TileSize + Renderer.TileSizeHalf;
-            var spawnY = spawnTileY * Renderer.TileSize + Renderer.TileSizeHalf;
-            var spawnTile = _terrainManager.GetTile(tileX: spawnTileX, tileY: spawnTileY);
-            var spawnableMobs = _mobData.Where(m => m.Spawnable.Contains(spawnTile.Terrain)).ToList();
-            if (spawnableMobs.Count == 0)
+            for (int mobGroups = 0; mobGroups < 3; ++mobGroups, offset = Vector2.Transform(offset, Rotate120))
             {
-                return;
-            }
-            var mobToSpawn = spawnableMobs[RandomUtil.Rand.Next(spawnableMobs.Count)];
-            var numberToSpawn = RandomUtil.Rand.Next(minValue: mobToSpawn.MinSpawned, maxValue: mobToSpawn.MaxSpawned);
-            for (int mob = 0; mob < numberToSpawn; ++mob)
-            {
-                var newMob = _mobFactor.Create(mobToSpawn.Class);
-                newMob.Metadata = mobToSpawn;
-                newMob.Tags = mobToSpawn.Tags.PickTags();
-                newMob.Scale = newMob.Tags.Match(new()
+                var spawnTileX = player.TileX + (int)offset.X;
+                var spawnTileY = player.TileY + (int)offset.Y;
+                var spawnX = spawnTileX * Renderer.TileSize + Renderer.TileSizeHalf;
+                var spawnY = spawnTileY * Renderer.TileSize + Renderer.TileSizeHalf;
+                var spawnTile = GlobalState.TerrainManager.GetTile(tileX: spawnTileX, tileY: spawnTileY);
+                var spawnableMobs = _mobData.Where(m => m.Spawnable.Contains(spawnTile.Terrain)).ToList();
+                if (spawnableMobs.Count == 0)
                 {
-                    { Tags.Gigantic, () => 2f },
-                    { Tags.Large, () => 1.5f },
-                    { Tags.Medium, () => 1f },
-                    { Tags.Small, () => 0.9f },
-                    { Tags.Tiny, () => 0.8f },
-                }, defaultValue: 1f);
-                newMob.Color = newMob.Tags.Match(new()
+                    return;
+                }
+                var mobToSpawn = spawnableMobs[RandomUtil.Rand.Next(spawnableMobs.Count)];
+                var numberToSpawn = RandomUtil.Rand.Next(minValue: mobToSpawn.MinSpawned, maxValue: mobToSpawn.MaxSpawned);
+                for (int mob = 0; mob < numberToSpawn; ++mob)
                 {
-                    { Tags.White, () => Color.White },
-                    { Tags.Black, () => Color.Black },
-                    { Tags.Red, () => Color.Red },
-                    { Tags.Green, () => Color.Green },
-                    { Tags.Blue, () => newMob.Scale < 1f ? MobLightBlue : Color.Blue },
-                    { Tags.Yellow, () => Color.Yellow },
-                }, defaultValue: Color.White);
-                // TODO: modify based on metadata (currently 256 = 16*16 (i.e. 16^2))
-                newMob.HitRadiusPow2 = (int)(256 * newMob.Scale);
-                newMob.EntitySpriteKey = mobToSpawn.EntitySpriteKey;
-                newMob.HP = mobToSpawn.hp;
-                newMob.TileX = spawnTileX;
-                newMob.X = spawnX;
-                newMob.XInt = spawnX;
-                newMob.TileY = spawnTileY;
-                newMob.Y = spawnY;
-                newMob.YInt = spawnY;
-                newMob.HitboxYOffset = -16;
-                newMob.Init();
-                Entities.Add(newMob);
+                    var newMob = _mobFactor.Create(mobToSpawn.Class);
+                    newMob.Metadata = mobToSpawn;
+                    newMob.Tags = mobToSpawn.Tags.PickTags();
+                    newMob.Scale = newMob.Tags.Match(new()
+                    {
+                        { Tags.Gigantic, () => 2f },
+                        { Tags.Large, () => 1.5f },
+                        { Tags.Medium, () => 1f },
+                        { Tags.Small, () => 0.9f },
+                        { Tags.Tiny, () => 0.8f },
+                    }, defaultValue: 1f);
+                    newMob.Color = newMob.Tags.Match(new()
+                    {
+                        { Tags.White, () => Color.White },
+                        { Tags.Black, () => Color.Black },
+                        { Tags.Red, () => Color.Red },
+                        { Tags.Green, () => Color.Green },
+                        { Tags.Blue, () => newMob.Scale < 1f ? MobLightBlue : Color.Blue },
+                        { Tags.Yellow, () => Color.Yellow },
+                    }, defaultValue: Color.White);
+                    // TODO: modify based on metadata (currently 400 = 20*20 (i.e. 20^2))
+                    newMob.HitRadiusPow2 = (int)(400 * newMob.Scale);
+                    newMob.EntitySpriteKey = mobToSpawn.EntitySpriteKey;
+                    newMob.DefaultAnimationKey = _entityData[mobToSpawn.EntitySpriteKey].DefaultAnimationKey;
+                    newMob.HP = mobToSpawn.hp;
+                    newMob.TileX = spawnTileX;
+                    newMob.X = spawnX;
+                    newMob.XInt = spawnX;
+                    newMob.TileY = spawnTileY;
+                    newMob.Y = spawnY;
+                    newMob.YInt = spawnY;
+                    newMob.HitboxYOffset = -16;
+                    newMob.InitBehaviours();
+                    newMob.InitDefaultAnimation();
+                    Entities.Add(newMob);
+                }
             }
         }
     }

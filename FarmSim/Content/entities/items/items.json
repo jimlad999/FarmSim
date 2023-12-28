@@ -77,5 +77,34 @@
         "Odorless": 1
       }
     ]
+  },
+  {
+    "id": "wood",
+    "entitySpriteKey": "item-wood",
+    "quality": {
+      "min": 10,
+      "max": 20
+    },
+    "tags": [
+      {
+        "Wood": 1
+      }
+    ]
+  },
+  {
+    "id": "coal",
+    "entitySpriteKey": "item-coal",
+    "quality": {
+      "min": 10,
+      "max": 20
+    },
+    "tags": [
+      {
+        "Ore": 1
+      },
+      {
+        "Fuel": 1
+      }
+    ]
   }
 ]

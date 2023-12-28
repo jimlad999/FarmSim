@@ -32,7 +32,7 @@ class BuildingSelectorButton : Button
                     roof: null,
                     exteriorWall: null,
                     interiorWall: null,
-                    floor: metadata.Floor,
+                    floor: metadata.FloorAnimation,
                     hasTransparency: metadata.HasTransparency)
                 {
                     VerticalAlignment = Alignment.Center,
@@ -46,10 +46,10 @@ class BuildingSelectorButton : Button
             {
                 children.Add(
                     new TileUIElement(
-                        roof: metadata.Roof,
-                        exteriorWall: metadata.ExteriorWall,
-                        interiorWall: metadata.InteriorWall,
-                        floor: metadata.Floor,
+                        roof: metadata.RoofAnimation,
+                        exteriorWall: metadata.ExteriorWallAnimation,
+                        interiorWall: metadata.InteriorWallAnimation,
+                        floor: metadata.FloorAnimation,
                         hasTransparency: metadata.HasTransparency)
                     {
                         VerticalAlignment = Alignment.Center,
@@ -64,8 +64,8 @@ class BuildingSelectorButton : Button
                     new TileUIElement(
                         roof: null,
                         exteriorWall: null,
-                        interiorWall: metadata.InteriorWall,
-                        floor: metadata.Floor,
+                        interiorWall: metadata.InteriorWallAnimation,
+                        floor: metadata.FloorAnimation,
                         hasTransparency: metadata.HasTransparency)
                     {
                         VerticalAlignment = Alignment.Center,
