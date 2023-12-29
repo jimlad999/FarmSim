@@ -182,6 +182,9 @@ public class Game1 : Game
             }));
             // make default selection for player
             actionButton1.Select();
+            // Manually set SelectedButton since the event listeners won't be attached yet.
+            // Once the Update(GameTime) runs once the event listeners will be attached.
+            _actionBar.SelectedButton = actionButton1;
             ((ActionButton)_actionBar.Children[1]).SetOption(new ActionIcon("magic-missile", (Button sender, ButtonState state, ButtonState previousState) =>
             {
                 if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
@@ -244,11 +247,6 @@ public class Game1 : Game
     protected override void Update(GameTime gameTime)
     {
         _controllerManager.Update(gameTime);
-        _uiOverlay.Update(gameTime, _screensToDraw);
-        _viewportManager.Update(gameTime);
-        EntityManager.Update(gameTime);
-        GlobalState.AnimationManager.Update(gameTime);
-
         if (_controllerManager.IsKeyInitialPressed(Keys.Escape))
         {
             // if not just HUD displayed
@@ -265,6 +263,13 @@ public class Game1 : Game
                 Exit();
             }
         }
+        else if (_controllerManager.IsRightMouseInitialPressed())
+        {
+            if (GlobalState.PlayerManager.ActivePlayer.BuildingKey != null)
+            {
+                GlobalState.PlayerManager.ActivePlayer.BuildingKey = null;
+            }
+        }
         else if (_controllerManager.IsKeyInitialPressed(Keys.OemTilde) && !_screensToDraw.Contains("command-console"))
         {
             _uiOverlay.NextRefresh(() =>
@@ -273,6 +278,28 @@ public class Game1 : Game
                 _commandInput.IgnoreLastKeyPress();
             });
         }
+        else if (_controllerManager.IsScrolling(out var scrollResult))
+        {
+            if (_controllerManager.IsKeyDown(Keys.LeftControl) || _controllerManager.IsKeyDown(Keys.RightControl))
+            {
+                if (scrollResult.ScrollDirection == ControllerManager.ScrollDirection.Up)
+                {
+                    _viewportManager.ZoomOut();
+                }
+                else if (scrollResult.ScrollDirection == ControllerManager.ScrollDirection.Down)
+                {
+                    _viewportManager.ZoomIn();
+                }
+            }
+            else if (scrollResult.ScrollDirection == ControllerManager.ScrollDirection.Up)
+            {
+                _actionBar.CycleNext();
+            }
+            else if (scrollResult.ScrollDirection == ControllerManager.ScrollDirection.Down)
+            {
+                _actionBar.CyclePrevious();
+            }
+        }
         else if (_controllerManager.IsKeyInitialPressed(Keys.F12))
         {
             GlobalState.AnimationManager.Clear();
@@ -280,6 +307,11 @@ public class Game1 : Game
             EntityManager.Reset();
             _renderer.ClearLODCache();
         }
+
+        _uiOverlay.Update(gameTime, _screensToDraw);
+        _viewportManager.Update(gameTime);
+        EntityManager.Update(gameTime);
+        GlobalState.AnimationManager.Update(gameTime);
 
         base.Update(gameTime);
     }

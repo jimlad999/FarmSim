@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.Serialization;
+﻿using System.Runtime.Serialization;
 using UI;
 using Utils;
 
@@ -8,6 +7,8 @@ namespace FarmSim.UI;
 [DataContract]
 class ActionButton : ToggleButton
 {
+    public bool IsActive => Children.Count > 0;
+
     protected override void UpdateState(ButtonState previousState, ControllerManager controllerManager)
     {
         // Only active if there is an action associated with this.
@@ -30,7 +31,7 @@ class ActionButton : ToggleButton
 
     public void SetOption(ActionIcon newAction)
     {
-        if (Children.Count > 0)
+        if (IsActive)
         {
             var oldAction = (ActionIcon)Children[0];
             EventHandler -= oldAction.ButtonEventHandler;

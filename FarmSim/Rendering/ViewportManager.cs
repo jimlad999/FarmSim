@@ -84,45 +84,56 @@ internal class ViewportManager
             }
         }
 
-        if (UIOverlay?.State.IsMouseOverElement == false)
-        {
-            if (Zoom < MaxZoom && _controllerManager.IsMouseScrollingUp())
-            {
-                Zoom *= 2;
-                if (Zoom > MaxZoom) Zoom = MaxZoom;
-                _x += _width / 4;
-                _y += _height / 4;
-                _width /= 2;
-                _widthHalf = _width / 2;
-                _height /= 2;
-                _heightHalf = _height / 2;
-                stateChanged = true;
-            }
-            else if (Zoom > MinZoom && _controllerManager.IsMouseScrollingDown())
-            {
-                Zoom /= 2;
-                if (Zoom < MinZoom) Zoom = MinZoom;
-                _x -= _width / 2;
-                _y -= _height / 2;
-                _width *= 2;
-                _widthHalf = _width / 2;
-                _height *= 2;
-                _heightHalf = _height / 2;
-                stateChanged = true;
-            }
-        }
-
         if (stateChanged)
         {
-            Viewport = new Viewport(
-                x: (int)_x,
-                y: (int)_y,
-                width: (int)_width,
-                height: (int)_height);
+            UpdateViewport();
         }
     }
 
-    internal (int X, int Y) ConvertScreenCoordinatesToWorldCoordinates(int screenX, int screenY)
+    private void UpdateViewport()
+    {
+        Viewport = new Viewport(
+            x: (int)_x,
+            y: (int)_y,
+            width: (int)_width,
+            height: (int)_height);
+    }
+
+    public void ZoomIn()
+    {
+        if (Zoom <= MinZoom)
+        {
+            return;
+        }
+        Zoom /= 2;
+        if (Zoom < MinZoom) Zoom = MinZoom;
+        _x -= _width / 2;
+        _y -= _height / 2;
+        _width *= 2;
+        _widthHalf = _width / 2;
+        _height *= 2;
+        _heightHalf = _height / 2;
+        UpdateViewport();
+    }
+
+    public void ZoomOut()
+    {
+        if (Zoom >= MaxZoom)
+        {
+            return;
+        }
+        Zoom *= 2;
+        if (Zoom > MaxZoom) Zoom = MaxZoom;
+        _x += _width / 4;
+        _y += _height / 4;
+        _width /= 2;
+        _widthHalf = _width / 2;
+        _height /= 2;
+        _heightHalf = _height / 2;
+        UpdateViewport();
+    }
+
+    public (int X, int Y) ConvertScreenCoordinatesToWorldCoordinates(int screenX, int screenY)
     {
         return (
             X: (int)(screenX / Zoom + Viewport.X),
@@ -130,7 +141,7 @@ internal class ViewportManager
         );
     }
 
-    internal (int X, int Y) ConvertScreenCoordinatesToTileCoordinates(int screenX, int screenY)
+    public (int X, int Y) ConvertScreenCoordinatesToTileCoordinates(int screenX, int screenY)
     {
         return (
             X: (int)Math.Floor((screenX / Zoom + Viewport.X) / Renderer.TileSize),

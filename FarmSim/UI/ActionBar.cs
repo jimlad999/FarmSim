@@ -31,4 +31,50 @@ class ActionBar : ButtonGroup
             offset,
             positionParentBasedOnChildrenDimensions: true);
     }
+
+    public void CycleNext()
+    {
+        if (Children.Count == 0 || SelectedButton == null)
+        {
+            return;
+        }
+        var nextIndex = Children.IndexOf(SelectedButton);
+        ActionButton nextAction;
+        do
+        {
+            if (++nextIndex >= Children.Count)
+            {
+                nextIndex = 0;
+            }
+            nextAction = (ActionButton)Children[nextIndex];
+        // break out if full cycle
+        } while (!(nextAction.IsActive || nextAction == SelectedButton));
+        if (nextAction != SelectedButton)
+        {
+            nextAction.Select();
+        }
+    }
+
+    public void CyclePrevious()
+    {
+        if (Children.Count == 0 || SelectedButton == null)
+        {
+            return;
+        }
+        var nextIndex = Children.IndexOf(SelectedButton);
+        ActionButton nextAction;
+        do
+        {
+            if (--nextIndex < 0)
+            {
+                nextIndex = Children.Count - 1;
+            }
+            nextAction = (ActionButton)Children[nextIndex];
+            // break out if full cycle
+        } while (!(nextAction.IsActive || nextAction == SelectedButton));
+        if (nextAction != SelectedButton)
+        {
+            nextAction.Select();
+        }
+    }
 }

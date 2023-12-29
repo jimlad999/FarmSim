@@ -101,6 +101,13 @@ public class ControllerManager
         return CurrentMouseState.ScrollWheelValue - PreviousMouseState.ScrollWheelValue;
     }
 
+    public bool IsScrolling(out ScrollResult result)
+    {
+        var delta = GetMouseScrollDelta();
+        result = new ScrollResult(delta, delta < 0 ? ScrollDirection.Down : delta > 0 ? ScrollDirection.Up : ScrollDirection.None);
+        return delta != 0;
+    }
+
     public bool IsMouseScrollingUp()
     {
         return GetMouseScrollDelta() > 0;
@@ -125,5 +132,40 @@ public class ControllerManager
     public bool IsLeftMouseUp()
     {
         return CurrentMouseState.LeftButton == ButtonState.Released;
+    }
+
+    public bool IsRightMouseInitialPressed()
+    {
+        return CurrentMouseState.RightButton == ButtonState.Pressed
+            && PreviousMouseState.RightButton == ButtonState.Released;
+    }
+
+    public bool IsRightMouseDown()
+    {
+        return CurrentMouseState.RightButton == ButtonState.Pressed;
+    }
+
+    public bool IsRightMouseUp()
+    {
+        return CurrentMouseState.RightButton == ButtonState.Released;
+    }
+
+    public struct ScrollResult
+    {
+        public int Delta;
+        public ScrollDirection ScrollDirection;
+
+        public ScrollResult(int delta, ScrollDirection scrollDirection)
+        {
+            Delta = delta;
+            ScrollDirection = scrollDirection;
+        }
+    }
+
+    public enum ScrollDirection
+    {
+        None,
+        Up,
+        Down,
     }
 }
