@@ -11,7 +11,7 @@ namespace UI;
 public class ButtonGroup : UIElement
 {
     [IgnoreDataMember]
-    private Dictionary<UIElement, Point> ChildOffsetCache = new();
+    protected Dictionary<UIElement, Point> ChildOffsetCache = new();
     [IgnoreDataMember]
     public Button SelectedButton;
     [IgnoreDataMember]

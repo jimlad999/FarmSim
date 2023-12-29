@@ -1,21 +1,84 @@
 {
   "UIElements": [
     {
-      "$type": "UI.Button, UI",
-      "id": "build-button",
+      "$type": "FarmSim.UI.ActionBarLayout, FarmSim",
+      "padding": 5,
+      "texture": "hud-main-panel",
       "verticalAlignment": "Bottom",
-      "horizontalAlignment": "Right",
-      "releasedTexture": "button-released",
-      "selectedTexture": "button-selected",
-      "pressedTexture": "button-pressed",
-      "Children": [
-        {
-          "$type": "UI.Text, UI",
-          "verticalAlignment": "Center",
-          "horizontalAlignment": "Center",
-          "value": "<white>Build<white>"
-        }
-      ]
+      "horizontalAlignment": "Center",
+      "leftButton": {
+        "$type": "UI.Button, UI",
+        "id": "menu-button",
+        "width": 128,
+        "height": 48,
+        "releasedTexture": "button-released",
+        "selectedTexture": "button-selected",
+        "pressedTexture": "button-pressed",
+        "Children": [
+          {
+            "$type": "UI.Text, UI",
+            "verticalAlignment": "Center",
+            "horizontalAlignment": "Center",
+            "value": "<white>Menu<white>"
+          }
+        ]
+      },
+      "rightButton": {
+        "$type": "UI.Button, UI",
+        "id": "build-button",
+        "width": 128,
+        "height": 48,
+        "releasedTexture": "button-released",
+        "selectedTexture": "button-selected",
+        "pressedTexture": "button-pressed",
+        "Children": [
+          {
+            "$type": "UI.Text, UI",
+            "verticalAlignment": "Center",
+            "horizontalAlignment": "Center",
+            "value": "<white>Build<white>"
+          }
+        ]
+      },
+      "ActionBar": {
+        "$type": "FarmSim.UI.ActionBar, FarmSim",
+        "id": "action-bar",
+        "padding": "0 5",
+        "Children": [
+          {
+            "$type": "FarmSim.UI.ActionButton, FarmSim",
+            "releasedTexture": "button-released",
+            "selectedTexture": "button-selected",
+            "pressedTexture": "button-pressed",
+            "width": 48,
+            "height": 48
+          },
+          {
+            "$type": "FarmSim.UI.ActionButton, FarmSim",
+            "releasedTexture": "button-released",
+            "selectedTexture": "button-selected",
+            "pressedTexture": "button-pressed",
+            "width": 48,
+            "height": 48
+          },
+          {
+            "$type": "FarmSim.UI.ActionButton, FarmSim",
+            "releasedTexture": "button-released",
+            "selectedTexture": "button-selected",
+            "pressedTexture": "button-pressed",
+            "width": 48,
+            "height": 48
+          },
+          {
+            "$type": "FarmSim.UI.ActionButton, FarmSim",
+            "releasedTexture": "button-released",
+            "selectedTexture": "button-selected",
+            "pressedTexture": "button-pressed",
+            "width": 48,
+            "height": 48
+          }
+        ]
+      }
     }
   ]
 }

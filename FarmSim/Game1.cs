@@ -36,6 +36,7 @@ public class Game1 : Game
     private SpriteBatch _spriteBatch;
     private Renderer _renderer;
     private TextInput _commandInput;
+    private ActionBar _actionBar;
     private bool _debugArcRange;
     private Effect _debugArcRangeEffect;
     private RenderTarget2D _entireScreen;
@@ -112,6 +113,41 @@ public class Game1 : Game
             screens,
             uiSpriteSheet,
             _controllerManager);
+        GlobalState.ConsolidatedZoningData = new();
+        foreach (var buildableData in tilesetData.Data)
+        {
+            GlobalState.ConsolidatedZoningData.Add(buildableData.Key, buildableData.Value);
+        }
+        foreach (var buildableData in entitiesData.Data)
+        {
+            GlobalState.ConsolidatedZoningData.Add(buildableData.Key, buildableData.Value);
+        }
+        GlobalState.TerrainManager = new TerrainManager(Rand.Next(), resourceData);
+        GlobalState.ItemManager = new ItemManager(itemData, entitiesData.Data);
+        GlobalState.MobManager = new MobManager(mobData, entitiesData.Data);
+        GlobalState.ProjectileManager = new ProjectileManager(entitiesData.Data);
+        GlobalState.PlayerManager = new PlayerManager();
+
+        var player = GlobalState.PlayerManager.ActivePlayer = new Player.Player(
+            // TODO: Pull this from save state (once saving has been implemented)
+            new Inventory(new()),
+            _controllerManager,
+            _viewportManager,
+            _uiOverlay);
+        GlobalState.PlayerManager.AddPlayer(GlobalState.PlayerManager.ActivePlayer);
+        _viewportManager.Tracking = player;
+        _viewportManager.UIOverlay = _uiOverlay;
+#if DEBUG
+        Renderer.RenderFogOfWar = false;
+#endif
+        _renderer = new Renderer(
+            _viewportManager,
+            tileset,
+            entitySpriteSheet,
+            fogOfWarEffect,
+            fogOfWarInverseEffect,
+            pixel);
+
         // TODO: find a better place for UI interactions to sit (should sit within the Game, i.e. not the library)
         if (_uiOverlay.TryGetById("build-button", out Button buildButton))
         {
@@ -133,6 +169,26 @@ public class Game1 : Game
                     _uiOverlay.NextRefresh(() => _screensToDraw.Remove("buildscreen"));
                 }
             };
+        }
+        if (_uiOverlay.TryGetById("action-bar", out _actionBar))
+        {
+            var actionButton1 = (ActionButton)_actionBar.Children[0];
+            actionButton1.SetOption(new ActionIcon("multi-tool-attack", (Button sender, ButtonState state, ButtonState previousState) =>
+            {
+                if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
+                {
+                    GlobalState.PlayerManager.ActivePlayer.PrimaryAction = new MultiToolActions();
+                }
+            }));
+            // make default selection for player
+            actionButton1.Select();
+            ((ActionButton)_actionBar.Children[1]).SetOption(new ActionIcon("magic-missile", (Button sender, ButtonState state, ButtonState previousState) =>
+            {
+                if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
+                {
+                    GlobalState.PlayerManager.ActivePlayer.PrimaryAction = new FireProjectileActions();
+                }
+            }));
         }
         if (_uiOverlay.TryGetById("command-input", out _commandInput)
             && _uiOverlay.TryGetById("command-log", out Log commandLog))
@@ -183,40 +239,6 @@ public class Game1 : Game
                 });
             };
         }
-        GlobalState.ConsolidatedZoningData = new();
-        foreach (var buildableData in tilesetData.Data)
-        {
-            GlobalState.ConsolidatedZoningData.Add(buildableData.Key, buildableData.Value);
-        }
-        foreach (var buildableData in entitiesData.Data)
-        {
-            GlobalState.ConsolidatedZoningData.Add(buildableData.Key, buildableData.Value);
-        }
-        GlobalState.TerrainManager = new TerrainManager(Rand.Next(), resourceData);
-        GlobalState.ItemManager = new ItemManager(itemData, entitiesData.Data);
-        GlobalState.MobManager = new MobManager(mobData, entitiesData.Data);
-        GlobalState.ProjectileManager = new ProjectileManager(entitiesData.Data);
-        GlobalState.PlayerManager = new PlayerManager();
-
-        var player = GlobalState.PlayerManager.ActivePlayer = new Player.Player(
-            // TODO: Pull this from save state (once saving has been implemented)
-            new Inventory(new()),
-            _controllerManager,
-            _viewportManager,
-            _uiOverlay);
-        GlobalState.PlayerManager.AddPlayer(GlobalState.PlayerManager.ActivePlayer);
-        _viewportManager.Tracking = player;
-        _viewportManager.UIOverlay = _uiOverlay;
-#if DEBUG
-        Renderer.RenderFogOfWar = false;
-#endif
-        _renderer = new Renderer(
-            _viewportManager,
-            tileset,
-            entitySpriteSheet,
-            fogOfWarEffect,
-            fogOfWarInverseEffect,
-            pixel);
     }
 
     protected override void Update(GameTime gameTime)
@@ -307,7 +329,7 @@ public class Game1 : Game
             _renderer.Draw(_spriteBatch);
         }
         // should UIOverlay be inside the Renderer instead?
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
         _uiOverlay.Draw(_spriteBatch, _screensToDraw);
         _spriteBatch.End();
 

@@ -27,6 +27,15 @@
     },
     "building-panel-selected": {
       "source": "building-panel-selected.png"
+    },
+    "hud-main-panel": {
+      "source": "hud-main-panel.png"
+    },
+    "multi-tool-attack": {
+      "source": "icons/multi-tool-attack.png"
+    },
+    "magic-missile": {
+      "source": "../entities/projectiles/magic-missile.png"
     }
   }
 }

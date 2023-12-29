@@ -13,22 +13,6 @@ public class Tab : ToggleButton
     [DataMember]
     public UIElement[] TabContent = Array.Empty<UIElement>();
 
-    // For use with TabContainer
-    public void Select()
-    {
-        if (State != ButtonState.Pressed)
-        {
-            var previousState = State;
-            State = ButtonState.Pressed;
-            Texture = PressedTexture;
-            TextureStale = true;
-            if (EventHandler != null)
-            {
-                EventHandler.Invoke(this, State, previousState);
-            }
-        }
-    }
-
     public override bool TryGetById<T>(string id, out T result)
     {
         foreach (var child in TabContent)

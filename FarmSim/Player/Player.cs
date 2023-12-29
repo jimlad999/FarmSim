@@ -23,8 +23,7 @@ class Player : Entity, IHasMultiTool
 
     public MultiTool MultiTool { get; set; } = new MultiTool();
 
-    private IAction PrimaryAction = new MultiToolActions();//DEBUG
-    //private IAction PrimaryAction = new FireProjectileActions();//DEBUG
+    public IAction PrimaryAction;
 
     private string _buildingKey;
     public string BuildingKey
@@ -147,7 +146,7 @@ class Player : Entity, IHasMultiTool
 
     private void UpdateAction()
     {
-        if (_controllerManager.IsLeftMouseInitialPressed())
+        if (PrimaryAction != null && _controllerManager.IsLeftMouseInitialPressed())
         {
             var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection();
             PrimaryAction.Invoke(

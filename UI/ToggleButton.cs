@@ -14,4 +14,20 @@ public class ToggleButton : Button
         }
         base.UpdateState(previousState, controllerManager);
     }
+
+    // For use with TabContainer
+    public void Select()
+    {
+        if (State != ButtonState.Pressed)
+        {
+            var previousState = State;
+            State = ButtonState.Pressed;
+            Texture = PressedTexture;
+            TextureStale = true;
+            if (EventHandler != null)
+            {
+                EventHandler.Invoke(this, State, previousState);
+            }
+        }
+    }
 }
