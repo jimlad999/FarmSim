@@ -1,4 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarmSim.Rendering;
+using FarmSim.Terrain;
+using FarmSim.Utils;
+using Microsoft.Xna.Framework;
+using System;
 
 namespace FarmSim.Entities;
 
@@ -13,19 +17,24 @@ class MultiTool
             return BaseDamage;
         }
     }
-    private int ToolRadiusPow2 = 16 * 16;
-    private int ToolReach = 32;
+    private int ToolReach = 1;//tiles
     private int WeaponReachPow2 = 110 * 110;
     private double ArcHalfRadians = 0.872665;//+/- 40 degrees of facing direction
 
-    public PointRange ToolRange(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)
+    public bool IsTileWithinRange(Entity entity, Tile targetTile)
     {
-        return new PointRange(
-            x: entity.XInt + xOffset,
-            y: entity.YInt + yOffset,
-            facingDirection: facingDirection,
-            reach: ToolReach,
-            radiusPow2: ToolRadiusPow2);
+        var xDiff = targetTile.X - entity.TileX;
+        var yDiff = targetTile.Y - entity.TileY;
+        var xMod = entity.XInt.Mod(Renderer.TileSize);
+        var yMod = entity.YInt.Mod(Renderer.TileSize);
+        const int XLowerTileBound = 12;
+        const int XUppterTileBound = Renderer.TileSize - XLowerTileBound;
+        const int YLowerTileBound = 6;
+        const int YUppterTileBound = Renderer.TileSize - YLowerTileBound;
+        var xOffset = xDiff + (xMod <= XLowerTileBound && xDiff < 0 ? 1 : xMod > XUppterTileBound && xDiff > 0 ? -1 : 0);
+        var yOffset = yDiff + (yMod <= YLowerTileBound && yDiff < 0 ? 1 : yMod >= YUppterTileBound && yDiff > 0 ? -1 : 0);
+        return Math.Abs(xOffset) <= ToolReach
+            && Math.Abs(yOffset) <= ToolReach;
     }
 
     public ArcRange WeaponRange(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)

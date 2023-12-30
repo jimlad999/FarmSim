@@ -1,6 +1,4 @@
-﻿using FarmSim.Entities;
-using FarmSim.Rendering;
-using FarmSim.Utils;
+﻿using FarmSim.Utils;
 using System.Collections.Generic;
 
 namespace FarmSim.Terrain;
@@ -99,16 +97,6 @@ class TerrainManager
                     .Add(buildingType, buildingKey);
             }
         }
-    }
-
-    public Tile GetTileWithinRange(PointRange range)
-    {
-        var reachTileX = range.ReachX / Renderer.TileSize;
-        if (range.ReachX < 0) --reachTileX;
-        var reachTileY = range.ReachY / Renderer.TileSize;
-        if (range.ReachY < 0) --reachTileY;
-        var tile = GetTile(tileX: reachTileX, tileY: reachTileY);
-        return tile;
     }
 
     public Resource CreateResource(string tilesetKey, int tileX, int tileY)

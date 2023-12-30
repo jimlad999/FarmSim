@@ -323,6 +323,7 @@ public class Game1 : Game
             {
                 GlobalState.PlayerManager.ActivePlayer.BuildingKey = null;
             }
+            // else (see) Player.InvokeSecondaryAction
         }
         else if ((_controllerManager.IsKeyInitialPressed(Keys.OemTilde) || _controllerManager.IsKeyInitialPressed(Keys.OemQuestion)) && !_screensToDraw.Contains("command-console"))
         {

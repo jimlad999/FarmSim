@@ -13,8 +13,8 @@ namespace FarmSim.Player;
 interface IAction
 {
     bool CreatesProjectile { get; }
-    void Invoke(Entity entity, int xOffset, int yOffset, Vector2 facingDirection);
-    TelescopeResult Telescope(Entity entity, int xOffset, int yOffset, Vector2 facingDirection);
+    void Invoke(Entity entity, Tile targetTile, int xOffset, int yOffset, Vector2 facingDirection);
+    TelescopeResult Telescope(Entity entity, Tile targetTile, int xOffset, int yOffset, Vector2 facingDirection);
 }
 
 enum TelescopeResultType
@@ -76,12 +76,12 @@ class FireProjectileAction : IAction
 
     public bool CreatesProjectile => true;
 
-    public void Invoke(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)
+    public void Invoke(Entity entity, Tile targetTile, int xOffset, int yOffset, Vector2 facingDirection)
     {
-        Telescope(entity, xOffset, yOffset, facingDirection).Invoke();
+        Telescope(entity, targetTile, xOffset, yOffset, facingDirection).Invoke();
     }
 
-    public TelescopeResult Telescope(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)
+    public TelescopeResult Telescope(Entity entity, Tile targetTile, int xOffset, int yOffset, Vector2 facingDirection)
     {
         return TelescopeResult.Projectile(() =>
             GlobalState.ProjectileManager.CreateProjectile(
@@ -97,12 +97,12 @@ class MultiToolAction : IAction
 {
     public bool CreatesProjectile => false;
 
-    public void Invoke(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)
+    public void Invoke(Entity entity, Tile targetTile, int xOffset, int yOffset, Vector2 facingDirection)
     {
-        Telescope(entity, xOffset, yOffset, facingDirection).Invoke();
+        Telescope(entity, targetTile, xOffset, yOffset, facingDirection).Invoke();
     }
 
-    public TelescopeResult Telescope(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)
+    public TelescopeResult Telescope(Entity entity, Tile targetTile, int xOffset, int yOffset, Vector2 facingDirection)
     {
         if (entity is not IHasMultiTool entityWithMultiTool)
         {
@@ -144,11 +144,10 @@ class MultiToolAction : IAction
                 });
             });
         }
-        else
+        else if (entityWithMultiTool.MultiTool.IsTileWithinRange(entity, targetTile))
         {
-            var tile = GlobalState.TerrainManager.GetTileWithinRange(entityWithMultiTool.MultiTool.ToolRange(entity, xOffset: xOffset, yOffset: yOffset, facingDirection));
             var noResourcesFound = true;
-            foreach (var resource in tile.GetResources())
+            foreach (var resource in targetTile.GetResources())
             {
                 noResourcesFound = false;
                 switch (resource.PrimaryTag)
@@ -181,29 +180,29 @@ class MultiToolAction : IAction
             if (noResourcesFound)
             {
                 // TODO: work out better way of what interacts with multi tool
-                if (tile.Terrain == "grass"
-                    || tile.Terrain == "farm-land")
+                if (targetTile.Terrain == "grass"
+                    || targetTile.Terrain == "farm-land")
                 {
-                    return TelescopeResult.Farm(tile, () =>
+                    return TelescopeResult.Farm(targetTile, () =>
                     {
-                        if (tile.Terrain == "grass")
+                        if (targetTile.Terrain == "grass")
                         {
                             var animation = GlobalState.AnimationManager.PlayOnce(entity, "till-land");
-                            ChangeTile(animation, tile, "farm-land");
+                            ChangeTile(animation, targetTile, "farm-land");
                         }
-                        else if (tile.Terrain == "farm-land")
+                        else if (targetTile.Terrain == "farm-land")
                         {
                             var animation = GlobalState.AnimationManager.PlayOnce(entity, "till-land");
-                            ChangeTile(animation, tile, "grass");
+                            ChangeTile(animation, targetTile, "grass");
                         }
                     });
                 }
-                else if (tile.Terrain == "water")
+                else if (targetTile.Terrain == "water")
                 {
                     return TelescopeResult.Bucket(Array.Empty<Entity>(), () =>
                     {
                         var animation = GlobalState.AnimationManager.PlayOnce(entity, "bucket");
-                        ChangeTile(animation, tile, "rock");
+                        ChangeTile(animation, targetTile, "rock");
                     });
                 }
             }

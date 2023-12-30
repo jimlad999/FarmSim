@@ -84,14 +84,15 @@ class Player : Entity, IHasMultiTool
             return;
         }
         UpdateMovement(gameTime);
+        var mouseTilePosition = GetHoveredTileCoordinates();
         UpdateFacingDirectionToMouse();
         if (_buildingKey != null)
         {
-            UpdateBuildingPlacement();
+            UpdateBuildingPlacement(mouseTilePosition);
         }
         else
         {
-            UpdateAction();
+            UpdateAction(mouseTilePosition);
         }
     }
 
@@ -145,13 +146,15 @@ class Player : Entity, IHasMultiTool
         UpdateFacingDirection(directionX: moouseWorldPosition.X - XInt, directionY: moouseWorldPosition.Y - YInt);
     }
 
-    private void UpdateAction()
+    private void UpdateAction((int X, int Y) mouseTilePosition)
     {
         if (PrimaryAction != null)
         {
             var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection();
+            var mouseTile = GlobalState.TerrainManager.GetTile(tileX: mouseTilePosition.X, tileY: mouseTilePosition.Y);
             TelescopeAction = PrimaryAction.Telescope(
                 this,
+                mouseTile,
                 xOffset: xOffset,
                 yOffset: yOffset,
                 shootingDirection);
@@ -193,11 +196,10 @@ class Player : Entity, IHasMultiTool
     }
 #endif
 
-    private void UpdateBuildingPlacement()
+    private void UpdateBuildingPlacement((int X, int Y) mouseTilePosition)
     {
         if (TilePlacement != null)
         {
-            var mouseTilePosition = GetHoveredTileCoordinates();
             TilePlacement.Update(mouseTilePosition);
 
             if (TilePlacement.AllTilesBuildable && _controllerManager.IsLeftMouseInitialPressed())

@@ -9,41 +9,6 @@ interface IRange
         where TEntity : Entity;
 }
 
-readonly struct PointRange : IRange
-{
-    public readonly int OriginX;
-    public readonly int ReachX;
-    public readonly int OriginY;
-    public readonly int ReachY;
-    public readonly Vector2 FacingDirection;
-    public readonly int Reach;
-    public readonly int RadiusPow2;
-
-    public PointRange(
-        int x,
-        int y,
-        Vector2 facingDirection,
-        int reach,
-        int radiusPow2)
-    {
-        OriginX = x;
-        ReachX = (int)(x + facingDirection.X * reach);
-        OriginY = y;
-        ReachY = (int)(y + facingDirection.Y * reach);
-        FacingDirection = facingDirection;
-        Reach = reach;
-        RadiusPow2 = radiusPow2;
-    }
-
-    public readonly bool InRange<TEntity>(TEntity entity, out int distancePow2) where TEntity : Entity
-    {
-        var xDiff = entity.XInt - ReachX;
-        var yDiff = entity.YInt - ReachY;
-        distancePow2 = xDiff * xDiff + yDiff * yDiff;
-        return distancePow2 > RadiusPow2;
-    }
-}
-
 readonly struct ArcRange : IRange
 {
     private const double Radians180 = 3.14159;
