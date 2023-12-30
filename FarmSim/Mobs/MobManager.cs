@@ -143,10 +143,14 @@ class MobManager : EntityManager<Mob>
                 var spawnX = spawnTileX * Renderer.TileSize + Renderer.TileSizeHalf;
                 var spawnY = spawnTileY * Renderer.TileSize + Renderer.TileSizeHalf;
                 var spawnTile = GlobalState.TerrainManager.GetTile(tileX: spawnTileX, tileY: spawnTileY);
+                if (spawnTile.Buildings.Any())
+                {
+                    continue;
+                }
                 var spawnableMobs = _mobData.Where(m => m.Spawnable.Contains(spawnTile.Terrain)).ToList();
                 if (spawnableMobs.Count == 0)
                 {
-                    return;
+                    continue;
                 }
                 var mobToSpawn = spawnableMobs[RandomUtil.Rand.Next(spawnableMobs.Count)];
                 var numberToSpawn = RandomUtil.Rand.Next(minValue: mobToSpawn.MinSpawned, maxValue: mobToSpawn.MaxSpawned);
