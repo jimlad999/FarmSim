@@ -30,4 +30,10 @@ class Resource : Entity, IDespawnble
         Y = YInt;
         InitDefaultAnimation();
     }
+
+    public override void InitDefaultAnimation(double animationOffset = 0)
+    {
+        // calls the type overload.
+        GlobalState.AnimationManager.InitDefault(this, animationOffset);
+    }
 }

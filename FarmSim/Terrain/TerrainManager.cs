@@ -7,12 +7,12 @@ namespace FarmSim.Terrain;
 
 class TerrainManager
 {
+    public const int ChunkSize = 64;
+
     private readonly TerrainGenerator _terrainGenerator;
     private readonly Dictionary<string, ResourceData> _resourceData;
 
     private Dictionary<int, Dictionary<int, Chunk>> _chunks = new();
-
-    public int ChunkSize { get; private set; } = 64;
 
     public TerrainManager(
         int seed,

@@ -128,4 +128,24 @@ abstract class Animation : IPositionable, IDespawnble
         }
         return GlobalState.EntitiesData.Data[SpriteSheetKey].Animations[AnimationKey].DirectionFrames[FacingDirection];
     }
+
+    protected void InitAnimationOffset(double animationOffset)
+    {
+        var frames = GetFrames();
+        var currentFrame = frames[ActiveFrameIndex];
+        if (currentFrame.Duration == 0)
+        {
+            return;
+        }
+        while (animationOffset >= currentFrame.Duration)
+        {
+            animationOffset -= currentFrame.Duration;
+            if (++ActiveFrameIndex >= frames.Length)
+            {
+                ActiveFrameIndex = 0;
+            }
+            currentFrame = frames[ActiveFrameIndex];
+        }
+        ActiveFrameDurationMilliseconds = animationOffset;
+    }
 }

@@ -76,14 +76,8 @@ class Renderer
     {
         var viewport = _viewportManager.Viewport;
         var zoomedTileSize = TileSizeFloat * _viewportManager.Zoom;
-
-        var xOffset = viewport.X.Mod(TileSize);
-        var yOffset = viewport.Y.Mod(TileSize);
-        int xTileStart = (viewport.X - xOffset) / TileSize;
-        int yTileStart = (viewport.Y - yOffset) / TileSize;
         // +4 to allow for rendering objects taller than a few tile (e.g. trees and buildings)
-        int xTileEnd = (viewport.X + viewport.Width) / TileSize + 4;
-        int yTileEnd = (viewport.Y + viewport.Height) / TileSize + 4;
+        var (xOffset, yOffset, xTileStart, yTileStart, xTileEnd, yTileEnd) = _viewportManager.GetTileDimensions(minBuffer: 0, maxBuffer: 4);
         var xDrawOffset = -xOffset * _viewportManager.Zoom;
         var yDrawOffset = -yOffset * _viewportManager.Zoom;
         var shouldRenderChunks = _viewportManager.Zoom < ChunkTerrainLODZoomLevel;

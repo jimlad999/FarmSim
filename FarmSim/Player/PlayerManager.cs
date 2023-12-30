@@ -10,7 +10,7 @@ namespace FarmSim.Player;
 
 class PlayerManager : EntityManager<Player>
 {
-    private const int DespawnRadius = MobManager.SpawnRadius + 10;//tiles
+    public const int DespawnRadius = MobManager.SpawnRadius + 10;//tiles
 
     public Player ActivePlayer;
 

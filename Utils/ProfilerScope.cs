@@ -5,13 +5,19 @@ namespace Utils;
 
 public sealed class ProfilerScope : IDisposable
 {
-    private Stopwatch sw = Stopwatch.StartNew();
+    private readonly string _operationName;
+    private readonly Stopwatch sw = Stopwatch.StartNew();
+
+    public ProfilerScope(string operationName = "Profiler")
+    {
+        _operationName = operationName;
+    }
 
     public void Dispose()
     {
         sw.Stop();
         Debug.WriteLine((
-            $"Profiler",
+            _operationName,
             sw.ElapsedTicks
         ));
     }

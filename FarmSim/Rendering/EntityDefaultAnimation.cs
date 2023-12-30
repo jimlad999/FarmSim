@@ -24,26 +24,6 @@ class EntityDefaultAnimation : Animation, IEntityAnimation
         InitAnimationOffset(animationOffset);
     }
 
-    private void InitAnimationOffset(double animationOffset)
-    {
-        var frames = GetFrames();
-        var currentFrame = frames[ActiveFrameIndex];
-        if (currentFrame.Duration == 0)
-        {
-            return;
-        }
-        while (animationOffset >= currentFrame.Duration)
-        {
-            animationOffset -= currentFrame.Duration;
-            if (++ActiveFrameIndex >= frames.Length)
-            {
-                ActiveFrameIndex = 0;
-            }
-            currentFrame = frames[ActiveFrameIndex];
-        }
-        ActiveFrameDurationMilliseconds = animationOffset;
-    }
-
     public override DelayedAction Update(GameTime gameTime)
     {
         FlagForDespawning = Entity is IDespawnble despawnable && despawnable.FlagForDespawning;

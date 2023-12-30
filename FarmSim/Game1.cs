@@ -74,7 +74,7 @@ public class Game1 : Game
             height: _spriteBatch.GraphicsDevice.Viewport.Height);
         var pixel = ColoredPanel.Pixel = Content.Load<Texture2D>("pixel");
 
-        GlobalState.AnimationManager = new AnimationManager();
+        GlobalState.AnimationManager = new AnimationManager(_viewportManager);
 
         var resourceData = JsonConvert.DeserializeObject<Dictionary<string, ResourceData>>(File.ReadAllText("Content/entities/items/resources.json"));
         var itemData = JsonConvert.DeserializeObject<ItemData[]>(File.ReadAllText("Content/entities/items/items.json"))

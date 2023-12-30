@@ -1,4 +1,6 @@
 ﻿using FarmSim.Entities;
+using FarmSim.Player;
+using FarmSim.Terrain;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using System;
@@ -9,21 +11,31 @@ namespace FarmSim.Rendering;
 
 class AnimationManager
 {
-    public List<Animation> Animations = new();
+    public List<Animation> MovingAnimations = new();
+    public ChunkPartitionedCollection<Animation> StationaryAnimations = new();
     public Dictionary<string, GlobalRepeatingAnimation> TilesetAnimations = new();
+    private readonly ViewportManager _viewportManager;
+
+    public AnimationManager(ViewportManager viewportManager)
+    {
+        _viewportManager = viewportManager;
+    }
 
     public IEnumerable<Animation> GetAnimationsInRange(int xTileStart, int xTileEnd, int yTileStart, int yTileEnd)
     {
-        return Animations.Where(mob =>
-            xTileStart <= mob.TileX && mob.TileX <= xTileEnd
-            && yTileStart <= mob.TileY && mob.TileY <= yTileEnd);
+        return MovingAnimations
+            .Where(mob =>
+                xTileStart <= mob.TileX && mob.TileX <= xTileEnd
+                && yTileStart <= mob.TileY && mob.TileY <= yTileEnd)
+            .Concat(StationaryAnimations
+                .GetInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd));
     }
 
     public Animation PlayOnce(Entity entity, string animationKey)
     {
         // Actions can be interrupted if a new animation takes affect before the animation is complete
         // e.g. preventing an attack from executing by aiming for middle of animation frames.
-        foreach (var animation in Animations.Where(animation => animation is IEntityAnimation entityAnimation && entityAnimation.Entity == entity))
+        foreach (var animation in MovingAnimations.Where(animation => animation is IEntityAnimation entityAnimation && entityAnimation.Entity == entity))
         {
             animation.FlagForDespawning = true;
             animation.Clear();
@@ -31,7 +43,7 @@ class AnimationManager
         var newAnimation = new EntityAnimation(entity, animationKey);
         // We can assume here we don't need to clear any other entity animations because they will be cleared before "After" is called.
         newAnimation.After(() => PlayDefaultInternal(entity, 0));
-        Animations.Add(newAnimation);
+        MovingAnimations.Add(newAnimation);
         return newAnimation;
     }
 
@@ -44,7 +56,14 @@ class AnimationManager
     private Animation PlayDefaultInternal(Entity entity, double animationOffset)
     {
         var newAnimation = new EntityDefaultAnimation(entity, animationOffset);
-        Animations.Add(newAnimation);
+        MovingAnimations.Add(newAnimation);
+        return newAnimation;
+    }
+
+    public Animation InitDefault(Resource resource, double animationOffset)
+    {
+        var newAnimation = new ResourceAnimation(resource, animationOffset);
+        StationaryAnimations.Add(newAnimation);
         return newAnimation;
     }
 
@@ -59,7 +78,7 @@ class AnimationManager
             Scale = new Vector2(scale, scale),
         };
         newAnimation.UpdateTileIndex();
-        Animations.Add(newAnimation);
+        MovingAnimations.Add(newAnimation);
         return newAnimation;
     }
 
@@ -83,17 +102,29 @@ class AnimationManager
 
     public void Clear()
     {
-        foreach (var animation in Animations)
+        foreach (var animation in MovingAnimations)
         {
             animation.Clear();
         }
-        Animations.Clear();
+        MovingAnimations.Clear();
+        foreach (var animation in StationaryAnimations)
+        {
+            animation.Clear();
+        }
+        StationaryAnimations.Clear();
     }
 
     public void Update(GameTime gameTime)
     {
+        const int AnimationUpdateBuffer = PlayerManager.DespawnRadius + 1;
+        var (_, _, xTileStart, yTileStart, xTileEnd, yTileEnd) = _viewportManager.GetTileDimensions(minBuffer: AnimationUpdateBuffer, maxBuffer: AnimationUpdateBuffer);
         var delayedActions = new List<Action>();
-        foreach (var animation in Animations.Where(animation => !animation.FlagForDespawning).Concat(TilesetAnimations.Values))
+        // only update animations that the player can see
+        var animationsToUpdate = GetAnimationsInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
+            .Where(animation => !animation.FlagForDespawning)
+            .Concat(TilesetAnimations.Values)
+            .ToList();
+        foreach (var animation in animationsToUpdate)
         {
             switch (animation.Update(gameTime))
             {
@@ -114,7 +145,7 @@ class AnimationManager
                 animation.Clear();
             }
         }
-        var removed = Animations.RemoveAll(animation => animation.FlagForDespawning);
+        var removed = MovingAnimations.RemoveAll(animation => animation.FlagForDespawning);
         if (removed > 0)
         {
         }

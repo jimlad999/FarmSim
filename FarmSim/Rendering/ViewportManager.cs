@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using FarmSim.Utils;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -147,6 +148,17 @@ internal class ViewportManager
             X: (int)Math.Floor((screenX / Zoom + Viewport.X) / Renderer.TileSize),
             Y: (int)Math.Floor((screenY / Zoom + Viewport.Y) / Renderer.TileSize)
         );
+    }
+
+    public (int xOffset, int yOffset, int xTileStart, int yTileStart, int xTileEnd, int yTileEnd) GetTileDimensions(int minBuffer, int maxBuffer)
+    {
+        var xOffset = Viewport.X.Mod(Renderer.TileSize);
+        var yOffset = Viewport.Y.Mod(Renderer.TileSize);
+        var xTileStart = (Viewport.X - xOffset) / Renderer.TileSize - minBuffer;
+        var yTileStart = (Viewport.Y - yOffset) / Renderer.TileSize - minBuffer;
+        var xTileEnd = (Viewport.X + Viewport.Width) / Renderer.TileSize + maxBuffer;
+        var yTileEnd = (Viewport.Y + Viewport.Height) / Renderer.TileSize + maxBuffer;
+        return (xOffset, yOffset, xTileStart, yTileStart, xTileEnd, yTileEnd);
     }
 
     public static ViewportManager CenteredOnZeroZero(ControllerManager controllerManager, GraphicsDeviceManager graphics)
