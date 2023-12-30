@@ -40,6 +40,7 @@ public class Game1 : Game
     private bool _debugArcRange;
     private Effect _debugArcRangeEffect;
     private RenderTarget2D _entireScreen;
+    private CustomMouseCursor _mousePointer;
 
     public Game1()
     {
@@ -65,6 +66,14 @@ public class Game1 : Game
 
         Text.Normal = Content.Load<SpriteFont>("fonts/GameFont");
         Text.Bold = Content.Load<SpriteFont>("fonts/GameFontBold");
+        _mousePointer = new CustomMouseCursor(
+            bucket: Content.Load<Texture2D>("ui/pointers/pointer-bucket"),
+            chop: Content.Load<Texture2D>("ui/pointers/pointer-chop"),
+            farm: Content.Load<Texture2D>("ui/pointers/pointer-farm"),
+            harvest: Content.Load<Texture2D>("ui/pointers/pointer-harvest"),
+            mine: Content.Load<Texture2D>("ui/pointers/pointer-mine"),
+            projectile: Content.Load<Texture2D>("ui/pointers/pointer-projectile"),
+            slash: Content.Load<Texture2D>("ui/pointers/pointer-slash"));
         var fogOfWarEffect = Content.Load<Effect>("shaders/fog-of-war");
         var fogOfWarInverseEffect = Content.Load<Effect>("shaders/fog-of-war-inverse");
         _debugArcRangeEffect = Content.Load<Effect>("shaders/debug-arc-range");
@@ -177,7 +186,7 @@ public class Game1 : Game
             {
                 if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
                 {
-                    GlobalState.PlayerManager.ActivePlayer.PrimaryAction = new MultiToolActions();
+                    GlobalState.PlayerManager.ActivePlayer.PrimaryAction = new MultiToolAction();
                 }
             }));
             // make default selection for player
@@ -189,7 +198,7 @@ public class Game1 : Game
             {
                 if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
                 {
-                    GlobalState.PlayerManager.ActivePlayer.PrimaryAction = new FireProjectileActions();
+                    GlobalState.PlayerManager.ActivePlayer.PrimaryAction = new FireProjectileAction();
                 }
             }));
         }
@@ -351,6 +360,7 @@ public class Game1 : Game
         _viewportManager.Update(gameTime);
         EntityManager.Update(gameTime);
         GlobalState.AnimationManager.Update(gameTime);
+        _mousePointer.Update();
 
         base.Update(gameTime);
     }

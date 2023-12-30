@@ -2,6 +2,7 @@
 using FarmSim.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System;
 using UI;
 using Utils;
 
@@ -155,6 +156,16 @@ class Player : Entity, IHasMultiTool
                 yOffset: yOffset,
                 shootingDirection);
         }
+    }
+
+    public TelescopeResult TelescopeAction()
+    {
+        var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection();
+        return PrimaryAction.Telescope(
+            this,
+            xOffset: xOffset,
+            yOffset: yOffset,
+            shootingDirection);
     }
 
     private (int xOffset, int yOffset, Vector2 shootingDirection) GetActionOffsetsAndDirection()

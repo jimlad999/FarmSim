@@ -11,9 +11,22 @@ interface IAction
 {
     bool CreatesProjectile { get; }
     void Invoke(Entity entity, int xOffset, int yOffset, Vector2 facingDirection);
+    TelescopeResult Telescope(Entity entity, int xOffset, int yOffset, Vector2 facingDirection);
 }
 
-class FireProjectileActions : IAction
+enum TelescopeResult
+{
+    None,
+    Projectile,
+    Slash,
+    Bucket,
+    Chop,
+    Farm,
+    Harvest,
+    Mine,
+}
+
+class FireProjectileAction : IAction
 {
     public static ProjectileData Test = new() { Class = "FarmSim.Projectiles.LinearProjectile, FarmSim", Effect = new() { Class = "FarmSim.Projectiles.SmallKnockback, FarmSim" }, EntitySpriteKey = "magic-missile", Speed = 600, HitRadiusPow2 = 100 /* 10^2 */ };
     public ProjectileData Metadata = Test;
@@ -29,16 +42,74 @@ class FireProjectileActions : IAction
             originY: entity.YInt + yOffset,
             normalizedDirection: facingDirection);
     }
+
+    public TelescopeResult Telescope(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)
+    {
+        return TelescopeResult.Projectile;
+    }
 }
 
-class MultiToolActions : IAction
+class MultiToolAction : IAction
 {
     public bool CreatesProjectile => false;
 
+    public TelescopeResult Telescope(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)
+    {
+        if (entity is not IHasMultiTool entityWithMultiTool)
+        {
+            return TelescopeResult.None;
+        }
+        var weaponRange = entityWithMultiTool.MultiTool.WeaponRange(entity, xOffset: xOffset, yOffset: yOffset, facingDirection);
+        if (entity is Player && GlobalState.MobManager.TryFindEntityWithinRangeOrCloseEnoughToBeEnagedInCombat(weaponRange, out var _))
+        {
+            return TelescopeResult.Slash;
+        }
+        else if (entity is Mob && GlobalState.PlayerManager.TryFindEntityWithinRangeOrCloseEnoughToBeEnagedInCombat(weaponRange, out var hitPlayers))
+        {
+            return TelescopeResult.Slash;
+        }
+        else
+        {
+            var tile = GlobalState.TerrainManager.GetTileWithinRange(entityWithMultiTool.MultiTool.ToolRange(entity, xOffset: xOffset, yOffset: yOffset, facingDirection));
+            var noResourcesFound = true;
+            foreach (var resource in tile.GetResources())
+            {
+                noResourcesFound = false;
+                switch (resource.PrimaryTag)
+                {
+                    case Tags.Wood:
+                        return TelescopeResult.Chop;
+                    case Tags.Plant:
+                        return TelescopeResult.Harvest;
+                    case Tags.Liquid:
+                    case Tags.Drink:
+                        return TelescopeResult.Bucket;
+                    case Tags.Rock:
+                    case Tags.Ore:
+                    case Tags.Gem:
+                        return TelescopeResult.Mine;
+                };
+            }
+            if (noResourcesFound)
+            {
+                // TODO: work out better way of what interacts with multi tool
+                if (tile.Terrain == "grass"
+                    || tile.Terrain == "farm-land")
+                {
+                    return TelescopeResult.Farm;
+                }
+                else if (tile.Terrain == "water")
+                {
+                    return TelescopeResult.Bucket;
+                }
+            }
+        }
+        return TelescopeResult.Slash;
+    }
+
     public void Invoke(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)
     {
-        var entityWithMultiTool = entity as IHasMultiTool;
-        if (entityWithMultiTool == null)
+        if (entity is not IHasMultiTool entityWithMultiTool)
         {
             return;
         }
@@ -160,7 +231,7 @@ class MultiToolActions : IAction
         return animation;
     }
 
-    private static void HarvestResource(Animation animation,Resource resource, MultiTool multiTool)
+    private static void HarvestResource(Animation animation, Resource resource, MultiTool multiTool)
     {
         animation.OnKeyFrame(() =>
         {

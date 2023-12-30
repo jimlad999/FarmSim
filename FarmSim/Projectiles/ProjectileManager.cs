@@ -17,7 +17,7 @@ class ProjectileManager : EntityManager<Projectile>
     {
         var data = new ProjectileData[]
         {
-            Player.FireProjectileActions.Test
+            Player.FireProjectileAction.Test
         };
         _projectileFactory = new EntityFactory<Projectile, ProjectileData>(data);
         _projectileEffectFactory = new EntityFactory<ProjectileEffect, ProjectileEffectData>(data.Select(d => d.Effect).Where(e => e != null).ToArray());

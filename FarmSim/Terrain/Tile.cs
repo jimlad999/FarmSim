@@ -12,8 +12,6 @@ class Tile
     public Resource Trees;
     public Resource Ores;
     public Buildings Buildings;
-    public bool InSight;
-
 
     public Tile(
         Chunk chunk,
