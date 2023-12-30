@@ -172,8 +172,9 @@ class MobManager : EntityManager<Mob>
                         { Tags.Blue, () => newMob.Scale < 1f ? MobLightBlue : Color.Blue },
                         { Tags.Yellow, () => Color.Yellow },
                     }, defaultValue: Color.White);
-                    // TODO: modify based on metadata (currently 400 = 20*20 (i.e. 20^2))
-                    newMob.HitRadiusPow2 = (int)(400 * newMob.Scale);
+                    // TODO: modify based on metadata
+                    const int HitRadiusPow2 = 25 * 25;
+                    newMob.HitRadiusPow2 = (int)(HitRadiusPow2 * newMob.Scale);
                     newMob.EntitySpriteKey = mobToSpawn.EntitySpriteKey;
                     newMob.DefaultAnimationKey = _entityData[mobToSpawn.EntitySpriteKey].DefaultAnimationKey;
                     newMob.HP = mobToSpawn.hp;

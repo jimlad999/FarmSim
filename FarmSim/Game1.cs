@@ -235,9 +235,30 @@ public class Game1 : Game
                 }
                 else if (value.StartsWith("/SPAWN", StringComparison.OrdinalIgnoreCase))
                 {
-                    GlobalState.MobManager.SpawnMobs();
-                    GlobalState.MobManager.ResetSpawnWaitTime();
-                    logOutput.Add(("Spawned mobs around player.", Log.Level.Debug));
+                    var spawnOperation = value.Substring(6, value.Length - 6).Trim();
+
+                    if (!int.TryParse(spawnOperation, out var spawnCount))
+                    {
+                        if (string.IsNullOrEmpty(spawnOperation))
+                        {
+                            spawnCount = 1;
+                        }
+                    }
+                    if (spawnCount == 0)
+                    {
+                        logOutput.Add(("Spawn command not recognised.", Log.Level.Debug));
+                        logOutput.Add(("Usage:", Log.Level.Debug));
+                        logOutput.Add((" /SPAWN [count]", Log.Level.Debug));
+                    }
+                    else
+                    {
+                        for (int i = 0; i < spawnCount; ++i)
+                        {
+                            GlobalState.MobManager.SpawnMobs();
+                            GlobalState.MobManager.ResetSpawnWaitTime();
+                        }
+                        logOutput.Add(("Spawned mobs around player.", Log.Level.Debug));
+                    }
                 }
                 else
                 {
