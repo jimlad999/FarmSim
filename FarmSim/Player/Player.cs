@@ -2,7 +2,6 @@
 using FarmSim.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using System;
 using UI;
 using Utils;
 
@@ -25,6 +24,7 @@ class Player : Entity, IHasMultiTool
     public MultiTool MultiTool { get; set; } = new MultiTool();
 
     public IAction PrimaryAction;
+    public TelescopeResult TelescopeAction = TelescopeResult.None;
 
     private string _buildingKey;
     public string BuildingKey
@@ -147,25 +147,23 @@ class Player : Entity, IHasMultiTool
 
     private void UpdateAction()
     {
-        if (PrimaryAction != null && _controllerManager.IsLeftMouseInitialPressed())
+        if (PrimaryAction != null)
         {
             var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection();
-            PrimaryAction.Invoke(
+            TelescopeAction = PrimaryAction.Telescope(
                 this,
                 xOffset: xOffset,
                 yOffset: yOffset,
                 shootingDirection);
         }
-    }
-
-    public TelescopeResult TelescopeAction()
-    {
-        var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection();
-        return PrimaryAction.Telescope(
-            this,
-            xOffset: xOffset,
-            yOffset: yOffset,
-            shootingDirection);
+        else
+        {
+            TelescopeAction = TelescopeResult.None;
+        }
+        if (_controllerManager.IsLeftMouseInitialPressed())
+        {
+            TelescopeAction.Invoke();
+        }
     }
 
     private (int xOffset, int yOffset, Vector2 shootingDirection) GetActionOffsetsAndDirection()

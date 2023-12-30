@@ -73,21 +73,21 @@ class CustomMouseCursor
         }
         if (player.PrimaryAction is MultiToolAction)
         {
-            switch (player.TelescopeAction())
+            switch (player.TelescopeAction.Type)
             {
-                case TelescopeResult.Projectile:
+                case TelescopeResultType.Projectile:
                     return new CustomResult(Projectile, 8, 8);
-                case TelescopeResult.Slash:
+                case TelescopeResultType.Slash:
                     return new CustomResult(Slash, 0, 0);
-                case TelescopeResult.Bucket:
+                case TelescopeResultType.Bucket:
                     return new CustomResult(Bucket, 0, 0);
-                case TelescopeResult.Chop:
+                case TelescopeResultType.Chop:
                     return new CustomResult(Chop, 0, 0);
-                case TelescopeResult.Farm:
+                case TelescopeResultType.Farm:
                     return new CustomResult(Farm, 0, 0);
-                case TelescopeResult.Harvest:
+                case TelescopeResultType.Harvest:
                     return new CustomResult(Harvest, 0, 0);
-                case TelescopeResult.Mine:
+                case TelescopeResultType.Mine:
                     return new CustomResult(Mine, 0, 0);
             }
         }

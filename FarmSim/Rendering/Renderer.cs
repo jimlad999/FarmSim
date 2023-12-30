@@ -37,6 +37,7 @@ class Renderer
 
 #pragma warning disable CA2211 // Non-constant fields should not be visible
     public static bool RenderFogOfWar = true;
+    public static bool RenderTelescopedPlayerAction = false;
 #pragma warning restore CA2211 // Non-constant fields should not be visible
 
     private readonly ViewportManager _viewportManager;
@@ -44,6 +45,8 @@ class Renderer
     private readonly EntitySpriteSheet _entitySpriteSheet;
     private readonly Effect _fogOfWarEffect;
     private readonly Effect _fogOfWarInverseEffect;
+    private readonly Effect _outlineTileEffect;
+    private readonly Effect _outlineEntityEffect;
     private readonly Texture2D _pixel;
     private Dictionary<Chunk, RenderTarget2D> _chunkTilePrerender = new();
 
@@ -53,6 +56,8 @@ class Renderer
         EntitySpriteSheet entitySpriteSheet,
         Effect fogOfWarEffect,
         Effect fogOfWarInverseEffect,
+        Effect outlineTileEffect,
+        Effect outlineEntityEffect,
         Texture2D pixel)
     {
         _viewportManager = viewportManager;
@@ -60,6 +65,8 @@ class Renderer
         _entitySpriteSheet = entitySpriteSheet;
         _fogOfWarEffect = fogOfWarEffect;
         _fogOfWarInverseEffect = fogOfWarInverseEffect;
+        _outlineTileEffect = outlineTileEffect;
+        _outlineEntityEffect = outlineEntityEffect;
         _pixel = pixel;
     }
 
@@ -140,6 +147,12 @@ class Renderer
         //specific because the player sight radius is larger than the number of tiles you can see at zoom == 1
         var renderFogOfWar = RenderFogOfWar && _viewportManager.Zoom < 1;
 
+        var telescopedPlayerAction = RenderTelescopedPlayerAction ? activePlayer.TelescopeAction : TelescopeResult.None;
+        _outlineTileEffect.Parameters["TileTexelSize"].SetValue(_tileset.TexelSize);
+        _outlineTileEffect.Parameters["TileHighlightColor"].SetValue(new Vector4(255, 255, 255, 255));
+        _outlineEntityEffect.Parameters["EntityTexelSize"].SetValue(_entitySpriteSheet.TexelSize);
+        _outlineEntityEffect.Parameters["EntityHighlightColor"].SetValue(new Vector4(200, 0, 0, 255));
+
         spriteBatch.GraphicsDevice.Clear(Color.CornflowerBlue);
         float yDraw = (int)yDrawOffset;
         for (var tileY = yTileStart; tileY < yTileEnd; ++tileY)
@@ -171,7 +184,18 @@ class Renderer
                 }
                 else
                 {
-                    DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, activePlayer.TilePlacement, playerIsInsideBuilding);
+                    if (telescopedPlayerAction.IsTargeting(tile))
+                    {
+                        spriteBatch.End();
+                        spriteBatch.Begin(effect: _outlineTileEffect);
+                        DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, activePlayer.TilePlacement, playerIsInsideBuilding);
+                        spriteBatch.End();
+                        spriteBatch.Begin();
+                    }
+                    else
+                    {
+                        DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, activePlayer.TilePlacement, playerIsInsideBuilding);
+                    }
                     xDraw += zoomedTileSize;
                 }
             }
@@ -188,14 +212,21 @@ class Renderer
                 {
                     var drawXDiff = (leftXPoint - animation.XInt) * _viewportManager.Zoom;
                     var drawYDiff = (topYPoint - animation.YInt) * _viewportManager.Zoom;
-                    DrawSpriteAnimation(spriteBatch, animation, xDraw: xDraw - drawXDiff, yDraw: yDraw - drawYDiff, zoomScale: _viewportManager.Zoom);
+                    DrawSpriteAnimation(
+                        spriteBatch,
+                        animation,
+                        xDraw: xDraw - drawXDiff,
+                        yDraw: yDraw - drawYDiff,
+                        zoomScale: _viewportManager.Zoom,
+                        telescopedPlayerAction,
+                        renderFogOfWar: renderFogOfWar);
                 }
                 if (activePlayer.TilePlacement != null)
                 {
                     if (renderFogOfWar)
                     {
                         spriteBatch.End();
-                        spriteBatch.Begin();
+                        spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
                     }
                     for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
                     {
@@ -205,11 +236,6 @@ class Renderer
                             DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, activePlayer.TilePlacement, playerIsInsideBuilding);
                         }
                         xDraw += zoomedTileSize;
-                    }
-                    if (renderFogOfWar)
-                    {
-                        spriteBatch.End();
-                        spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: renderFogOfWar ? _fogOfWarEffect : null);
                     }
                 }
                 spriteBatch.End();
@@ -418,10 +444,26 @@ class Renderer
         }
     }
 
-    private void DrawSpriteAnimation(SpriteBatch spriteBatch, Animation animation, float xDraw, float yDraw, float zoomScale)
+    private void DrawSpriteAnimation(
+        SpriteBatch spriteBatch,
+        Animation animation,
+        float xDraw,
+        float yDraw,
+        float zoomScale,
+        TelescopeResult telescopedPlayerAction,
+        bool renderFogOfWar)
     {
         var entitySpriteSheet = _entitySpriteSheet[animation];
-        var heightOffset = animation is IEntityAnimation entityAnimation && entityAnimation.Entity is IHasHeight entityHasHeight ? -entityHasHeight.HeightOffGroundInt : 0;
+        var heightOffset = 0;
+        bool applyOutlineEffect = false;
+        if (animation is IEntityAnimation entityAnimation)
+        {
+            if (entityAnimation.Entity is IHasHeight entityHasHeight)
+            {
+                heightOffset = -entityHasHeight.HeightOffGroundInt;
+            }
+            applyOutlineEffect = telescopedPlayerAction.IsTargeting(entityAnimation.Entity);
+        }
         var zoomedEntityScale = zoomScale * animation.Scale;
         if (heightOffset != 0)
         {
@@ -433,6 +475,13 @@ class Renderer
                 scale: new Vector2(x: zoomedEntityScale.X, zoomedEntityScale.Y / 2),
                 color: ItemShadow);
         }
+        if (applyOutlineEffect)
+        {
+            // if want to apply both outline entity and fog of war then will need to render entity with outline
+            // to render target first and then render that within fog of war.
+            spriteBatch.End();
+            spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: _outlineEntityEffect);
+        }
         DrawSprite(
             spriteBatch,
             entitySpriteSheet,
@@ -440,6 +489,11 @@ class Renderer
             yDraw: yDraw + heightOffset,
             scale: zoomedEntityScale,
             color: animation.Color);
+        if (applyOutlineEffect)
+        {
+            spriteBatch.End();
+            spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: renderFogOfWar ? _fogOfWarEffect : null);
+        }
     }
 
     private void DrawPartialBuilding(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, ITilePlacement tilePlacement, bool playerIsInsideBuilding)

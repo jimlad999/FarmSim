@@ -76,6 +76,8 @@ public class Game1 : Game
             slash: Content.Load<Texture2D>("ui/pointers/pointer-slash"));
         var fogOfWarEffect = Content.Load<Effect>("shaders/fog-of-war");
         var fogOfWarInverseEffect = Content.Load<Effect>("shaders/fog-of-war-inverse");
+        var outlineTileEffect = Content.Load<Effect>("shaders/outline-tile");
+        var outlineEntityEffect = Content.Load<Effect>("shaders/outline-entity");
         _debugArcRangeEffect = Content.Load<Effect>("shaders/debug-arc-range");
         _entireScreen = new RenderTarget2D(
             _spriteBatch.GraphicsDevice,
@@ -148,6 +150,7 @@ public class Game1 : Game
         _viewportManager.UIOverlay = _uiOverlay;
 #if DEBUG
         Renderer.RenderFogOfWar = false;
+        Renderer.RenderTelescopedPlayerAction = true;
 #endif
         _renderer = new Renderer(
             _viewportManager,
@@ -155,6 +158,8 @@ public class Game1 : Game
             entitySpriteSheet,
             fogOfWarEffect,
             fogOfWarInverseEffect,
+            outlineTileEffect,
+            outlineEntityEffect,
             pixel);
 
         // TODO: find a better place for UI interactions to sit (should sit within the Game, i.e. not the library)
@@ -231,6 +236,11 @@ public class Game1 : Game
                     {
                         Renderer.RenderFogOfWar = setOperation.EndsWith("true", StringComparison.OrdinalIgnoreCase);
                         logOutput.Add(($"Fog of war {(Renderer.RenderFogOfWar ? "enabled" : "disabled")}.", Log.Level.Debug));
+                    }
+                    else if (setOperation.StartsWith("RenderTelescopedPlayerAction=", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Renderer.RenderTelescopedPlayerAction = setOperation.EndsWith("true", StringComparison.OrdinalIgnoreCase);
+                        logOutput.Add(($"Telescoping player action {(Renderer.RenderTelescopedPlayerAction ? "enabled" : "disabled")}.", Log.Level.Debug));
                     }
                     else if (setOperation.StartsWith("DebugArcRange=", StringComparison.OrdinalIgnoreCase))
                     {
@@ -407,7 +417,8 @@ public class Game1 : Game
         else
 #endif
         {
-            _renderer.Draw(_spriteBatch);
+            using (new ProfilerScope())
+                _renderer.Draw(_spriteBatch);
         }
         // should UIOverlay be inside the Renderer instead?
         _spriteBatch.Begin(blendState: BlendState.NonPremultiplied);

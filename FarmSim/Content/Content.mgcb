@@ -57,6 +57,18 @@
 /processorParam:DebugMode=Auto
 /build:shaders/fog-of-war.fx
 
+#begin shaders/outline-entity.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:shaders/outline-entity.fx
+
+#begin shaders/outline-tile.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:shaders/outline-tile.fx
+
 #begin ui/pointers/pointer-bucket.png
 /importer:TextureImporter
 /processor:TextureProcessor

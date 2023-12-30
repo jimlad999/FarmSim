@@ -19,6 +19,7 @@ abstract class SpriteSheet<TSpriteData> : ISpriteSheet
 {
     protected readonly Dictionary<string, Metadata> _metadata = new();
     protected RenderTarget2D _renderTarget;
+    public Vector2 TexelSize;
 
     public ProcessedSpriteData this[Animation animation]
     {
@@ -45,7 +46,8 @@ abstract class SpriteSheet<TSpriteData> : ISpriteSheet
         using (var disposeScope = new DeferredDisposeScope())
         {
             var totalWidth = 0;
-            var totalHeight = 0;
+            // apply 1 pixel transparent buffer around every sheet so that (simplified) edge detection shaders can work
+            var totalHeight = 1;
             var sprites = new Dictionary<string, (Texture2D, Rectangle)>();
             foreach (var data in spriteSheetData.Data)
             {
@@ -53,7 +55,7 @@ abstract class SpriteSheet<TSpriteData> : ISpriteSheet
                 // destinationRectangle to render to _renderTarget.
                 // Will then be used as the base for each frames sourceRectangles from the _renderTarget.
                 var destinationRectangle = new Rectangle(
-                    x: 0,
+                    x: 1,
                     y: totalHeight,
                     width: texture.Width,
                     height: texture.Height);
@@ -62,7 +64,7 @@ abstract class SpriteSheet<TSpriteData> : ISpriteSheet
 
                 disposeScope.Disposables.Add(texture);
 
-                // +1 so that there is a small gap between sprites so that you don't get bleeding around the edges
+                // +1 so that there is a small gap between sprites so that you don't get bleeding around the edges + edge detection shaders
                 totalHeight += texture.Height + 1;
                 if (texture.Width > totalWidth)
                 {
@@ -70,9 +72,10 @@ abstract class SpriteSheet<TSpriteData> : ISpriteSheet
                 }
             }
             _renderTarget = new RenderTarget2D(
-            spriteBatch.GraphicsDevice,
-                width: totalWidth,
+                spriteBatch.GraphicsDevice,
+                width: totalWidth + 2,
                 height: totalHeight);
+            TexelSize = new Vector2(1f / totalWidth, 1f / totalHeight);
             using (RenderTargetScope.Create(spriteBatch, _renderTarget))
             {
                 foreach (var sprite in sprites.Values)

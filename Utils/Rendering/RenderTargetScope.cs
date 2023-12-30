@@ -24,11 +24,14 @@ public sealed class RenderTargetScope : IDisposable
         _spriteBatch.GraphicsDevice.SetRenderTarget(null);
     }
 
-    public static RenderTargetScope Create(SpriteBatch spriteBatch, RenderTarget2D renderTarget, bool begin = true)
+    public static RenderTargetScope Create(SpriteBatch spriteBatch, RenderTarget2D renderTarget, bool begin = true, bool clear = true)
     {
         var scope = new RenderTargetScope(spriteBatch, began: begin);
         spriteBatch.GraphicsDevice.SetRenderTarget(renderTarget);
-        spriteBatch.GraphicsDevice.Clear(Color.Transparent);
+        if (clear)
+        {
+            spriteBatch.GraphicsDevice.Clear(Color.Transparent);
+        }
         if (begin)
         {
             spriteBatch.Begin(blendState: BlendState.AlphaBlend);
