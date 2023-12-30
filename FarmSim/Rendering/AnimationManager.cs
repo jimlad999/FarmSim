@@ -23,12 +23,16 @@ class AnimationManager
 
     public IEnumerable<Animation> GetAnimationsInRange(int xTileStart, int xTileEnd, int yTileStart, int yTileEnd)
     {
-        return MovingAnimations
-            .Where(mob =>
-                xTileStart <= mob.TileX && mob.TileX <= xTileEnd
-                && yTileStart <= mob.TileY && mob.TileY <= yTileEnd)
+        return GetMovingAnimationsInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
             .Concat(StationaryAnimations
                 .GetInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd));
+    }
+
+    private IEnumerable<Animation> GetMovingAnimationsInRange(int xTileStart, int xTileEnd, int yTileStart, int yTileEnd)
+    {
+        return MovingAnimations.Where(mob =>
+            xTileStart <= mob.TileX && mob.TileX <= xTileEnd
+            && yTileStart <= mob.TileY && mob.TileY <= yTileEnd);
     }
 
     public Animation PlayOnce(Entity entity, string animationKey)
@@ -118,12 +122,24 @@ class AnimationManager
     {
         const int AnimationUpdateBuffer = PlayerManager.DespawnRadius + 1;
         var (_, _, xTileStart, yTileStart, xTileEnd, yTileEnd) = _viewportManager.GetTileDimensions(minBuffer: AnimationUpdateBuffer, maxBuffer: AnimationUpdateBuffer);
+        Update(
+            gameTime,
+            GetMovingAnimationsInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
+                .Where(animation => !animation.FlagForDespawning)
+                .Concat(TilesetAnimations.Values),
+            MovingAnimations.RemoveAll);
+        Update(
+            gameTime,
+            StationaryAnimations.GetInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd),
+            StationaryAnimations.RemoveAllInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd));
+    }
+
+    private void Update(
+        GameTime gameTime,
+        IEnumerable<Animation> animationsToUpdate,
+        Func<Predicate<Animation>, int> removeAll)
+    {
         var delayedActions = new List<Action>();
-        // only update animations that the player can see
-        var animationsToUpdate = GetAnimationsInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
-            .Where(animation => !animation.FlagForDespawning)
-            .Concat(TilesetAnimations.Values)
-            .ToList();
         foreach (var animation in animationsToUpdate)
         {
             switch (animation.Update(gameTime))
@@ -145,10 +161,7 @@ class AnimationManager
                 animation.Clear();
             }
         }
-        var removed = MovingAnimations.RemoveAll(animation => animation.FlagForDespawning);
-        if (removed > 0)
-        {
-        }
+        removeAll(animation => animation.FlagForDespawning);
         // Defer actions so that Animations can don't modify Animations mid iteration.
         foreach (var action in delayedActions)
         {

@@ -38,6 +38,30 @@ class ChunkPartitionedCollection<T> : IEnumerable<T>
         LazyGet(chunkX: chunkX, chunkY: chunkY).Add(value);
     }
 
+    public Func<Predicate<T>, int> RemoveAllInRange(
+        int xTileStart,
+        int xTileEnd,
+        int yTileStart,
+        int yTileEnd)
+    {
+        return predicate =>
+        {
+            var xChunkStart = GetChunk(xTileStart);
+            var xChunkEnd = GetChunk(xTileEnd) + 1;
+            var yChunkStart = GetChunk(yTileStart);
+            var yChunkEnd = GetChunk(yTileEnd) + 1;
+            var removed = 0;
+            for (int chunkY = yChunkStart; chunkY < yChunkEnd; ++chunkY)
+            {
+                for (int chunkX = xChunkStart; chunkX < xChunkEnd; ++chunkX)
+                {
+                    removed += LazyGet(chunkX: chunkX, chunkY: chunkY).RemoveAll(predicate);
+                }
+            }
+            return removed;
+        };
+    }
+
     public void Clear()
     {
         ChunkPartitionedLists.Clear();
