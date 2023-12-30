@@ -23,7 +23,7 @@ class MobManager : EntityManager<Mob>
 
     private readonly MobData[] _mobData;
     private readonly Dictionary<string, EntityData> _entityData;
-    private readonly EntityFactory<Mob, MobData> _mobFactor;
+    private readonly EntityFactory<Mob, MobData> _mobFactory;
 
     private double _waitTimeMilliseconds;
 
@@ -33,7 +33,7 @@ class MobManager : EntityManager<Mob>
     {
         _mobData = mobData;
         _entityData = entityData;
-        _mobFactor = new EntityFactory<Mob, MobData>(mobData);
+        _mobFactory = new EntityFactory<Mob, MobData>(mobData);
 #if !DEBUG
         ResetSpawnWaitTime();
 #endif
@@ -119,12 +119,12 @@ class MobManager : EntityManager<Mob>
         }
     }
 
-    private void ResetSpawnWaitTime()
+    public void ResetSpawnWaitTime()
     {
         _waitTimeMilliseconds = MinWaitTimeMilliseconds + RandomUtil.Rand.Next(RandomWaitTimeMilliseconds);
     }
 
-    private void SpawnMobs()
+    public void SpawnMobs()
     {
         // range: -SpawnRadius to SpawnRadius
         var xOffset = RandomUtil.Rand.Next(SpawnRadius2Plus1) - SpawnRadius;
@@ -152,7 +152,7 @@ class MobManager : EntityManager<Mob>
                 var numberToSpawn = RandomUtil.Rand.Next(minValue: mobToSpawn.MinSpawned, maxValue: mobToSpawn.MaxSpawned);
                 for (int mob = 0; mob < numberToSpawn; ++mob)
                 {
-                    var newMob = _mobFactor.Create(mobToSpawn.Class);
+                    var newMob = _mobFactory.Create(mobToSpawn.Class);
                     newMob.Metadata = mobToSpawn;
                     newMob.Tags = mobToSpawn.Tags.PickTags();
                     newMob.Scale = newMob.Tags.Match(new()
@@ -185,7 +185,7 @@ class MobManager : EntityManager<Mob>
                     newMob.YInt = spawnY;
                     newMob.HitboxYOffset = -16;
                     newMob.InitBehaviours();
-                    newMob.InitDefaultAnimation();
+                    newMob.InitDefaultAnimation(animationOffset: RandomUtil.Rand.Next(500));
                     Entities.Add(newMob);
                 }
             }

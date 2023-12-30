@@ -46,18 +46,31 @@ class MultiToolActions : IAction
         if (entity is Player && GlobalState.MobManager.TryFindEntityWithinRangeOrCloseEnoughToBeEnagedInCombat(weaponRange, out var hitMobs))
         {
             var animation = GlobalState.AnimationManager.PlayOnce(entity, "slash");
-            if (hitMobs.Count > 0)
+            animation.OnKeyFrame(() =>
             {
-                animation.OnKeyFrame(() => GlobalState.MobManager.Damage(hitMobs, entityWithMultiTool.MultiTool.Damage));
-            }
+                // Allow for more mobs entering the attack animation after the attack has happened.
+                // e.g. the playe is walking towards an enemy and attacks slightly too early.
+                GlobalState.MobManager.TryFindEntityWithinRangeOrCloseEnoughToBeEnagedInCombat(weaponRange, out var extraMobs);
+                hitMobs.AddRange(extraMobs);
+                if (hitMobs.Count > 0)
+                {
+                    GlobalState.MobManager.Damage(hitMobs, entityWithMultiTool.MultiTool.Damage);
+                }
+            });
         }
         else if (entity is Mob && GlobalState.PlayerManager.TryFindEntityWithinRangeOrCloseEnoughToBeEnagedInCombat(weaponRange, out var hitPlayers))
         {
             var animation = GlobalState.AnimationManager.PlayOnce(entity, "slash");
-            if (hitPlayers.Count > 0)
+            animation.OnKeyFrame(() =>
             {
-                animation.OnKeyFrame(() => GlobalState.PlayerManager.Damage(hitPlayers, entityWithMultiTool.MultiTool.Damage));
-            }
+                // Player walks into an attack
+                GlobalState.PlayerManager.TryFindEntityWithinRangeOrCloseEnoughToBeEnagedInCombat(weaponRange, out var extraPlayers);
+                hitPlayers.AddRange(extraPlayers);
+                if (hitPlayers.Count > 0)
+                {
+                    GlobalState.PlayerManager.Damage(hitPlayers, entityWithMultiTool.MultiTool.Damage);
+                }
+            });
         }
         else
         {

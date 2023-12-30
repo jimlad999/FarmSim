@@ -111,11 +111,18 @@ class TerrainManager
         return tile;
     }
 
+    public Resource CreateResource(string tilesetKey, int tileX, int tileY)
+    {
+        var resourceData = _resourceData[tilesetKey];
+        return new Resource(itemId: resourceData.ItemId, primaryTag: resourceData.PrimaryTag, tilesetKey: tilesetKey, tileX: tileX, tileY: tileY);
+    }
+
     public void HavestResource(Resource resource, int harvestMultipler)
     {
         var tile = GetTile(tileX: resource.TileX, tileY: resource.TileY);
         resource.FlagForDespawning = true;
         tile.RemoveResource(resource);
+        GlobalState.AnimationManager.Generate(x: resource.XInt, y: resource.YInt, animationKey: "generic-despawn", scale: 1f);
         // TODO: Added variance (i.e. generate arbitrary number of items based on config)
         var numberToGenerate = harvestMultipler;
         for (int i = 0; i < numberToGenerate; ++i)
@@ -127,11 +134,5 @@ class TerrainManager
     public void ChangeTile(Tile tile, string newTerrain)
     {
         tile.Terrain = newTerrain;
-    }
-
-    public Resource CreateResource(string tilesetKey, int tileX, int tileY)
-    {
-        var resourceData = _resourceData[tilesetKey];
-        return new Resource(itemId: resourceData.ItemId, primaryTag: resourceData.PrimaryTag, tilesetKey: tilesetKey, tileX: tileX, tileY: tileY);
     }
 }

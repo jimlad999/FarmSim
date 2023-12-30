@@ -206,11 +206,12 @@ public class Game1 : Game
                 if (value == "/?")
                 {
                     logOutput.Add(("Commands:", Log.Level.Debug));
-                    logOutput.Add((" SET", Log.Level.Debug));
+                    logOutput.Add((" /SET", Log.Level.Debug));
+                    logOutput.Add((" /SPAWN", Log.Level.Debug));
                 }
-                else if (value.StartsWith("SET ", StringComparison.OrdinalIgnoreCase))
+                else if (value.StartsWith("/SET ", StringComparison.OrdinalIgnoreCase))
                 {
-                    var setOperation = value.Substring(4, value.Length - 4).Replace(" ", string.Empty);
+                    var setOperation = value.Substring(5, value.Length - 5).Replace(" ", string.Empty);
                     if (setOperation == "/?")
                     {
                         logOutput.Add(("SET options:", Log.Level.Debug));
@@ -232,6 +233,12 @@ public class Game1 : Game
                         logOutput.Add(("Unknow SET operation. Type SET /? for help...", Log.Level.Debug));
                     }
                 }
+                else if (value.StartsWith("/SPAWN", StringComparison.OrdinalIgnoreCase))
+                {
+                    GlobalState.MobManager.SpawnMobs();
+                    GlobalState.MobManager.ResetSpawnWaitTime();
+                    logOutput.Add(("Spawned mobs around player.", Log.Level.Debug));
+                }
                 else
                 {
                     logOutput.Add(("Unknow command. Type /? for help...", Log.Level.Debug));
@@ -252,7 +259,14 @@ public class Game1 : Game
             // if not just HUD displayed
             if (_screensToDraw.Count > 1)
             {
-                _screensToDraw.RemoveAt(_screensToDraw.Count - 1);
+                if (_screensToDraw.Contains("command-console") && _commandInput.Value.Length > 0)
+                {
+                    _commandInput.Clear();
+                }
+                else
+                {
+                    _screensToDraw.RemoveAt(_screensToDraw.Count - 1);
+                }
             }
             else if (GlobalState.PlayerManager.ActivePlayer.BuildingKey != null)
             {
@@ -270,12 +284,16 @@ public class Game1 : Game
                 GlobalState.PlayerManager.ActivePlayer.BuildingKey = null;
             }
         }
-        else if (_controllerManager.IsKeyInitialPressed(Keys.OemTilde) && !_screensToDraw.Contains("command-console"))
+        else if ((_controllerManager.IsKeyInitialPressed(Keys.OemTilde) || _controllerManager.IsKeyInitialPressed(Keys.OemQuestion)) && !_screensToDraw.Contains("command-console"))
         {
             _uiOverlay.NextRefresh(() =>
             {
                 _screensToDraw.Add("command-console");
-                _commandInput.IgnoreLastKeyPress();
+                // let '/' registery as a key press for the command console
+                if (_controllerManager.IsKeyInitialPressed(Keys.OemTilde))
+                {
+                    _commandInput.IgnoreLastKeyPress();
+                }
             });
         }
         else if (_controllerManager.IsScrolling(out var scrollResult))
@@ -333,8 +351,8 @@ public class Game1 : Game
             _debugArcRangeEffect.Parameters["HalfScreenWidth"].SetValue(halfScreenWidth);
             _debugArcRangeEffect.Parameters["HalfScreenHeight"].SetValue(halfScreenHeight);
             _debugArcRangeEffect.Parameters["Scale"].SetValue(_viewportManager.Zoom);
-            _debugArcRangeEffect.Parameters["XOffset"].SetValue(xOffset * _viewportManager.Zoom);
-            _debugArcRangeEffect.Parameters["YOffset"].SetValue(yOffset * _viewportManager.Zoom);
+            _debugArcRangeEffect.Parameters["XOffset"].SetValue((xOffset + (int)(weaponRange.FacingDirection.X * 30)) * _viewportManager.Zoom);
+            _debugArcRangeEffect.Parameters["YOffset"].SetValue((yOffset - (int)(weaponRange.FacingDirection.Y * 30)) * _viewportManager.Zoom);
             _debugArcRangeEffect.Parameters["ReachPow2"].SetValue(weaponRange.ReachPow2 * _viewportManager.Zoom);
             _debugArcRangeEffect.Parameters["ArcCrosses0"].SetValue(weaponRange.ArcCrosses0);
             _debugArcRangeEffect.Parameters["FacingDirectionRadiansMin"].SetValue((float)weaponRange.FacingDirectionRadiansMin);

@@ -30,20 +30,20 @@ class AnimationManager
         }
         var newAnimation = new EntityAnimation(entity, animationKey);
         // We can assume here we don't need to clear any other entity animations because they will be cleared before "After" is called.
-        newAnimation.After(() => PlayDefaultInternal(entity));
+        newAnimation.After(() => PlayDefaultInternal(entity, 0));
         Animations.Add(newAnimation);
         return newAnimation;
     }
 
     // Should only be called on entity creation. Can assume there was no animations for this entity.
-    public Animation InitDefault(Entity entity)
+    public Animation InitDefault(Entity entity, double animationOffset)
     {
-        return PlayDefaultInternal(entity);
+        return PlayDefaultInternal(entity, animationOffset);
     }
 
-    private Animation PlayDefaultInternal(Entity entity)
+    private Animation PlayDefaultInternal(Entity entity, double animationOffset)
     {
-        var newAnimation = new EntityDefaultAnimation(entity);
+        var newAnimation = new EntityDefaultAnimation(entity, animationOffset);
         Animations.Add(newAnimation);
         return newAnimation;
     }

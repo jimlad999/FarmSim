@@ -30,7 +30,7 @@ public class TextInput : UIElement
     [IgnoreDataMember]
     private Text Text;
     [IgnoreDataMember]
-    private StringBuilder Value = new();
+    public StringBuilder Value = new();
     [IgnoreDataMember]
     private int CursorIndex = 0;
     [IgnoreDataMember]
@@ -47,6 +47,15 @@ public class TextInput : UIElement
     public void IgnoreLastKeyPress()
     {
         IgnoreLastKeyPressInternal = true;
+    }
+
+    public void Clear()
+    {
+        HistoryIndex = 0;
+        CursorIndex = 0;
+        Value.Clear();
+        Text.UpdateValue($"<{Color}>{Placeholder}");
+        Text.AlphaModifier = PlaceholderAlpha;
     }
 
     public override void Update(GameTime gameTime, UIState state, UISpriteSheet uiSpriteSheet, ControllerManager controllerManager)
@@ -90,11 +99,7 @@ public class TextInput : UIElement
                 {
                     History.Add(value);
                 }
-                HistoryIndex = 0;
-                CursorIndex = 0;
-                Value.Clear();
-                Text.UpdateValue($"<{Color}>{Placeholder}");
-                Text.AlphaModifier = PlaceholderAlpha;
+                Clear();
                 EventHandler.Invoke(this, value.Replace(Text.PlaceholderGT, '>').Replace(Text.PlaceholderLT, '<'));
             }
         }

@@ -15,8 +15,8 @@ class MultiTool
     }
     private int ToolRadiusPow2 = 16 * 16;
     private int ToolReach = 32;
-    private int WeaponReachPow2 = 70 * 70;
-    private double ArcHalfRadians = 0.698132;//+/- 40 degrees of facing direction
+    private int WeaponReachPow2 = 110 * 110;
+    private double ArcHalfRadians = 0.872665;//+/- 40 degrees of facing direction
 
     public PointRange ToolRange(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)
     {
@@ -31,8 +31,8 @@ class MultiTool
     public ArcRange WeaponRange(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)
     {
         return new ArcRange(
-            x: entity.XInt + xOffset,
-            y: entity.YInt + yOffset,
+            x: entity.XInt + xOffset - (int)(facingDirection.X * 30),
+            y: entity.YInt + yOffset - (int)(facingDirection.Y * 30),
             facingDirection: facingDirection,
             arcHalfRadians: ArcHalfRadians,
             reachPow2: WeaponReachPow2);

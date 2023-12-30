@@ -7,7 +7,7 @@
         "generic-despawn": {
           "origin": {
             "x": 48,
-            "y": 88
+            "y": 82
           },
           "frameWidth": 96,
           "frameHeight": 96,
@@ -16,7 +16,23 @@
               {
                 "x": 0,
                 "y": 0,
-                "Duration": 400
+                "Duration": 100
+              },
+              {
+                "x": 0,
+                "y": 96,
+                "Duration": 100
+              },
+              {
+                "x": 0,
+                "y": 192,
+                "Duration": 100,
+                "keyFrame": true
+              },
+              {
+                "x": 0,
+                "y": 288,
+                "Duration": 100
               }
             ]
           }
@@ -856,25 +872,109 @@
             "Up": [
               {
                 "x": 0,
-                "y": 0
+                "y": 0,
+                "duration": 100
+              },
+              {
+                "x": 64,
+                "y": 0,
+                "duration": 200
+              },
+              {
+                "x": 128,
+                "y": 0,
+                "duration": 200
+              },
+              {
+                "x": 64,
+                "y": 0,
+                "duration": 100
+              },
+              {
+                "x": 192,
+                "y": 0,
+                "duration": 100
               }
             ],
             "Down": [
               {
                 "x": 0,
-                "y": 96
+                "y": 96,
+                "duration": 100
+              },
+              {
+                "x": 64,
+                "y": 96,
+                "duration": 200
+              },
+              {
+                "x": 128,
+                "y": 96,
+                "duration": 200
+              },
+              {
+                "x": 64,
+                "y": 96,
+                "duration": 100
+              },
+              {
+                "x": 192,
+                "y": 96,
+                "duration": 100
               }
             ],
             "Left": [
               {
                 "x": 0,
-                "y": 192
+                "y": 192,
+                "duration": 100
+              },
+              {
+                "x": 64,
+                "y": 192,
+                "duration": 200
+              },
+              {
+                "x": 128,
+                "y": 192,
+                "duration": 200
+              },
+              {
+                "x": 64,
+                "y": 192,
+                "duration": 100
+              },
+              {
+                "x": 192,
+                "y": 192,
+                "duration": 100
               }
             ],
             "Right": [
               {
                 "x": 0,
-                "y": 288
+                "y": 288,
+                "duration": 100
+              },
+              {
+                "x": 64,
+                "y": 288,
+                "duration": 200
+              },
+              {
+                "x": 128,
+                "y": 288,
+                "duration": 200
+              },
+              {
+                "x": 64,
+                "y": 288,
+                "duration": 100
+              },
+              {
+                "x": 192,
+                "y": 288,
+                "duration": 100
               }
             ]
           }
@@ -889,28 +989,28 @@
           "directionFrames": {
             "Up": [
               {
-                "x": 64,
+                "x": 256,
                 "y": 0,
                 "duration": 400
               }
             ],
             "Down": [
               {
-                "x": 64,
+                "x": 256,
                 "y": 96,
                 "duration": 400
               }
             ],
             "Left": [
               {
-                "x": 64,
+                "x": 256,
                 "y": 192,
                 "duration": 400
               }
             ],
             "Right": [
               {
-                "x": 64,
+                "x": 256,
                 "y": 288,
                 "duration": 400
               }
