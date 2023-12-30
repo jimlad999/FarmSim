@@ -40,4 +40,13 @@ class ActionButton : ToggleButton
         Children.Add(newAction);
         EventHandler += newAction.ButtonEventHandler;
     }
+
+    protected override void UpdateUIState(UIState state, ControllerManager controllerManager)
+    {
+        // Only if active will it count towards the state. Other elements (above or below) this could still capture state anyway.
+        if (IsActive)
+        {
+            base.UpdateUIState(state, controllerManager);
+        }
+    }
 }

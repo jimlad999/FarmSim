@@ -360,7 +360,7 @@ public class Game1 : Game
         _viewportManager.Update(gameTime);
         EntityManager.Update(gameTime);
         GlobalState.AnimationManager.Update(gameTime);
-        _mousePointer.Update();
+        _mousePointer.Update(_uiOverlay);
 
         base.Update(gameTime);
     }

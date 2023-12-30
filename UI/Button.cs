@@ -58,6 +58,15 @@ public class Button : SpriteUIElement
         }
     }
 
+    protected override void UpdateUIState(UIState state, ControllerManager controllerManager)
+    {
+        if (!state.IsMouseOverInteractiveElement && DestinationCache.Contains(controllerManager.CurrentMouseState.Position))
+        {
+            state.IsMouseOverInteractiveElement = true;
+        }
+        base.UpdateUIState(state, controllerManager);
+    }
+
     protected virtual void UpdateState(ButtonState previousState, ControllerManager controllerManager)
     {
         var selected = DestinationCache != Rectangle.Empty

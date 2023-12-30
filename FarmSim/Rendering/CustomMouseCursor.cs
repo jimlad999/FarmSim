@@ -1,6 +1,8 @@
 ﻿using FarmSim.Player;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
+using UI;
 
 namespace FarmSim.Rendering;
 
@@ -13,7 +15,7 @@ class CustomMouseCursor
     private readonly Texture2D Mine;
     private readonly Texture2D Projectile;
     private readonly Texture2D Slash;
-    private Texture2D CurrentCursor;
+    private IResult Current;
 
     public CustomMouseCursor(
         Texture2D bucket,
@@ -33,49 +35,110 @@ class CustomMouseCursor
         Slash = slash;
     }
 
-    public void Update()
+    public void Update(UIOverlay uiOverlay)
     {
-        var (mouseTexture, originX, originY) = GetPlayerCursor();
-        if (CurrentCursor != mouseTexture)
+        var result = GetCursor(uiOverlay);
+        if (!result.Equals(Current))
         {
-            CurrentCursor = mouseTexture;
-            Mouse.SetCursor(MouseCursor.FromTexture2D(CurrentCursor, originX, originY));
+            Current = result;
+            if (result is SystemResult systemResult)
+            {
+                Mouse.SetCursor(systemResult.MouseCursor);
+            }
+            else if (result is CustomResult customResult)
+            {
+                Mouse.SetCursor(MouseCursor.FromTexture2D(customResult.Texture, originx: customResult.OriginX, originy: customResult.OriginY));
+            }
         }
     }
 
-    private (Texture2D, int originX, int originY) GetPlayerCursor()
+    private IResult GetCursor(UIOverlay uiOverlay)
     {
-        var player = GlobalState.PlayerManager.ActivePlayer;
-        if (player.PrimaryAction == null)
+        if (uiOverlay.State.IsMouseOverInteractiveElement)
         {
-            // points don't matter since cursor won't change
-            return (CurrentCursor, 0, 0);
+            return new SystemResult(MouseCursor.Hand);
+        }
+        if (uiOverlay.State.IsMouseOverElement)
+        {
+            return new SystemResult(MouseCursor.Arrow);
+        }
+        var player = GlobalState.PlayerManager.ActivePlayer;
+        if (player.TilePlacement != null || player.PrimaryAction == null)
+        {
+            return new SystemResult(MouseCursor.Arrow);
         }
         if (player.PrimaryAction is FireProjectileAction)
         {
-            return (Projectile, 8, 8);
+            return new CustomResult(Projectile, 8, 8);
         }
         if (player.PrimaryAction is MultiToolAction)
         {
             switch (player.TelescopeAction())
             {
                 case TelescopeResult.Projectile:
-                    return (Projectile, 8, 8);
+                    return new CustomResult(Projectile, 8, 8);
                 case TelescopeResult.Slash:
-                    return (Slash, 0, 0);
+                    return new CustomResult(Slash, 0, 0);
                 case TelescopeResult.Bucket:
-                    return (Bucket, 0, 0);
+                    return new CustomResult(Bucket, 0, 0);
                 case TelescopeResult.Chop:
-                    return (Chop, 0, 0);
+                    return new CustomResult(Chop, 0, 0);
                 case TelescopeResult.Farm:
-                    return (Farm, 0, 0);
+                    return new CustomResult(Farm, 0, 0);
                 case TelescopeResult.Harvest:
-                    return (Harvest, 0, 0);
+                    return new CustomResult(Harvest, 0, 0);
                 case TelescopeResult.Mine:
-                    return (Mine, 0, 0);
+                    return new CustomResult(Mine, 0, 0);
             }
         }
-        // points don't matter since cursor won't change
-        return (CurrentCursor, 0, 0);
+        return new SystemResult(MouseCursor.Arrow);
+    }
+
+    interface IResult
+    {
+    }
+    struct SystemResult : IResult
+    {
+        public MouseCursor MouseCursor;
+
+        public SystemResult(MouseCursor mouseCursor)
+        {
+            MouseCursor = mouseCursor;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is SystemResult result &&
+                MouseCursor == result.MouseCursor;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(MouseCursor);
+        }
+    }
+    struct CustomResult : IResult
+    {
+        public Texture2D Texture;
+        public int OriginX;
+        public int OriginY;
+
+        public CustomResult(Texture2D texture, int originX, int originY)
+        {
+            Texture = texture;
+            OriginX = originX;
+            OriginY = originY;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is CustomResult result &&
+                Texture == result.Texture;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Texture);
+        }
     }
 }

@@ -93,13 +93,18 @@ public abstract class UIElement
         {
             return;
         }
-        if (!state.IsMouseOverElement && DestinationCache.Contains(controllerManager.CurrentMouseState.Position))
-        {
-            state.IsMouseOverElement = true;
-        }
+        UpdateUIState(state, controllerManager);
         foreach (var child in Children)
         {
             child.Update(gameTime, state, uiSpriteSheet, controllerManager);
+        }
+    }
+
+    protected virtual void UpdateUIState(UIState state, ControllerManager controllerManager)
+    {
+        if (!state.IsMouseOverElement && DestinationCache.Contains(controllerManager.CurrentMouseState.Position))
+        {
+            state.IsMouseOverElement = true;
         }
     }
 
