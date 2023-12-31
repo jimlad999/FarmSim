@@ -18,7 +18,7 @@ class MobManager : EntityManager<Mob>
     private const int MaxWaitTimeMilliseconds = 60_000;
     private const int RandomWaitTimeMilliseconds = MaxWaitTimeMilliseconds - MinWaitTimeMilliseconds;
     // Public because despawn radius of projectiles same as mobs
-    public const int SpawnRadius = Player.Player.SightRadius + 4;//tiles
+    public const int SpawnRadius = Player.Player.SightRadiusTiles + 4;//tiles
     private const int SpawnRadius2Plus1 = SpawnRadius + SpawnRadius + 1;//tiles
     private const int SpawnRadiusPow2 = SpawnRadius * SpawnRadius;
 

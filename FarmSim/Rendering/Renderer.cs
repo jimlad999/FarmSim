@@ -126,7 +126,7 @@ class Renderer
         // can set once globally?
         var halfScreenWidth = spriteBatch.GraphicsDevice.Viewport.Width / 2f;
         var halfScreenHeight = spriteBatch.GraphicsDevice.Viewport.Height / 2f;
-        var fogOfWarRadius = Player.Player.SightRadius * TileSize * _viewportManager.Zoom;
+        var fogOfWarRadius = Player.Player.SightRadiusTiles * TileSize * _viewportManager.Zoom;
         var fogOfWarRadiusWithBuffer = fogOfWarRadius + 30 * _viewportManager.Zoom;
         var fogOfWarRadiusWithBufferPow2 = fogOfWarRadiusWithBuffer * fogOfWarRadiusWithBuffer;
         var fogOfWarStartClipRadiusWithBuffer = fogOfWarRadius - 15 * _viewportManager.Zoom;
@@ -492,18 +492,25 @@ class Renderer
             // to render target first and then render that within fog of war.
             spriteBatch.End();
             spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: _outlineEntityEffect);
-        }
-        DrawSprite(
-            spriteBatch,
-            entitySpriteSheet,
-            xDraw: xDraw,
-            yDraw: yDraw + heightOffset,
-            scale: zoomedEntityScale,
-            color: animation.Color);
-        if (applyOutlineEffect)
-        {
+            DrawSprite(
+                spriteBatch,
+                entitySpriteSheet,
+                xDraw: xDraw,
+                yDraw: yDraw + heightOffset,
+                scale: zoomedEntityScale,
+                color: animation.Color);
             spriteBatch.End();
             spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: renderFogOfWar ? _fogOfWarEffect : null);
+        }
+        else
+        {
+            DrawSprite(
+                spriteBatch,
+                entitySpriteSheet,
+                xDraw: xDraw,
+                yDraw: yDraw + heightOffset,
+                scale: zoomedEntityScale,
+                color: animation.Color);
         }
     }
 

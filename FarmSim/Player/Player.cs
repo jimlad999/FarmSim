@@ -11,7 +11,9 @@ namespace FarmSim.Player;
 
 class Player : Entity, IHasMultiTool, IHasInventory
 {
-    public const int SightRadius = 12;//tiles
+    public const int SightRadiusTiles = 12;
+    public const int SightRadiusWorld = SightRadiusTiles * Renderer.TileSize;
+    public const int SightRadiusWorldPow2 = SightRadiusWorld * SightRadiusWorld;
     private const double MovementSpeed = 200;
     public const int PickUpDistancePow2Const = Renderer.TileSize * Renderer.TileSize;//pick up within 1 tile
     public int PickUpDistancePow2 => PickUpDistancePow2Const;
@@ -168,15 +170,21 @@ class Player : Entity, IHasMultiTool, IHasInventory
     {
         var (mouseWorldX, mouseWorldY) = mouseCoordinates.WorldPosition;
         var (mouseTileX, mouseTileY) = mouseCoordinates.TilePosition;
-        var (mob, _) = GlobalState.MobManager.GetEntitiesInRange(xTileStart: mouseTileX - 1, xTileEnd: mouseTileX + 1, yTileStart: mouseTileY - 1, yTileEnd: mouseTileY + 1)
+        var (mob, _, _) = GlobalState.MobManager.GetEntitiesInRange(xTileStart: mouseTileX - 1, xTileEnd: mouseTileX + 1, yTileStart: mouseTileY - 1, yTileEnd: mouseTileY + 1)
             .Select(mob =>
             {
-                var xDiff = mouseWorldX - mob.X - mob.HitboxXOffset;
-                var yDiff = mouseWorldY - mob.Y - mob.HitboxYOffset;
-                return (mob, distancePow2: xDiff * xDiff + yDiff * yDiff);
+                var xDiffMouse = mouseWorldX - mob.XInt - mob.HitboxXOffset;
+                var yDiffMouse = mouseWorldY - mob.YInt - mob.HitboxYOffset;
+                var xDiffPlayer = XInt - mob.XInt;
+                var yDiffPlayer = YInt - mob.YInt;
+                return (
+                    mob,
+                    mouseDistancePow2: xDiffMouse * xDiffMouse + yDiffMouse * yDiffMouse,
+                    playerDistancePow2: Renderer.RenderFogOfWar ? xDiffPlayer * xDiffPlayer + yDiffPlayer * yDiffPlayer : 0
+                );
             })
-            .Where(a => a.distancePow2 <= a.mob.HitRadiusPow2)
-            .OrderBy(a => a.distancePow2)
+            .Where(a => a.mouseDistancePow2 <= a.mob.HitRadiusPow2 && a.playerDistancePow2 <= SightRadiusWorldPow2)
+            .OrderBy(a => a.mouseDistancePow2)
             .FirstOrDefault();
         HoveredEntity = mob;
     }
