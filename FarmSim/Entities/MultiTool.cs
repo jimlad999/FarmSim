@@ -17,7 +17,7 @@ class MultiTool
             return BaseDamage;
         }
     }
-    private int ToolReach = 1;//tiles
+    private int ToolReach = 1;//tiles (closer to 1.2 with the adjustments in IsTileWithinRange)
     private int WeaponReachPow2 = 110 * 110;
     private double ArcHalfRadians = 0.872665;//+/- 40 degrees of facing direction
 

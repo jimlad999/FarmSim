@@ -14,14 +14,14 @@ class EntityDefaultAnimation : Animation, IEntityAnimation
     public override int TileX { get => Entity.TileX; set { } }
     public override int TileY { get => Entity.TileY; set { } }
 
-    public EntityDefaultAnimation(Entity entity, double animationOffset)
+    public EntityDefaultAnimation(Entity entity, double animationOffsetMilliseconds)
     {
         Entity = entity;
         SpriteSheetKey = entity.EntitySpriteKey;
         AnimationKey = entity.DefaultAnimationKey;
         Scale = new Vector2(entity.Scale, entity.Scale);
         Color = entity.Color;
-        InitAnimationOffset(animationOffset);
+        InitAnimationOffset(animationOffsetMilliseconds);
     }
 
     public override DelayedAction Update(GameTime gameTime)

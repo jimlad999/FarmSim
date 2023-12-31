@@ -147,7 +147,7 @@ class Renderer
         //specific because the player sight radius is larger than the number of tiles you can see at zoom == 1
         var renderFogOfWar = RenderFogOfWar && _viewportManager.Zoom < 1;
 
-        var telescopedPlayerAction = RenderTelescopedPlayerAction ? activePlayer.TelescopeAction : TelescopeResult.None;
+        var telescopedPlayerAction = RenderTelescopedPlayerAction ? activePlayer.TelescopePrimaryAction : TelescopeResult.None;
         _outlineTileEffect.Parameters["TileTexelSize"].SetValue(_tileset.TexelSize);
         _outlineTileEffect.Parameters["TileHighlightColor"].SetValue(new Vector4(255, 255, 255, 255));
         _outlineEntityEffect.Parameters["EntityTexelSize"].SetValue(_entitySpriteSheet.TexelSize);

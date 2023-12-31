@@ -30,7 +30,11 @@ class Item : Entity, IHasHeight, IDespawnble
     // Data about this instance of item (e.g. type, chosen tags, chosen quality).
     // This is what is added to the player inventory.
     public ItemInfo InstanceInfo;
+    // Player who threw the item into the world.
+    public Player.Player Owner;
     public double SecondsInWorld;
+    internal double PickUpDelayTimeMilliseconds;
+
     public bool FlagForDespawning { get; set; } = false;
 
     public Item()
@@ -44,11 +48,20 @@ class Item : Entity, IHasHeight, IDespawnble
 
     public void Update(GameTime gameTime)
     {
+        SecondsInWorld += gameTime.ElapsedGameTime.TotalSeconds;
+        if (PickUpDelayTimeMilliseconds > 0)
+        {
+            PickUpDelayTimeMilliseconds -= gameTime.ElapsedGameTime.TotalMilliseconds;
+        }
+        UpdateMovement(gameTime);
+    }
+
+    private void UpdateMovement(GameTime gameTime)
+    {
         if (Speed == 0)
         {
             return;
         }
-        SecondsInWorld += gameTime.ElapsedGameTime.TotalSeconds;
         var distancePerFrame = Speed * gameTime.ElapsedGameTime.TotalSeconds;
         X += NormalizedDirection.X * distancePerFrame;
         Y += NormalizedDirection.Y * distancePerFrame;

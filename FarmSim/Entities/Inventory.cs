@@ -1,13 +1,18 @@
-﻿using FarmSim.Entities;
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace FarmSim.Player;
+namespace FarmSim.Entities;
 
-class Inventory
+class Inventory : IEnumerable<ItemInfo>
 {
-    public Dictionary<string, List<ItemInfo>> SimplifiedItems = new();
+    public Dictionary<string, List<ItemInfo>> SimplifiedItems;
+
+    public Inventory()
+    {
+        SimplifiedItems = new();
+    }
 
     public Inventory(List<ItemInfo> items)
     {
@@ -52,5 +57,15 @@ class Inventory
         }
         itemList.Remove(item);
         return true;
+    }
+
+    public IEnumerator<ItemInfo> GetEnumerator()
+    {
+        return SimplifiedItems.SelectMany(a => a.Value).GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }

@@ -122,7 +122,7 @@ class MultiToolAction : IAction
                     hitMobs.AddRange(extraMobs);
                     if (hitMobs.Count > 0)
                     {
-                        GlobalState.MobManager.Damage(hitMobs, entityWithMultiTool.MultiTool.Damage);
+                        GlobalState.MobManager.Damage(hitMobs.Distinct(), entityWithMultiTool.MultiTool.Damage);
                     }
                 });
             });
@@ -139,7 +139,7 @@ class MultiToolAction : IAction
                     hitPlayers.AddRange(extraPlayers);
                     if (hitPlayers.Count > 0)
                     {
-                        GlobalState.PlayerManager.Damage(hitPlayers, entityWithMultiTool.MultiTool.Damage);
+                        GlobalState.PlayerManager.Damage(hitPlayers.Distinct(), entityWithMultiTool.MultiTool.Damage);
                     }
                 });
             });
@@ -244,11 +244,7 @@ class MultiToolAction : IAction
 
     private static void HarvestResource(Animation animation, Resource resource, MultiTool multiTool)
     {
-        animation.OnKeyFrame(() =>
-        {
-            System.Diagnostics.Debug.WriteLine("generating resources");
-            GlobalState.TerrainManager.HavestResource(resource, multiTool.HarvestMultiplier);
-        });
+        animation.OnKeyFrame(() => GlobalState.TerrainManager.HavestResource(resource, multiTool.HarvestMultiplier));
     }
 
     private static void ChangeTile(Animation animation, Tile tile, string newTerrain)

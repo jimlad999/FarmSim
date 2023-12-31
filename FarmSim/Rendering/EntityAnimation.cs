@@ -27,7 +27,11 @@ class EntityAnimation : Animation, IEntityAnimation
 
     public override DelayedAction Update(GameTime gameTime)
     {
-        FlagForDespawning = Entity is IDespawnble despawnable && despawnable.FlagForDespawning;
+        if (Entity is IDespawnble despawnable && despawnable.FlagForDespawning)
+        {
+            FlagForDespawning = true;
+            return DelayedAction.After;
+        }
         return base.Update(gameTime);
     }
 }

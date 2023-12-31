@@ -39,9 +39,9 @@ abstract class Entity : IPositionable
 
     // Animation offset is used to make it so entities spawned at the same time don't have the exact same animation timing.
     // This is to ensure as much as possible there is no uniform animations close by to make it appear more natural.
-    public virtual void InitDefaultAnimation(double animationOffset = 0)
+    public virtual void InitDefaultAnimation(double animationOffsetMilliseconds = 0)
     {
-        GlobalState.AnimationManager.InitDefault(this, animationOffset);
+        GlobalState.AnimationManager.InitDefault(this, animationOffsetMilliseconds);
     }
 
     public void ApplyForce(Vector2 externalForce)

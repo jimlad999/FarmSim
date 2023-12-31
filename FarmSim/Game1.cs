@@ -403,14 +403,6 @@ public class Game1 : Game
                 x: _controllerManager.CurrentMouseState.X - halfScreenWidth + xOffset * _viewportManager.Zoom,
                 y: _controllerManager.CurrentMouseState.Y - halfScreenHeight - yOffset * _viewportManager.Zoom);
             mouseDirection.Normalize();
-            //System.Diagnostics.Debug.WriteLine((
-            //    "facing", weaponRange.FacingDirection,
-            //    "mouse", mouseDirection,
-            //    "atan2(actual)", weaponRange.FacingDirectionRadians,
-            //    "atan2(mouse)", Math.Atan2(y: mouseDirection.Y, x: mouseDirection.X),
-            //    "Min", weaponRange.FacingDirectionRadiansMin,
-            //    "Max", weaponRange.FacingDirectionRadiansMax,
-            //    "ArcCrosses0", weaponRange.ArcCrosses0));
             _spriteBatch.Begin(blendState: BlendState.AlphaBlend, effect: _debugArcRangeEffect);
             _spriteBatch.Draw(_entireScreen, _entireScreen.Bounds, Color.White);
             _spriteBatch.End();
@@ -418,8 +410,7 @@ public class Game1 : Game
         else
 #endif
         {
-            using (new ProfilerScope())
-                _renderer.Draw(_spriteBatch);
+            _renderer.Draw(_spriteBatch);
         }
         // should UIOverlay be inside the Renderer instead?
         _spriteBatch.Begin(blendState: BlendState.NonPremultiplied);

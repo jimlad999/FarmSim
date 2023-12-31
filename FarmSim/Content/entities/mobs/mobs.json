@@ -12,6 +12,20 @@
       "Slimy",
       "Pseudopod"
     ],
+    "eats": [
+      "Meat",
+      "Plant",
+      "Wood",
+      "Drink",
+      "Rock",
+      "Ore",
+      "Gem",
+      "Fuel"
+    ],
+    "hunger": {
+      "min": 1,
+      "max": 1
+    },
     "tags": [
       {
         "Slimy": 1

@@ -61,13 +61,6 @@ readonly struct ArcRange : IRange
             return false;
         }
         var entityDirectionRadians = Math.Atan2(y: yDiff, x: xDiff);
-        System.Diagnostics.Debug.WriteLine((
-            "yDiff", yDiff,
-            "xDiff", xDiff,
-            "crosses0", ArcCrosses0,
-            "rad", Math.Round(entityDirectionRadians, 5),
-            "min", Math.Round(FacingDirectionRadiansMin, 5),
-            "max", Math.Round(FacingDirectionRadiansMax, 5)));
         return ArcCrosses0
             ? entityDirectionRadians > FacingDirectionRadiansMin
                 || entityDirectionRadians < FacingDirectionRadiansMax

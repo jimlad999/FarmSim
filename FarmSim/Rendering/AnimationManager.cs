@@ -37,6 +37,16 @@ class AnimationManager
 
     public Animation PlayOnce(Entity entity, string animationKey)
     {
+        return SwapEntityAnimations(entity, new EntityAnimation(entity, animationKey));
+    }
+
+    public Animation PlayForDuration(Entity entity, string animationKey, double durationMilliseconds)
+    {
+        return SwapEntityAnimations(entity, new EntityDurableAnimation(entity, animationKey, durationMilliseconds));
+    }
+
+    private Animation SwapEntityAnimations(Entity entity, Animation newAnimation)
+    {
         // Actions can be interrupted if a new animation takes affect before the animation is complete
         // e.g. preventing an attack from executing by aiming for middle of animation frames.
         foreach (var animation in MovingAnimations.Where(animation => animation is IEntityAnimation entityAnimation && entityAnimation.Entity == entity))
@@ -44,7 +54,6 @@ class AnimationManager
             animation.FlagForDespawning = true;
             animation.Clear();
         }
-        var newAnimation = new EntityAnimation(entity, animationKey);
         // We can assume here we don't need to clear any other entity animations because they will be cleared before "After" is called.
         newAnimation.After(() => PlayDefaultInternal(entity, 0));
         MovingAnimations.Add(newAnimation);
@@ -52,21 +61,21 @@ class AnimationManager
     }
 
     // Should only be called on entity creation. Can assume there was no animations for this entity.
-    public Animation InitDefault(Entity entity, double animationOffset)
+    public Animation InitDefault(Entity entity, double animationOffsetMilliseconds)
     {
-        return PlayDefaultInternal(entity, animationOffset);
+        return PlayDefaultInternal(entity, animationOffsetMilliseconds);
     }
 
-    private Animation PlayDefaultInternal(Entity entity, double animationOffset)
+    private Animation PlayDefaultInternal(Entity entity, double animationOffsetMilliseconds)
     {
-        var newAnimation = new EntityDefaultAnimation(entity, animationOffset);
+        var newAnimation = new EntityDefaultAnimation(entity, animationOffsetMilliseconds);
         MovingAnimations.Add(newAnimation);
         return newAnimation;
     }
 
-    public Animation InitDefault(Resource resource, double animationOffset)
+    public Animation InitDefault(Resource resource, double animationOffsetMilliseconds)
     {
-        var newAnimation = new ResourceAnimation(resource, animationOffset);
+        var newAnimation = new ResourceAnimation(resource, animationOffsetMilliseconds);
         StationaryAnimations.Add(newAnimation);
         return newAnimation;
     }
@@ -86,9 +95,10 @@ class AnimationManager
         return newAnimation;
     }
 
-    public Animation Generate(Entity entity, string animationKey, Vector2 direction)
+    public Animation Generate(Entity entity, string animationKey, double durationMilliseconds, Vector2 direction)
     {
-        var newAnimation = new EntityEffectAnimation(entity, animationKey, direction);
+        var newAnimation = new EntityEffectAnimation(entity, animationKey, durationMilliseconds, direction);
+        MovingAnimations.Add(newAnimation);
         return newAnimation;
     }
 

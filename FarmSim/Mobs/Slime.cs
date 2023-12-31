@@ -2,9 +2,9 @@
 
 class Slime : Mob
 {
-    public override void InitBehaviours()
+    public override void InitDefaultBehaviours()
     {
-        _behaviours = new[]
+        Behaviours = new()
         {
             new RandomWonderBehaviour(wonderDistance: Metadata.Speed * 5, validTerrain: Metadata.Spawnable, maxWaitTimeMilliseconds: 10_000)
         };

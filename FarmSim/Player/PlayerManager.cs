@@ -39,8 +39,12 @@ class PlayerManager : EntityManager<Player>
     {
         foreach (var player in Entities)
         {
-            if (player.TryPickUpItem(item))
+            var itemXDiff = player.XInt - item.XInt;
+            var itemYDiff = player.YInt - item.YInt;
+            var itemDistancePow2 = itemXDiff * itemXDiff + itemYDiff * itemYDiff;
+            if (itemDistancePow2 <= player.PickUpDistancePow2)
             {
+                player.PickUpItem(item);
                 return true;
             }
         }
@@ -56,15 +60,18 @@ class PlayerManager : EntityManager<Player>
             Damage(player, 0);
             if (projectile.Effect != null)// && player.HP > 0)
             {
-                // TODO: apply effect to mob (e.g. stun)
-                GlobalState.AnimationManager.Generate(entity: player, animationKey: projectile.Effect.AnimationKey, direction: new Vector2(x: 0, y: 1));
+                projectile.Effect.Apply(player, projectile);
+                if (projectile.Effect.AnimationKey != null)
+                {
+                    GlobalState.AnimationManager.Generate(entity: player, animationKey: projectile.Effect.AnimationKey, durationMilliseconds: projectile.Effect.DurationMilliseconds, direction: Vector2.UnitY);
+                }
             }
             return true;
         }
         return false;
     }
 
-    public void Damage(List<Player> players, int damage)
+    public void Damage(IEnumerable<Player> players, int damage)
     {
         foreach (var player in players)
         {

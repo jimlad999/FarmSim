@@ -7,6 +7,6 @@ class RandomRange
 
     public int GetValue()
     {
-        return RandomUtil.Rand.Next(Min, Max);
+        return Min == Max ? Max : RandomUtil.Rand.Next(Min, Max);
     }
 }

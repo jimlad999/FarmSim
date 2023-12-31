@@ -13,6 +13,7 @@ class MobManager : EntityManager<Mob>
 {
     private static readonly Matrix Rotate120 = Matrix.CreateRotationZ(2.0944f);
     private static readonly Color MobLightBlue = Color.FromNonPremultiplied(0, 120, 210, 255);
+    private const int UnconsciousTimeMilliseconds = 15_000;
     private const int MinWaitTimeMilliseconds = 10_000;
     private const int MaxWaitTimeMilliseconds = 60_000;
     private const int RandomWaitTimeMilliseconds = MaxWaitTimeMilliseconds - MinWaitTimeMilliseconds;
@@ -47,6 +48,23 @@ class MobManager : EntityManager<Mob>
     }
 #endif
 
+    public bool TryPickUpItem(Item item)
+    {
+        // Should unconscious mobs be able to pick up items?
+        foreach (var mob in Entities)
+        {
+            var itemXDiff = mob.XInt - item.XInt;
+            var itemYDiff = mob.YInt - item.YInt;
+            var itemDistancePow2 = itemXDiff * itemXDiff + itemYDiff * itemYDiff;
+            if (itemDistancePow2 <= mob.PickUpDistancePow2)
+            {
+                mob.PickUpItem(item);
+                return true;
+            }
+        }
+        return false;
+    }
+
     public bool DetectCollision(Projectile projectile)
     {
         foreach (var mob in Entities.Where(projectile.DetectCollision))
@@ -56,14 +74,17 @@ class MobManager : EntityManager<Mob>
             if (projectile.Effect != null)
             {
                 projectile.Effect.Apply(mob, projectile);
-                GlobalState.AnimationManager.Generate(entity: mob, animationKey: projectile.Effect.AnimationKey, direction: new Vector2(x: 0, y: 1));
+                if (projectile.Effect.AnimationKey != null)
+                {
+                    GlobalState.AnimationManager.Generate(entity: mob, animationKey: projectile.Effect.AnimationKey, durationMilliseconds: projectile.Effect.DurationMilliseconds, direction: Vector2.UnitY);
+                }
             }
             return true;
         }
         return false;
     }
 
-    public void Damage(List<Mob> mobs, int damage)
+    public void Damage(IEnumerable<Mob> mobs, int damage)
     {
         foreach (var mob in mobs)
         {
@@ -73,26 +94,51 @@ class MobManager : EntityManager<Mob>
 
     private static void Damage(Mob mob, int damage)
     {
-        var hitAnimation = GlobalState.AnimationManager.PlayOnce(mob, "hit");
-        mob.Hit = true;
-        mob.HP -= damage;
-        hitAnimation.After(() =>
+        // Mob will fall unconscious when hp drops to/below 0. Player can then kill the mob for drops or tame it with food.
+        if (mob.HP <= 0)
         {
-            mob.Hit = false;
-            if (mob.HP <= 0)
+            mob.FlagForDespawning = true;
+            GlobalState.AnimationManager.Generate(x: mob.XInt, y: mob.YInt, animationKey: "generic-despawn", scale: mob.Scale);
+            foreach (var drop in mob.GetDrops())
             {
-                mob.FlagForDespawning = true;
-                GlobalState.AnimationManager.Generate(x: mob.XInt, y: mob.YInt, animationKey: "generic-despawn", scale: mob.Scale);
-                foreach (var drop in mob.GetDrops())
-                {
-                    GlobalState.ItemManager.CreateNewItem(
-                        itemId: drop,
-                        originX: mob.XInt,
-                        originY: mob.YInt,
-                        normalizedDirection: RandomUtil.RandomNormalizedDirection());
-                }
+                GlobalState.ItemManager.CreateNewItem(
+                    itemId: drop,
+                    originX: mob.XInt,
+                    originY: mob.YInt,
+                    normalizedDirection: RandomUtil.RandomNormalizedDirection());
             }
-        });
+            // Mobs will drop anything they haven't already eaten
+            foreach (var instanceInfo in mob.Inventory)
+            {
+                GlobalState.ItemManager.CreateItemFromExisting(
+                    instanceInfo: instanceInfo,
+                    originX: mob.XInt,
+                    originY: mob.YInt,
+                    normalizedDirection: RandomUtil.RandomNormalizedDirection());
+            }
+        }
+        else
+        {
+            var hitAnimation = GlobalState.AnimationManager.PlayOnce(mob, "hit");
+            mob.Hit = true;
+            mob.HP -= damage;
+            hitAnimation.After(() =>
+            {
+                mob.Hit = false;
+                if (mob.HP <= 0)
+                {
+                    var hitAnimation = GlobalState.AnimationManager.PlayForDuration(mob, "unconscious", durationMilliseconds: UnconsciousTimeMilliseconds);
+                    var unconsciousAnimation = GlobalState.AnimationManager.Generate(entity: mob, animationKey: "unconscious", durationMilliseconds: UnconsciousTimeMilliseconds, direction: Vector2.UnitY);
+                    unconsciousAnimation.After(() =>
+                    {
+                        if (!mob.FlagForDespawning)
+                        {
+                            mob.HP = 1;
+                        }
+                    });
+                }
+            });
+        }
     }
 
     public void Update(GameTime gameTime)
@@ -157,6 +203,7 @@ class MobManager : EntityManager<Mob>
                 for (int mob = 0; mob < numberToSpawn; ++mob)
                 {
                     var newMob = _mobFactory.Create(mobToSpawn.Class);
+                    newMob.Inventory = new Inventory();
                     newMob.Metadata = mobToSpawn;
                     newMob.Tags = mobToSpawn.Tags.PickTags();
                     newMob.Scale = newMob.Tags.Match(new()
@@ -182,6 +229,7 @@ class MobManager : EntityManager<Mob>
                     newMob.EntitySpriteKey = mobToSpawn.EntitySpriteKey;
                     newMob.DefaultAnimationKey = _entityData[mobToSpawn.EntitySpriteKey].DefaultAnimationKey;
                     newMob.HP = mobToSpawn.hp;
+                    newMob.Hunger = mobToSpawn.Hunger.GetValue();
                     newMob.TileX = spawnTileX;
                     newMob.X = spawnX;
                     newMob.XInt = spawnX;
@@ -189,8 +237,8 @@ class MobManager : EntityManager<Mob>
                     newMob.Y = spawnY;
                     newMob.YInt = spawnY;
                     newMob.HitboxYOffset = -16;
-                    newMob.InitBehaviours();
-                    newMob.InitDefaultAnimation(animationOffset: RandomUtil.Rand.Next(500));
+                    newMob.InitDefaultBehaviours();
+                    newMob.InitDefaultAnimation(animationOffsetMilliseconds: RandomUtil.Rand.Next(500));
                     Entities.Add(newMob);
                 }
             }

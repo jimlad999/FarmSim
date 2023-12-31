@@ -31,9 +31,9 @@ class Resource : Entity, IDespawnble
         InitDefaultAnimation();
     }
 
-    public override void InitDefaultAnimation(double animationOffset = 0)
+    public override void InitDefaultAnimation(double animationOffsetMilliseconds = 0)
     {
         // calls the type overload.
-        GlobalState.AnimationManager.InitDefault(this, animationOffset);
+        GlobalState.AnimationManager.InitDefault(this, animationOffsetMilliseconds);
     }
 }

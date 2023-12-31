@@ -2,18 +2,20 @@
 using FarmSim.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using System;
 using UI;
 using Utils;
 
 namespace FarmSim.Player;
 
-class Player : Entity, IHasMultiTool
+class Player : Entity, IHasMultiTool, IHasInventory
 {
     public const int SightRadius = 12;//tiles
     private const double MovementSpeed = 200;
-    private const int PickUpDistancePow2 = Renderer.TileSize * Renderer.TileSize;//pick up within 1 tile
+    public const int PickUpDistancePow2Const = Renderer.TileSize * Renderer.TileSize;//pick up within 1 tile
+    public int PickUpDistancePow2 => PickUpDistancePow2Const;
 
-    public readonly Inventory Inventory;
+    public Inventory Inventory { get; init; }
 
     private readonly ControllerManager _controllerManager;
     private readonly ViewportManager _viewportManager;
@@ -24,7 +26,7 @@ class Player : Entity, IHasMultiTool
     public MultiTool MultiTool { get; set; } = new MultiTool();
 
     public IAction PrimaryAction;
-    public TelescopeResult TelescopeAction = TelescopeResult.None;
+    public TelescopeResult TelescopePrimaryAction = TelescopeResult.None;
 
     private string _buildingKey;
     public string BuildingKey
@@ -64,17 +66,9 @@ class Player : Entity, IHasMultiTool
         InitDefaultAnimation();
     }
 
-    public bool TryPickUpItem(Item item)
+    public void PickUpItem(Item item)
     {
-        var itemXDiff = XInt - item.XInt;
-        var itemYDiff = YInt - item.YInt;
-        var itemDistancePow2 = itemXDiff * itemXDiff + itemYDiff * itemYDiff;
-        if (itemDistancePow2 <= PickUpDistancePow2)
-        {
-            Inventory.AddItem(item.InstanceInfo);
-            return true;
-        }
-        return false;
+        Inventory.AddItem(item.InstanceInfo);
     }
 
     public void Update(GameTime gameTime)
@@ -152,7 +146,7 @@ class Player : Entity, IHasMultiTool
         {
             var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection();
             var mouseTile = GlobalState.TerrainManager.GetTile(tileX: mouseTilePosition.X, tileY: mouseTilePosition.Y);
-            TelescopeAction = PrimaryAction.Telescope(
+            TelescopePrimaryAction = PrimaryAction.Telescope(
                 this,
                 mouseTile,
                 xOffset: xOffset,
@@ -161,12 +155,21 @@ class Player : Entity, IHasMultiTool
         }
         else
         {
-            TelescopeAction = TelescopeResult.None;
+            TelescopePrimaryAction = TelescopeResult.None;
         }
         if (_controllerManager.IsLeftMouseInitialPressed())
         {
-            TelescopeAction.Invoke();
+            TelescopePrimaryAction.Invoke();
         }
+        else if (_controllerManager.IsRightMouseInitialPressed())
+        {
+            InvokeSecondaryAction();
+        }
+    }
+
+    private void InvokeSecondaryAction()
+    {
+        throw new NotImplementedException();
     }
 
     private (int xOffset, int yOffset, Vector2 shootingDirection) GetActionOffsetsAndDirection()

@@ -8,7 +8,7 @@ class ResourceAnimation : Animation, IEntityAnimation
 {
     public Entity Entity { get; set; }
 
-    public ResourceAnimation(Resource resource, double animationOffset)
+    public ResourceAnimation(Resource resource, double animationOffsetMilliseconds)
     {
         Entity = resource;
         SpriteSheetKey = resource.EntitySpriteKey;
@@ -21,7 +21,7 @@ class ResourceAnimation : Animation, IEntityAnimation
         YInt = Entity.YInt;
         TileX = Entity.TileX;
         TileY = Entity.TileY;
-        InitAnimationOffset(animationOffset);
+        InitAnimationOffset(animationOffsetMilliseconds);
     }
 
     public override DelayedAction Update(GameTime gameTime)

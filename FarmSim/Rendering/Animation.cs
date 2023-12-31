@@ -93,7 +93,7 @@ abstract class Animation : IPositionable, IDespawnble
         return DelayedAction.None;
     }
 
-    protected bool UpdateAnimation(GameTime gameTime, FrameData[] frames, out FrameData activeFrame)
+    protected virtual bool UpdateAnimation(GameTime gameTime, FrameData[] frames, out FrameData activeFrame)
     {
         activeFrame = frames[ActiveFrameIndex];
         if (frames.Length == 1)
@@ -129,7 +129,7 @@ abstract class Animation : IPositionable, IDespawnble
         return GlobalState.EntitiesData.Data[SpriteSheetKey].Animations[AnimationKey].DirectionFrames[FacingDirection];
     }
 
-    protected void InitAnimationOffset(double animationOffset)
+    protected void InitAnimationOffset(double animationOffsetMilliseconds)
     {
         var frames = GetFrames();
         var currentFrame = frames[ActiveFrameIndex];
@@ -137,15 +137,15 @@ abstract class Animation : IPositionable, IDespawnble
         {
             return;
         }
-        while (animationOffset >= currentFrame.Duration)
+        while (animationOffsetMilliseconds >= currentFrame.Duration)
         {
-            animationOffset -= currentFrame.Duration;
+            animationOffsetMilliseconds -= currentFrame.Duration;
             if (++ActiveFrameIndex >= frames.Length)
             {
                 ActiveFrameIndex = 0;
             }
             currentFrame = frames[ActiveFrameIndex];
         }
-        ActiveFrameDurationMilliseconds = animationOffset;
+        ActiveFrameDurationMilliseconds = animationOffsetMilliseconds;
     }
 }

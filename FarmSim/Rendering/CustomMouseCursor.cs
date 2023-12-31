@@ -73,7 +73,7 @@ class CustomMouseCursor
         }
         if (player.PrimaryAction is MultiToolAction)
         {
-            switch (player.TelescopeAction.Type)
+            switch (player.TelescopePrimaryAction.Type)
             {
                 case TelescopeResultType.Projectile:
                     return new CustomResult(Projectile, 8, 8);

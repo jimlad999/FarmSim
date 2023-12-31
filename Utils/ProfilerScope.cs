@@ -3,6 +3,7 @@ using System.Diagnostics;
 
 namespace Utils;
 
+#if DEBUG
 public sealed class ProfilerScope : IDisposable
 {
     private readonly string _operationName;
@@ -22,3 +23,4 @@ public sealed class ProfilerScope : IDisposable
         ));
     }
 }
+#endif

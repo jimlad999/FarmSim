@@ -6,6 +6,7 @@ namespace FarmSim.Entities;
 
 class ItemManager : EntityManager<Item>
 {
+    public const double PickUpDelayTimeMilliseconds = 400;
     public const double DespawnTimeSeconds = 120.0;//2 minutes
     private static readonly Color ItemBlue = new Color(21, 124, 221);
 
@@ -24,7 +25,13 @@ class ItemManager : EntityManager<Item>
     {
         foreach (var item in Entities)
         {
-            if (!GlobalState.PlayerManager.TryPickUpItem(item))
+            if (item.PickUpDelayTimeMilliseconds <= 0
+                && (GlobalState.PlayerManager.TryPickUpItem(item) || GlobalState.MobManager.TryPickUpItem(item)))
+            {
+                item.FlagForDespawning = true;
+                // TODO: should there be "collect" animation (e.g. pull the item towards the player)?
+            }
+            else
             {
                 // no point updating item if player has picked it up
                 item.Update(gameTime);
@@ -33,11 +40,6 @@ class ItemManager : EntityManager<Item>
                     item.FlagForDespawning = true;
                     GlobalState.AnimationManager.Generate(x: item.XInt, y: item.YInt, animationKey: "generic-despawn", scale: 0.5f);
                 }
-            }
-            else
-            {
-                item.FlagForDespawning = true;
-                // TODO: should there be "collect" animation (e.g. pull the item towards the player)?
             }
         }
         Entities.RemoveAll(mob => mob.FlagForDespawning);
@@ -86,6 +88,7 @@ class ItemManager : EntityManager<Item>
         }, defaultValue: Color.White);
         newItem.EntitySpriteKey = metadata.EntitySpriteKey;
         newItem.DefaultAnimationKey = _entityData[metadata.EntitySpriteKey].DefaultAnimationKey;
+        newItem.PickUpDelayTimeMilliseconds = PickUpDelayTimeMilliseconds;
         newItem.X = originX;
         newItem.XInt = originX;
         newItem.Y = originY;
