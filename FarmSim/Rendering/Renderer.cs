@@ -151,7 +151,6 @@ class Renderer
         _outlineTileEffect.Parameters["TileTexelSize"].SetValue(_tileset.TexelSize);
         _outlineTileEffect.Parameters["TileHighlightColor"].SetValue(new Vector4(255, 255, 255, 255));
         _outlineEntityEffect.Parameters["EntityTexelSize"].SetValue(_entitySpriteSheet.TexelSize);
-        _outlineEntityEffect.Parameters["EntityHighlightColor"].SetValue(new Vector4(200, 0, 0, 255));
 
         spriteBatch.GraphicsDevice.Clear(Color.CornflowerBlue);
         float yDraw = (int)yDrawOffset;
@@ -219,6 +218,7 @@ class Renderer
                         yDraw: yDraw - drawYDiff,
                         zoomScale: _viewportManager.Zoom,
                         telescopedPlayerAction,
+                        activePlayer.HoveredEntity,
                         renderFogOfWar: renderFogOfWar);
                 }
                 if (activePlayer.TilePlacement != null)
@@ -451,6 +451,7 @@ class Renderer
         float yDraw,
         float zoomScale,
         TelescopeResult telescopedPlayerAction,
+        Entity hoveredEntity,
         bool renderFogOfWar)
     {
         var entitySpriteSheet = _entitySpriteSheet[animation];
@@ -462,7 +463,17 @@ class Renderer
             {
                 heightOffset = -entityHasHeight.HeightOffGroundInt;
             }
-            applyOutlineEffect = telescopedPlayerAction.IsTargeting(entityAnimation.Entity);
+            // Targeting highlighting wins out as by this point the player is probably going to attack.
+            if (telescopedPlayerAction.IsTargeting(entityAnimation.Entity))
+            {
+                applyOutlineEffect = true;
+                _outlineEntityEffect.Parameters["EntityHighlightColor"].SetValue(new Vector4(200, 0, 0, 255));
+            }
+            else if (entityAnimation.Entity == hoveredEntity)
+            {
+                applyOutlineEffect = true;
+                _outlineEntityEffect.Parameters["EntityHighlightColor"].SetValue(new Vector4(255, 255, 255, 255));
+            }
         }
         var zoomedEntityScale = zoomScale * animation.Scale;
         if (heightOffset != 0)

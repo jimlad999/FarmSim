@@ -1,8 +1,9 @@
 ﻿using FarmSim.Entities;
+using FarmSim.Mobs;
 using FarmSim.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using System;
+using System.Linq;
 using UI;
 using Utils;
 
@@ -27,8 +28,10 @@ class Player : Entity, IHasMultiTool, IHasInventory
 
     public IAction PrimaryAction;
     public TelescopeResult TelescopePrimaryAction = TelescopeResult.None;
+    public Entity HoveredEntity;
 
     private string _buildingKey;
+
     public string BuildingKey
     {
         get { return _buildingKey; }
@@ -78,15 +81,15 @@ class Player : Entity, IHasMultiTool, IHasInventory
             return;
         }
         UpdateMovement(gameTime);
-        var mouseTilePosition = GetHoveredTileCoordinates();
-        UpdateFacingDirectionToMouse();
+        var mouseCoordinates = GetMouseHoveredCoordinates();
+        UpdateFacingDirection(directionX: mouseCoordinates.WorldPosition.XInt - XInt, directionY: mouseCoordinates.WorldPosition.YInt - YInt);
         if (_buildingKey != null)
         {
-            UpdateBuildingPlacement(mouseTilePosition);
+            UpdateBuildingPlacement(mouseCoordinates.TilePosition);
         }
         else
         {
-            UpdateAction(mouseTilePosition);
+            UpdateAction(mouseCoordinates);
         }
     }
 
@@ -133,19 +136,12 @@ class Player : Entity, IHasMultiTool, IHasInventory
         }
     }
 
-    private void UpdateFacingDirectionToMouse()
-    {
-        var mouseScreenPosition = _controllerManager.CurrentMouseState.Position;
-        var moouseWorldPosition = _viewportManager.ConvertScreenCoordinatesToWorldCoordinates(mouseScreenPosition.X, mouseScreenPosition.Y);
-        UpdateFacingDirection(directionX: moouseWorldPosition.X - XInt, directionY: moouseWorldPosition.Y - YInt);
-    }
-
-    private void UpdateAction((int X, int Y) mouseTilePosition)
+    private void UpdateAction(((int XInt, int YInt) WorldPosition, (int TileX, int TileY) TilePosition) mouseCoordinates)
     {
         if (PrimaryAction != null)
         {
             var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection();
-            var mouseTile = GlobalState.TerrainManager.GetTile(tileX: mouseTilePosition.X, tileY: mouseTilePosition.Y);
+            var mouseTile = GlobalState.TerrainManager.GetTile(tileX: mouseCoordinates.TilePosition.TileX, tileY: mouseCoordinates.TilePosition.TileY);
             TelescopePrimaryAction = PrimaryAction.Telescope(
                 this,
                 mouseTile,
@@ -157,6 +153,7 @@ class Player : Entity, IHasMultiTool, IHasInventory
         {
             TelescopePrimaryAction = TelescopeResult.None;
         }
+        UpdateHoveredMob(mouseCoordinates);
         if (_controllerManager.IsLeftMouseInitialPressed())
         {
             TelescopePrimaryAction.Invoke();
@@ -167,9 +164,29 @@ class Player : Entity, IHasMultiTool, IHasInventory
         }
     }
 
+    private void UpdateHoveredMob(((int XInt, int YInt) WorldPosition, (int TileX, int TileY) TilePosition) mouseCoordinates)
+    {
+        var (mouseWorldX, mouseWorldY) = mouseCoordinates.WorldPosition;
+        var (mouseTileX, mouseTileY) = mouseCoordinates.TilePosition;
+        var (mob, _) = GlobalState.MobManager.GetEntitiesInRange(xTileStart: mouseTileX - 1, xTileEnd: mouseTileX + 1, yTileStart: mouseTileY - 1, yTileEnd: mouseTileY + 1)
+            .Select(mob =>
+            {
+                var xDiff = mouseWorldX - mob.X - mob.HitboxXOffset;
+                var yDiff = mouseWorldY - mob.Y - mob.HitboxYOffset;
+                return (mob, distancePow2: xDiff * xDiff + yDiff * yDiff);
+            })
+            .Where(a => a.distancePow2 <= a.mob.HitRadiusPow2)
+            .OrderBy(a => a.distancePow2)
+            .FirstOrDefault();
+        HoveredEntity = mob;
+    }
+
     private void InvokeSecondaryAction()
     {
-        throw new NotImplementedException();
+        if (HoveredEntity != null)
+        {
+
+        }
     }
 
     private (int xOffset, int yOffset, Vector2 shootingDirection) GetActionOffsetsAndDirection()
@@ -199,7 +216,7 @@ class Player : Entity, IHasMultiTool, IHasInventory
     }
 #endif
 
-    private void UpdateBuildingPlacement((int X, int Y) mouseTilePosition)
+    private void UpdateBuildingPlacement((int TileX, int TileY) mouseTilePosition)
     {
         if (TilePlacement != null)
         {
@@ -237,10 +254,11 @@ class Player : Entity, IHasMultiTool, IHasInventory
         }
     }
 
-    private (int X, int Y) GetHoveredTileCoordinates()
+    private ((int XInt, int YInt) WorldPosition, (int TileX, int TileY) TilePosition) GetMouseHoveredCoordinates()
     {
         var screenPosition = _controllerManager.CurrentMouseState.Position;
+        var worldPosition = _viewportManager.ConvertScreenCoordinatesToWorldCoordinates(screenPosition.X, screenPosition.Y);
         var tilePosition = _viewportManager.ConvertScreenCoordinatesToTileCoordinates(screenPosition.X, screenPosition.Y);
-        return tilePosition;
+        return (WorldPosition: worldPosition, TilePosition: tilePosition);
     }
 }

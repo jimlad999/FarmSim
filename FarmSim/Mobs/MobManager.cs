@@ -48,6 +48,13 @@ class MobManager : EntityManager<Mob>
     }
 #endif
 
+    public IEnumerable<Mob> GetEntitiesInRange(int xTileStart, int xTileEnd, int yTileStart, int yTileEnd)
+    {
+        return Entities.Where(mob =>
+            xTileStart <= mob.TileX && mob.TileX <= xTileEnd
+            && yTileStart <= mob.TileY && mob.TileY <= yTileEnd);
+    }
+
     public bool TryPickUpItem(Item item)
     {
         // Should unconscious mobs be able to pick up items?
