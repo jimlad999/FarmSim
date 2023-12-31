@@ -25,7 +25,7 @@ public class WrapContainer : UIElement
         {
             PaddingComputed = Utils.ComputePaddingOrMargin(Padding, drawArea);
         }
-        return Utils.PreComputeDestinationCache(
+        return Utils.PreComputeDestinationCacheHorizontalLayout(
             ref ChildOffsetCache,
             this,
             PaddingComputed.Value,

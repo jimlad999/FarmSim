@@ -1,6 +1,7 @@
 ﻿using FarmSim.Entities;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -56,7 +57,8 @@ class ProjectileManager : EntityManager<Projectile>
         newProjectile.Speed = metadata.Speed;
         newProjectile.EntitySpriteKey = metadata.EntitySpriteKey;
         newProjectile.DefaultAnimationKey = _entityData[metadata.EntitySpriteKey].DefaultAnimationKey;
-        newProjectile.HitRadiusPow2 = metadata.HitRadiusPow2;
+        newProjectile.HitRadius = metadata.HitRadius;
+        newProjectile.HitRadiusPow2 = metadata.HitRadius * metadata.HitRadius;
         newProjectile.X = originX;
         newProjectile.XInt = originX;
         newProjectile.Y = originY;

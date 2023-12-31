@@ -71,7 +71,7 @@ readonly struct TelescopeResult
 
 class FireProjectileAction : IAction
 {
-    public static ProjectileData Test = new() { Class = "FarmSim.Projectiles.LinearProjectile, FarmSim", Effect = new() { Class = "FarmSim.Projectiles.SmallKnockback, FarmSim" }, EntitySpriteKey = "magic-missile", Speed = 600, HitRadiusPow2 = 100 /* 10^2 */ };
+    public static ProjectileData Test = new() { Class = "FarmSim.Projectiles.LinearProjectile, FarmSim", Effect = new() { Class = "FarmSim.Projectiles.SmallKnockback, FarmSim" }, EntitySpriteKey = "magic-missile", Speed = 600, HitRadius = 10 };
     public ProjectileData Metadata = Test;
 
     public bool CreatesProjectile => true;

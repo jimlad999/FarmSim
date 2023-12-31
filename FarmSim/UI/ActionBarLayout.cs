@@ -42,7 +42,7 @@ class ActionBarLayout : Panel
         {
             PaddingComputed = UIUtils.ComputePaddingOrMargin(Padding, drawArea);
         }
-        return UIUtils.PreComputeDestinationCache(
+        return UIUtils.PreComputeDestinationCacheHorizontalLayout(
             ref ChildOffsetCache,
             this,
             PaddingComputed.Value,

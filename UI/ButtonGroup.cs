@@ -23,7 +23,7 @@ public class ButtonGroup : UIElement
         {
             MarginComputed = Utils.ComputePaddingOrMargin(Margin, drawArea);
         }
-        return Utils.PreComputeDestinationCache(
+        return Utils.PreComputeDestinationCacheHorizontalLayout(
             ref ChildOffsetCache,
             this,
             padding: Point.Zero,

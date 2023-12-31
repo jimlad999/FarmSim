@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -111,7 +112,7 @@ public static class Utils
         return new Point(x: leftPadding, y: topPadding);
     }
 
-    public static Rectangle PreComputeDestinationCache(
+    public static Rectangle PreComputeDestinationCacheHorizontalLayout(
         ref Dictionary<UIElement, Point> childOffsetCache,
         UIElement element,
         Point padding,
@@ -125,75 +126,178 @@ public static class Utils
             return drawArea;
         }
 
-        var maxY = int.MinValue;
-        var maxYHeight = 0;
-        var childOffset = padding + offset;
-        var maxDrawX = drawArea.Width + drawArea.X;
-        var maxWidth = padding.X;
-        var partialSumWidth = padding.X;
+        var margin = element.MarginComputed.Value;
+        return PreComputeDestinationCache(
+            ref childOffsetCache,
+            element,
+            primaryOffset: offset.X,
+            secondaryOffset: offset.Y,
+            primaryPadding: padding.X,
+            secondaryPadding: padding.Y,
+            primaryMargin: margin.X,
+            secondaryMargin: margin.Y,
+            drawAreaPrimaryDraw: drawArea.X,
+            drawAreaSecondaryDraw: drawArea.Y,
+            drawAreaPrimaryDimension: drawArea.Width,
+            drawAreaSecondaryDimension: drawArea.Height,
+            positionParentBasedOnChildrenDimensions: positionParentBasedOnChildrenDimensions,
+            primaryPoint: p => p.X,
+            secondaryPoint: p => p.Y,
+            primaryDimension: r => r.Width,
+            secondaryDimension: r => r.Height,
+            createPoint: (primary, secondary) => new Point(x: primary, y: secondary),
+            createRectangle: (primaryDraw, secondaryDraw, primaryDimension, secondaryDimension) =>
+                new Rectangle(x: primaryDraw, y: secondaryDraw, width: primaryDimension, height: secondaryDimension),
+            preComputeDestinationCache: (child, primaryChildOffset, secondaryChildOffset) =>
+                child.PreComputeDestinationCache(drawArea, new Point(x: primaryChildOffset, y: secondaryChildOffset)),
+            computePrimaryDraw: thisDimensionSize =>
+                ComputePosition(element.HorizontalAlignment, startValue: element.Left, endValue: element.Right, thisDimensionSize: thisDimensionSize, parentDimensionSize: drawArea.Width),
+            computeSecondaryDraw: thisDimensionSize =>
+                ComputePosition(element.VerticalAlignment, startValue: element.Top, endValue: element.Bottom, thisDimensionSize: thisDimensionSize, parentDimensionSize: drawArea.Height));
+    }
+
+    public static Rectangle PreComputeDestinationCacheVerticallLayout(
+        ref Dictionary<UIElement, Point> childOffsetCache,
+        UIElement element,
+        Point padding,
+        Rectangle drawArea,
+        Point offset,
+        bool positionParentBasedOnChildrenDimensions = false)
+    {
+        childOffsetCache = new();
+        if (element.Children.Count == 0)
+        {
+            return drawArea;
+        }
+
+        var margin = element.MarginComputed.Value;
+        return PreComputeDestinationCache(
+            ref childOffsetCache,
+            element,
+            primaryOffset: offset.Y,
+            secondaryOffset: offset.X,
+            primaryPadding: padding.Y,
+            secondaryPadding: padding.X,
+            primaryMargin: margin.Y,
+            secondaryMargin: margin.X,
+            drawAreaPrimaryDraw: drawArea.Y,
+            drawAreaSecondaryDraw: drawArea.X,
+            drawAreaPrimaryDimension: drawArea.Height,
+            drawAreaSecondaryDimension: drawArea.Width,
+            positionParentBasedOnChildrenDimensions: positionParentBasedOnChildrenDimensions,
+            primaryPoint: p => p.Y,
+            secondaryPoint: p => p.X,
+            primaryDimension: r => r.Height,
+            secondaryDimension: r => r.Width,
+            createPoint: (primary, secondary) => new Point(x: secondary, y: primary),
+            createRectangle: (primaryDraw, secondaryDraw, primaryDimension, secondaryDimension) =>
+                new Rectangle(x: secondaryDraw, y: primaryDraw, width: secondaryDimension, height: primaryDimension),
+            preComputeDestinationCache: (child, primaryChildOffset, secondaryChildOffset) =>
+                child.PreComputeDestinationCache(drawArea, new Point(x: secondaryChildOffset, y: primaryChildOffset)),
+            computePrimaryDraw: thisDimensionSize =>
+                ComputePosition(element.VerticalAlignment, startValue: element.Top, endValue: element.Bottom, thisDimensionSize: thisDimensionSize, parentDimensionSize: drawArea.Height),
+            computeSecondaryDraw: thisDimensionSize =>
+                ComputePosition(element.HorizontalAlignment, startValue: element.Left, endValue: element.Right, thisDimensionSize: thisDimensionSize, parentDimensionSize: drawArea.Width));
+    }
+
+    private static Rectangle PreComputeDestinationCache(
+        ref Dictionary<UIElement, Point> childOffsetCache,
+        UIElement element,
+        int primaryOffset,
+        int secondaryOffset,
+        int primaryPadding,
+        int secondaryPadding,
+        int primaryMargin,
+        int secondaryMargin,
+        int drawAreaPrimaryDraw,
+        int drawAreaSecondaryDraw,
+        int drawAreaPrimaryDimension,
+        int drawAreaSecondaryDimension,
+        bool positionParentBasedOnChildrenDimensions,
+        Func<Point, int> primaryPoint,
+        Func<Point, int> secondaryPoint,
+        Func<Rectangle, int> primaryDimension,
+        Func<Rectangle, int> secondaryDimension,
+        // (primary, secondary) => Point
+        Func<int, int, Point> createPoint,
+        // (primaryDraw, secondaryDraw, primaryDimension, secondaryDimension) => Rectangle
+        Func<int, int, int, int, Rectangle> createRectangle,
+        // (child, primaryChildOffset, secondaryChildOffset) => Rectangle
+        Func<UIElement, int, int, Rectangle> preComputeDestinationCache,
+        // (thisDimensionSize) => ComputePosition(...)
+        Func<int, int> computePrimaryDraw,
+        Func<int, int> computeSecondaryDraw)
+    {
+        var maxSecondaryDraw = int.MinValue;
+        var maxSecondaryDimension = 0;
+        var primaryChildOffset = primaryOffset + primaryPadding;
+        var secondaryChildOffset = secondaryOffset + secondaryPadding;
+        var maxPrimaryDraw = drawAreaPrimaryDimension + drawAreaPrimaryDraw;
+        var maxPrimaryDimension = primaryPadding;
+        var partialSumPrimaryDimension = maxPrimaryDimension;
         foreach (var child in element.Children)
         {
-            var childDestinationCache = child.PreComputeDestinationCache(drawArea, childOffset);
-            partialSumWidth += childDestinationCache.Width + padding.X;
-            if (partialSumWidth > maxWidth)
+            var childDestinationCache = preComputeDestinationCache(child, primaryChildOffset, secondaryChildOffset);
+            partialSumPrimaryDimension += primaryDimension(childDestinationCache) + primaryPadding;
+            if (partialSumPrimaryDimension > maxPrimaryDimension)
             {
-                maxWidth = partialSumWidth;
+                maxPrimaryDimension = partialSumPrimaryDimension;
             }
-            if (childDestinationCache.X + childDestinationCache.Width + padding.X > maxDrawX)
+            if (primaryPoint(childDestinationCache.Location) + primaryDimension(childDestinationCache) + primaryPadding > maxPrimaryDraw)
             {
-                partialSumWidth = 0;
-                childOffset = new Point(x: padding.X + offset.X, y: childOffset.Y + childDestinationCache.Height + padding.Y);
-                childDestinationCache = child.PreComputeDestinationCache(drawArea, childOffset);
+                partialSumPrimaryDimension = 0;
+                primaryChildOffset = primaryPadding + primaryOffset;
+                secondaryChildOffset += secondaryDimension(childDestinationCache) + secondaryPadding;
+                childDestinationCache = preComputeDestinationCache(child, primaryChildOffset, secondaryChildOffset);
             }
-            childOffsetCache[child] = childOffset;
-            childOffset = new Point(x: childOffset.X + childDestinationCache.Width + padding.X, y: childOffset.Y);
-            var childY = childDestinationCache.Y;
-            var childHeight = childDestinationCache.Height;
-            if (childY > maxY)
+            childOffsetCache[child] = createPoint(primaryChildOffset, secondaryChildOffset);
+            primaryChildOffset += primaryDimension(childDestinationCache) + primaryPadding;
+            var childSecondaryDraw = secondaryPoint(childDestinationCache.Location);
+            var childSecondaryDimension = secondaryDimension(childDestinationCache);
+            if (childSecondaryDraw > maxSecondaryDraw)
             {
-                maxY = childY;
-                maxYHeight = childHeight;
+                maxSecondaryDraw = childSecondaryDraw;
+                maxSecondaryDimension = childSecondaryDimension;
             }
-            else if (childY == maxY && childHeight > maxYHeight)
+            else if (childSecondaryDraw == maxSecondaryDraw && childSecondaryDimension > maxSecondaryDimension)
             {
-                maxYHeight = childHeight;
+                maxSecondaryDimension = childSecondaryDimension;
             }
         }
-        var contentHeight = maxY - drawArea.Y + maxYHeight;
-        int parentX;
-        int parentY;
-        int containerWidth;
-        int containerHeight;
-        var margin = element.MarginComputed.Value;
+        var finalSecondaryDimension = maxSecondaryDraw + maxSecondaryDimension + secondaryPadding - drawAreaSecondaryDraw - secondaryOffset;
+        int parentPrimaryDraw;
+        int parentSecondaryDraw;
+        int parentPrimaryDimension;
+        int parentSecondaryDimension;
         if (positionParentBasedOnChildrenDimensions)
         {
-            parentX = ComputePosition(element.HorizontalAlignment, startValue: element.Left, endValue: element.Right, thisDimensionSize: maxWidth, parentDimensionSize: drawArea.Width);
-            parentY = ComputePosition(element.VerticalAlignment, startValue: element.Top, endValue: element.Bottom, thisDimensionSize: contentHeight, parentDimensionSize: drawArea.Height);
-            containerWidth = maxWidth;
-            containerHeight = contentHeight;
+            parentPrimaryDraw = computePrimaryDraw(maxPrimaryDimension);
+            parentSecondaryDraw = computeSecondaryDraw(finalSecondaryDimension);
+            parentPrimaryDimension = maxPrimaryDimension;
+            parentSecondaryDimension = finalSecondaryDimension;
             // Realign the parent and the child offsets as the parents dimensions could have potentially changed based on the sum of the childrens dimensions.
-            if (offset.X != 0 || offset.Y != 0)
+            if (primaryOffset != 0 || secondaryOffset != 0)
             {
-                parentX += offset.X;
-                parentY += offset.Y;
+                parentPrimaryDraw += primaryOffset;
+                parentSecondaryDraw += secondaryOffset;
                 foreach (var value in childOffsetCache)
                 {
                     var currentOffset = childOffsetCache[value.Key];
-                    childOffsetCache[value.Key] = new Point(x: currentOffset.X - offset.X, y: currentOffset.Y - offset.Y);
+                    childOffsetCache[value.Key] = createPoint(primaryPoint(currentOffset) - primaryOffset, secondaryPoint(currentOffset) - parentSecondaryDraw);
                 }
             }
         }
         else
         {
-            parentX = ComputePosition(element.HorizontalAlignment, startValue: element.Left, endValue: element.Right, thisDimensionSize: drawArea.Width, parentDimensionSize: drawArea.Width);
-            parentY = ComputePosition(element.VerticalAlignment, startValue: element.Top, endValue: element.Bottom, thisDimensionSize: drawArea.Height, parentDimensionSize: drawArea.Height);
-            containerWidth = drawArea.Width - parentX - margin.X * 2;
-            containerHeight = (contentHeight > drawArea.Height ? contentHeight : drawArea.Height) - parentY - margin.Y * 2;
+            parentPrimaryDraw = computePrimaryDraw(drawAreaPrimaryDimension);
+            parentSecondaryDraw = computeSecondaryDraw(drawAreaSecondaryDimension);
+            parentPrimaryDimension = drawAreaPrimaryDimension - parentPrimaryDraw - primaryMargin * 2;
+            parentSecondaryDimension = (finalSecondaryDimension > drawAreaSecondaryDimension ? finalSecondaryDimension : drawAreaSecondaryDimension) - parentSecondaryDraw - secondaryMargin * 2;
         }
-        return new Rectangle(
-            x: drawArea.X + parentX + margin.X,
-            y: drawArea.Y + parentY + margin.Y,
-            width: containerWidth,
-            height: containerHeight);
+        return createRectangle(
+            drawAreaPrimaryDraw + parentPrimaryDraw + primaryMargin,
+            drawAreaSecondaryDraw + parentSecondaryDraw + secondaryMargin,
+            parentPrimaryDimension,
+            parentSecondaryDimension);
     }
 }

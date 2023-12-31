@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace FarmSim.Entities;
 
-class Item : Entity, IHasHeight, IDespawnble
+class Item : Entity, IHasElevation, IDespawnble
 {
     // Consider making this variable based on item?
     private const double InitialHorizontalSpeed = 100;

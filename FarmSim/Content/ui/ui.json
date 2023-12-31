@@ -31,6 +31,9 @@
     "hud-main-panel": {
       "source": "hud-main-panel.png"
     },
+    "hud-context-menu-panel": {
+      "source": "hud-context-menu-panel.png"
+    },
     "multi-tool-attack": {
       "source": "icons/multi-tool-attack.png"
     },

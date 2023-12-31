@@ -2,6 +2,7 @@
 using FarmSim.Rendering;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FarmSim.Mobs;
 
@@ -25,23 +26,25 @@ abstract class Mob : Entity, IDespawnble, IHasInventory, IHasHunger
     // called after construction
     public abstract void InitDefaultBehaviours();
 
-    public void AddBehaviour(Player.Player player, Behaviour playerOrders)
+    public void AddBehaviours(Player.Player player, params Behaviour[] playerOrders)
     {
         if (Owner == player)
         {
             Behaviours.RemoveAll(PlayerBehaviours.Contains);
             PlayerBehaviours.Clear();
-            Behaviours.Add(playerOrders);
-            PlayerBehaviours.Add(playerOrders);
+            Behaviours.InsertRange(0, playerOrders);
+            PlayerBehaviours.AddRange(playerOrders);
         }
     }
 
-    public void RemoveBehaviour(Player.Player player, Behaviour playerOrders)
+    public void RemoveBehaviours<TBehaviour>(Player.Player player)
+        where TBehaviour : Behaviour
     {
         if (Owner == player)
         {
-            Behaviours.Remove(playerOrders);
-            PlayerBehaviours.Remove(playerOrders);
+            var behavioursToRemove = PlayerBehaviours.OfType<TBehaviour>().ToList();
+            Behaviours.RemoveAll(behavioursToRemove.Contains);
+            PlayerBehaviours.RemoveAll(behavioursToRemove.Contains);
         }
     }
 
@@ -58,18 +61,19 @@ abstract class Mob : Entity, IDespawnble, IHasInventory, IHasHunger
         }
     }
 
-    public void Feed(Player.Player player, ItemInfo food)
+    // return true if newly tamed. false otherwise.
+    public bool Feed(Player.Player player, ItemInfo food)
     {
         // TODO: formulae based on mob.HP (less HP = higher reduction), food.Quality (higher quality = higher reduction), MobData (Tags modifiers?)
+        // If mob is reduced to 1 HP then give an easy tame since the monster would be unconscious soon anyway (or it was recently unconscious anyway)
         --Hunger;
-        if (Hunger <= 0)
+        if (Hunger <= 0 || HP <= 1)
         {
-            // Don't allow owners to change simply by feed. Only untamed mobs can be tamed this way/
-            if (Owner == null)
-            {
-                Owner = player;
-            }
+            // Don't allow owners to change simply by feed. Only untamed mobs can be tamed this way
+            // Setting of owner will happen in MobManager.Tame
+            return Owner == null;
         }
+        return false;
     }
 
     public void Update(GameTime gameTime)

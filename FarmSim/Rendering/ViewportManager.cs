@@ -21,6 +21,7 @@ internal class ViewportManager
     private double _height;
     private double _heightHalf;
 
+    public Viewport ScreenDimensions;
     public float Zoom = 1f;
     public Viewport Viewport;
     public int ScrollSpeed = 500;
@@ -29,10 +30,12 @@ internal class ViewportManager
 
     public ViewportManager(
         ControllerManager controllerManager,
+        Viewport screenDimensions,
         Viewport viewport)
     {
         _controllerManager = controllerManager;
 
+        ScreenDimensions = screenDimensions;
         Viewport = viewport;
         _x = Viewport.X;
         _y = Viewport.Y;
@@ -134,6 +137,14 @@ internal class ViewportManager
         UpdateViewport();
     }
 
+    public (int X, int Y) ConvertWorldCoordinatesToScreenCoordinates(int worldX, int worldY)
+    {
+        return (
+            X: (int)((worldX - Viewport.X) * Zoom),
+            Y: (int)((worldY - Viewport.Y) * Zoom)
+        );
+    }
+
     public (int X, int Y) ConvertScreenCoordinatesToWorldCoordinates(int screenX, int screenY)
     {
         return (
@@ -167,7 +178,12 @@ internal class ViewportManager
         var height = (int)(graphics.PreferredBackBufferHeight / DefaultZoom);
         return new ViewportManager(
             controllerManager,
-            new Viewport(
+            screenDimensions: new Viewport(
+                x: 0,
+                y: 0,
+                width: graphics.PreferredBackBufferWidth,
+                height: graphics.PreferredBackBufferHeight),
+            viewport: new Viewport(
                 x: -width / 2,
                 y: -height / 2,
                 width: width,

@@ -14,6 +14,7 @@ class MobManager : EntityManager<Mob>
     private static readonly Matrix Rotate120 = Matrix.CreateRotationZ(2.0944f);
     private static readonly Color MobLightBlue = Color.FromNonPremultiplied(0, 120, 210, 255);
     private const int UnconsciousTimeMilliseconds = 15_000;
+    private const int HappyTimeMilliseconds = 1_000;
     private const int MinWaitTimeMilliseconds = 10_000;
     private const int MaxWaitTimeMilliseconds = 60_000;
     private const int RandomWaitTimeMilliseconds = MaxWaitTimeMilliseconds - MinWaitTimeMilliseconds;
@@ -148,6 +149,19 @@ class MobManager : EntityManager<Mob>
         }
     }
 
+    public void Tame(Mob mob, Player.Player player)
+    {
+        if (mob.Owner != null)
+        {
+            return;
+        }
+        mob.HP = mob.Metadata.hp;
+        mob.Owner = player;
+        GlobalState.AnimationManager.PlayForDuration(mob, "happy", durationMilliseconds: HappyTimeMilliseconds);
+        // TODO: limited time behaviour to make mob look at player
+        // TODO: play special effects;
+    }
+
     public void Update(GameTime gameTime)
     {
         foreach (var mob in Entities)
@@ -231,7 +245,9 @@ class MobManager : EntityManager<Mob>
                         { Tags.Yellow, () => Color.Yellow },
                     }, defaultValue: Color.White);
                     // TODO: modify based on metadata
-                    const int HitRadiusPow2 = 25 * 25;
+                    const int HitRadius = 25;
+                    const int HitRadiusPow2 = HitRadius * HitRadius;
+                    newMob.HitRadius = (int)(HitRadius * newMob.Scale);
                     newMob.HitRadiusPow2 = (int)(HitRadiusPow2 * newMob.Scale);
                     newMob.EntitySpriteKey = mobToSpawn.EntitySpriteKey;
                     newMob.DefaultAnimationKey = _entityData[mobToSpawn.EntitySpriteKey].DefaultAnimationKey;

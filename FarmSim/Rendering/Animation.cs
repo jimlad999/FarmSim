@@ -120,13 +120,23 @@ abstract class Animation : IPositionable, IDespawnble
         return cycledThroughAnimations;
     }
 
-    protected FrameData[] GetFrames()
+    public int GetFrameHeight()
+    {
+        return GetAnimationData().FrameHeight;
+    }
+
+    protected AnimationData GetAnimationData()
     {
         if (GlobalState.Tileset.Data.TryGetValue(SpriteSheetKey, out var tileData))
         {
-            return tileData.Animations[AnimationKey].DirectionFrames[FacingDirection];
+            return tileData.Animations[AnimationKey];
         }
-        return GlobalState.EntitiesData.Data[SpriteSheetKey].Animations[AnimationKey].DirectionFrames[FacingDirection];
+        return GlobalState.EntitiesData.Data[SpriteSheetKey].Animations[AnimationKey];
+    }
+
+    protected FrameData[] GetFrames()
+    {
+        return GetAnimationData().DirectionFrames[FacingDirection];
     }
 
     protected void InitAnimationOffset(double animationOffsetMilliseconds)

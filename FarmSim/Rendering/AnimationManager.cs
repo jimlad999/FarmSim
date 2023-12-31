@@ -14,12 +14,6 @@ class AnimationManager
     public List<Animation> MovingAnimations = new();
     public ChunkPartitionedCollection<Animation> StationaryAnimations = new();
     public Dictionary<string, GlobalRepeatingAnimation> TilesetAnimations = new();
-    private readonly ViewportManager _viewportManager;
-
-    public AnimationManager(ViewportManager viewportManager)
-    {
-        _viewportManager = viewportManager;
-    }
 
     public IEnumerable<Animation> GetAnimationsInRange(int xTileStart, int xTileEnd, int yTileStart, int yTileEnd)
     {
@@ -131,7 +125,7 @@ class AnimationManager
     public void Update(GameTime gameTime)
     {
         const int AnimationUpdateBuffer = PlayerManager.DespawnRadius + 1;
-        var (_, _, xTileStart, yTileStart, xTileEnd, yTileEnd) = _viewportManager.GetTileDimensions(minBuffer: AnimationUpdateBuffer, maxBuffer: AnimationUpdateBuffer);
+        var (_, _, xTileStart, yTileStart, xTileEnd, yTileEnd) = GlobalState.ViewportManager.GetTileDimensions(minBuffer: AnimationUpdateBuffer, maxBuffer: AnimationUpdateBuffer);
         Update(
             gameTime,
             GetMovingAnimationsInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)

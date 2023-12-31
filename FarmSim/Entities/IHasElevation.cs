@@ -1,6 +1,6 @@
 ﻿namespace FarmSim.Entities;
 
-interface IHasHeight
+interface IHasElevation
 {
     double HeightOffGround { get; }
     int HeightOffGroundInt { get; }

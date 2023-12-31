@@ -1,6 +1,7 @@
 ﻿using FarmSim.Entities;
 using FarmSim.Mobs;
 using FarmSim.Rendering;
+using FarmSim.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Linq;
@@ -21,7 +22,6 @@ class Player : Entity, IHasMultiTool, IHasInventory
     public Inventory Inventory { get; init; }
 
     private readonly ControllerManager _controllerManager;
-    private readonly ViewportManager _viewportManager;
     private readonly UIOverlay _uiOverlay;
 
     public ITilePlacement TilePlacement;
@@ -31,6 +31,7 @@ class Player : Entity, IHasMultiTool, IHasInventory
     public IAction PrimaryAction;
     public TelescopeResult TelescopePrimaryAction = TelescopeResult.None;
     public Entity HoveredEntity;
+    public EntityContextMenu ContextMenu;
 
     private string _buildingKey;
 
@@ -55,14 +56,13 @@ class Player : Entity, IHasMultiTool, IHasInventory
     public Player(
         Inventory inventory,
         ControllerManager controllerManager,
-        ViewportManager viewportManager,
         UIOverlay uiOverlay)
     {
         Inventory = inventory;
         _controllerManager = controllerManager;
-        _viewportManager = viewportManager;
         _uiOverlay = uiOverlay;
         // intentionally smaller than the player sprite so player can dodge more easily
+        HitRadius = 8;
         HitRadiusPow2 = 64;//8*8 (i.e. 8^2)
         HitboxYOffset = -50;
         // TODO: set up player correctly from metadat files
@@ -142,7 +142,7 @@ class Player : Entity, IHasMultiTool, IHasInventory
     {
         if (PrimaryAction != null)
         {
-            var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection();
+            var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection(mouseCoordinates.WorldPosition);
             var mouseTile = GlobalState.TerrainManager.GetTile(tileX: mouseCoordinates.TilePosition.TileX, tileY: mouseCoordinates.TilePosition.TileY);
             TelescopePrimaryAction = PrimaryAction.Telescope(
                 this,
@@ -193,14 +193,35 @@ class Player : Entity, IHasMultiTool, IHasInventory
     {
         if (HoveredEntity != null)
         {
-
+            if (HoveredEntity is Mob mob && mob.PlayerBehaviours.OfType<FollowActivePlayerBehaviour>().Any())
+            {
+                ContextMenu.SetMenuItems(new[]
+                {
+                    EntityContextMenu.StopFollowing,
+                    EntityContextMenu.Work,
+                    EntityContextMenu.Feed,
+                },
+                HoveredEntity);
+            }
+            else
+            {
+                ContextMenu.SetMenuItems(new[]
+                {
+                    EntityContextMenu.Follow,
+                    EntityContextMenu.Work,
+                    EntityContextMenu.Feed,
+                },
+                HoveredEntity);
+            }
+        }
+        else if (ContextMenu.TrackingEntity != null)
+        {
+            ContextMenu.Clear();
         }
     }
 
-    private (int xOffset, int yOffset, Vector2 shootingDirection) GetActionOffsetsAndDirection()
+    private (int xOffset, int yOffset, Vector2 shootingDirection) GetActionOffsetsAndDirection((int XInt, int YInt) mouseWorldPosition)
     {
-        var mouseScreenPosition = _controllerManager.CurrentMouseState.Position;
-        var moouseWorldPosition = _viewportManager.ConvertScreenCoordinatesToWorldCoordinates(mouseScreenPosition.X, mouseScreenPosition.Y);
         var xOffset = PrimaryAction.CreatesProjectile
             ? FacingDirection == FacingDirection.Left ? -32
             : FacingDirection == FacingDirection.Right ? 32
@@ -209,7 +230,7 @@ class Player : Entity, IHasMultiTool, IHasInventory
         var yOffset = PrimaryAction.CreatesProjectile || FacingDirection != FacingDirection.Down
             ? HitboxYOffset
             : HitboxYOffset / 2;
-        var shootingDirection = new Vector2(x: moouseWorldPosition.X - XInt - xOffset, y: moouseWorldPosition.Y - YInt - yOffset);
+        var shootingDirection = new Vector2(x: mouseWorldPosition.XInt - XInt - xOffset, y: mouseWorldPosition.YInt - YInt - yOffset);
         shootingDirection.Normalize();
         return (xOffset, yOffset, shootingDirection);
     }
@@ -217,7 +238,9 @@ class Player : Entity, IHasMultiTool, IHasInventory
 #if DEBUG
     public ArcRange GetWeaponRange(out int xOffsetOut, out int yOffsetOut)
     {
-        var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection();
+        var mouseScreenPosition = _controllerManager.CurrentMouseState.Position;
+        var mouseWorldPosition = GlobalState.ViewportManager.ConvertScreenCoordinatesToWorldCoordinates(mouseScreenPosition.X, mouseScreenPosition.Y);
+        var (xOffset, yOffset, shootingDirection) = GetActionOffsetsAndDirection(mouseWorldPosition);
         xOffsetOut = xOffset;
         yOffsetOut = yOffset;
         return MultiTool.WeaponRange(this, xOffset: xOffset, yOffset: yOffset, shootingDirection);
@@ -265,8 +288,8 @@ class Player : Entity, IHasMultiTool, IHasInventory
     private ((int XInt, int YInt) WorldPosition, (int TileX, int TileY) TilePosition) GetMouseHoveredCoordinates()
     {
         var screenPosition = _controllerManager.CurrentMouseState.Position;
-        var worldPosition = _viewportManager.ConvertScreenCoordinatesToWorldCoordinates(screenPosition.X, screenPosition.Y);
-        var tilePosition = _viewportManager.ConvertScreenCoordinatesToTileCoordinates(screenPosition.X, screenPosition.Y);
+        var worldPosition = GlobalState.ViewportManager.ConvertScreenCoordinatesToWorldCoordinates(screenPosition.X, screenPosition.Y);
+        var tilePosition = GlobalState.ViewportManager.ConvertScreenCoordinatesToTileCoordinates(screenPosition.X, screenPosition.Y);
         return (WorldPosition: worldPosition, TilePosition: tilePosition);
     }
 }

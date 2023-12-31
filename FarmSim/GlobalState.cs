@@ -22,4 +22,5 @@ static class GlobalState
     public static ProjectileManager ProjectileManager;
     public static ItemManager ItemManager;
     public static AnimationManager AnimationManager;
+    public static ViewportManager ViewportManager;
 }

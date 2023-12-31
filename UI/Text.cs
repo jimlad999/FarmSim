@@ -14,6 +14,8 @@ public class Text : UIElement
     {
         Normal,
         Bold,
+        // HACK: quick and dirty. Not technically "weight"
+        Small,
     }
 
     // To avoid text clashing with TagRegex
@@ -25,6 +27,7 @@ public class Text : UIElement
 #pragma warning disable CA2211 // Non-constant fields should not be visible
     public static SpriteFont Normal;
     public static SpriteFont Bold;
+    public static SpriteFont Small;
 #pragma warning restore CA2211 // Non-constant fields should not be visible
 
     [DataMember]
@@ -136,6 +139,9 @@ public class Text : UIElement
                     case "b":
                         weight = weight == FontWeight.Normal ? FontWeight.Bold : FontWeight.Normal;
                         break;
+                    case "small":
+                        weight = weight == FontWeight.Normal ? FontWeight.Small : FontWeight.Normal;
+                        break;
                     default:
                         var newColor = ColorPalette.Parse(tag);
                         color = color == newColor ? ColorPalette.Black : newColor;
@@ -193,7 +199,7 @@ public class Text : UIElement
 
     private static SpriteFont GetFont(FontWeight weight)
     {
-        return weight == FontWeight.Normal ? Normal : Bold;
+        return weight == FontWeight.Normal ? Normal : weight == FontWeight.Small ? Small : Bold;
     }
 
     public struct ProcessedData

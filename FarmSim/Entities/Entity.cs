@@ -9,6 +9,8 @@ abstract class Entity : IPositionable
 
     public FacingDirection FacingDirection = FacingDirection.Down;
 
+    public int Height;
+    public int HitRadius;
     public int HitRadiusPow2;
 
     // world position
@@ -41,7 +43,8 @@ abstract class Entity : IPositionable
     // This is to ensure as much as possible there is no uniform animations close by to make it appear more natural.
     public virtual void InitDefaultAnimation(double animationOffsetMilliseconds = 0)
     {
-        GlobalState.AnimationManager.InitDefault(this, animationOffsetMilliseconds);
+        var defaultAnimation = GlobalState.AnimationManager.InitDefault(this, animationOffsetMilliseconds);
+        Height = defaultAnimation.GetFrameHeight();
     }
 
     public void ApplyForce(Vector2 externalForce)

@@ -7,5 +7,5 @@ class ProjectileData : IClassData
     public ProjectileEffectData Effect;
     public string EntitySpriteKey;
     public double Speed;
-    public int HitRadiusPow2;
+    public int HitRadius;
 }

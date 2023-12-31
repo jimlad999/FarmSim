@@ -40,7 +40,6 @@ class Renderer
     public static bool RenderTelescopedPlayerAction = false;
 #pragma warning restore CA2211 // Non-constant fields should not be visible
 
-    private readonly ViewportManager _viewportManager;
     private readonly Tileset _tileset;
     private readonly EntitySpriteSheet _entitySpriteSheet;
     private readonly Effect _fogOfWarEffect;
@@ -51,7 +50,6 @@ class Renderer
     private Dictionary<Chunk, RenderTarget2D> _chunkTilePrerender = new();
 
     public Renderer(
-        ViewportManager viewportManager,
         Tileset tileset,
         EntitySpriteSheet entitySpriteSheet,
         Effect fogOfWarEffect,
@@ -60,7 +58,6 @@ class Renderer
         Effect outlineEntityEffect,
         Texture2D pixel)
     {
-        _viewportManager = viewportManager;
         _tileset = tileset;
         _entitySpriteSheet = entitySpriteSheet;
         _fogOfWarEffect = fogOfWarEffect;
@@ -81,14 +78,15 @@ class Renderer
 
     public void Draw(SpriteBatch spriteBatch)
     {
-        var viewport = _viewportManager.Viewport;
-        var zoomedTileSize = TileSizeFloat * _viewportManager.Zoom;
+        var viewport = GlobalState.ViewportManager.Viewport;
+        var viewportZoom = GlobalState.ViewportManager.Zoom;
+        var zoomedTileSize = TileSizeFloat * viewportZoom;
         // +4 to allow for rendering objects taller than a few tile (e.g. trees and buildings)
-        var (xOffset, yOffset, xTileStart, yTileStart, xTileEnd, yTileEnd) = _viewportManager.GetTileDimensions(minBuffer: 0, maxBuffer: 4);
-        var xDrawOffset = -xOffset * _viewportManager.Zoom;
-        var yDrawOffset = -yOffset * _viewportManager.Zoom;
-        var shouldRenderChunks = _viewportManager.Zoom < ChunkTerrainLODZoomLevel;
-        var shouldRenderEntities = _viewportManager.Zoom >= ChunkObjectLODZoomLevel;
+        var (xOffset, yOffset, xTileStart, yTileStart, xTileEnd, yTileEnd) = GlobalState.ViewportManager.GetTileDimensions(minBuffer: 0, maxBuffer: 4);
+        var xDrawOffset = -xOffset * viewportZoom;
+        var yDrawOffset = -yOffset * viewportZoom;
+        var shouldRenderChunks = viewportZoom < ChunkTerrainLODZoomLevel;
+        var shouldRenderEntities = viewportZoom >= ChunkObjectLODZoomLevel;
         // TODO: consider cycling unused chunk pre renders to reduce memory footprint. Currently sitting comfortably under 1GB memory (in testing)
         var renderedChunks = new HashSet<Chunk>();
 
@@ -126,10 +124,10 @@ class Renderer
         // can set once globally?
         var halfScreenWidth = spriteBatch.GraphicsDevice.Viewport.Width / 2f;
         var halfScreenHeight = spriteBatch.GraphicsDevice.Viewport.Height / 2f;
-        var fogOfWarRadius = Player.Player.SightRadiusTiles * TileSize * _viewportManager.Zoom;
-        var fogOfWarRadiusWithBuffer = fogOfWarRadius + 30 * _viewportManager.Zoom;
+        var fogOfWarRadius = Player.Player.SightRadiusTiles * TileSize * viewportZoom;
+        var fogOfWarRadiusWithBuffer = fogOfWarRadius + 30 * viewportZoom;
         var fogOfWarRadiusWithBufferPow2 = fogOfWarRadiusWithBuffer * fogOfWarRadiusWithBuffer;
-        var fogOfWarStartClipRadiusWithBuffer = fogOfWarRadius - 15 * _viewportManager.Zoom;
+        var fogOfWarStartClipRadiusWithBuffer = fogOfWarRadius - 15 * viewportZoom;
         var fogOfWarStartClipRadiusWithBufferPow2 = fogOfWarStartClipRadiusWithBuffer * fogOfWarStartClipRadiusWithBuffer;
         _fogOfWarEffect.Parameters["HalfScreenWidth"].SetValue(halfScreenWidth);
         _fogOfWarEffect.Parameters["HalfScreenHeight"].SetValue(halfScreenHeight);
@@ -137,7 +135,7 @@ class Renderer
         _fogOfWarEffect.Parameters["FogOfWarStartClipRadiusPow2"].SetValue(fogOfWarStartClipRadiusWithBufferPow2);
         _fogOfWarEffect.Parameters["FogOfWarRadiusPow2Diff"].SetValue(fogOfWarRadiusWithBufferPow2 - fogOfWarStartClipRadiusWithBufferPow2);
         var fogOfWarInverseRadiusPow2 = fogOfWarRadius * fogOfWarRadius;
-        var fogOfWarInverseStartClipRadiusWithBuffer = fogOfWarRadius - 30 * _viewportManager.Zoom;
+        var fogOfWarInverseStartClipRadiusWithBuffer = fogOfWarRadius - 30 * viewportZoom;
         var fogOfWarInverseStartClipRadiusWithBufferPow2 = fogOfWarInverseStartClipRadiusWithBuffer * fogOfWarInverseStartClipRadiusWithBuffer;
         _fogOfWarInverseEffect.Parameters["HalfScreenWidth"].SetValue(halfScreenWidth);
         _fogOfWarInverseEffect.Parameters["HalfScreenHeight"].SetValue(halfScreenHeight);
@@ -145,7 +143,7 @@ class Renderer
         _fogOfWarInverseEffect.Parameters["FogOfWarStartClipRadiusPow2"].SetValue(fogOfWarInverseStartClipRadiusWithBufferPow2);
         _fogOfWarInverseEffect.Parameters["FogOfWarRadiusPow2Diff"].SetValue(fogOfWarInverseRadiusPow2 - fogOfWarInverseStartClipRadiusWithBufferPow2);
         //specific because the player sight radius is larger than the number of tiles you can see at zoom == 1
-        var renderFogOfWar = RenderFogOfWar && _viewportManager.Zoom < 1;
+        var renderFogOfWar = RenderFogOfWar && viewportZoom < 1;
 
         var telescopedPlayerAction = RenderTelescopedPlayerAction ? activePlayer.TelescopePrimaryAction : TelescopeResult.None;
         _outlineTileEffect.Parameters["TileTexelSize"].SetValue(_tileset.TexelSize);
@@ -170,7 +168,7 @@ class Renderer
                 {
                     if (renderedChunks.Add(tile.Chunk))
                     {
-                        DrawChunk(spriteBatch, tile.Chunk, xDraw: xDraw - xChunkIndex * zoomedTileSize, yDraw: yDraw - yChunkIndex * zoomedTileSize);
+                        DrawChunk(spriteBatch, tile.Chunk, xDraw: xDraw - xChunkIndex * zoomedTileSize, yDraw: yDraw - yChunkIndex * zoomedTileSize, scale: viewportZoom);
                     }
                     var xTilesSkipped = chunkSize - xChunkIndex;
                     tileX += xTilesSkipped;
@@ -187,13 +185,13 @@ class Renderer
                     {
                         spriteBatch.End();
                         spriteBatch.Begin(effect: _outlineTileEffect);
-                        DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, activePlayer.TilePlacement, playerIsInsideBuilding);
+                        DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: viewportZoom, activePlayer.TilePlacement, playerIsInsideBuilding);
                         spriteBatch.End();
                         spriteBatch.Begin();
                     }
                     else
                     {
-                        DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: _viewportManager.Zoom, activePlayer.TilePlacement, playerIsInsideBuilding);
+                        DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: viewportZoom, activePlayer.TilePlacement, playerIsInsideBuilding);
                     }
                     xDraw += zoomedTileSize;
                 }
@@ -209,14 +207,14 @@ class Renderer
                 var animationsToRenderThisTile = animations.OrderBy(e => e.Y).ToArray();
                 foreach (var animation in animationsToRenderThisTile)
                 {
-                    var drawXDiff = (leftXPoint - animation.XInt) * _viewportManager.Zoom;
-                    var drawYDiff = (topYPoint - animation.YInt) * _viewportManager.Zoom;
+                    var drawXDiff = (leftXPoint - animation.XInt) * viewportZoom;
+                    var drawYDiff = (topYPoint - animation.YInt) * viewportZoom;
                     DrawSpriteAnimation(
                         spriteBatch,
                         animation,
                         xDraw: xDraw - drawXDiff,
                         yDraw: yDraw - drawYDiff,
-                        zoomScale: _viewportManager.Zoom,
+                        zoomScale: viewportZoom,
                         telescopedPlayerAction,
                         activePlayer.HoveredEntity,
                         renderFogOfWar: renderFogOfWar);
@@ -233,7 +231,7 @@ class Renderer
                         if (activePlayer.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
                         {
                             var tile = GlobalState.TerrainManager.GetTile(tileX: tileX, tileY: tileY);
-                            DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, activePlayer.TilePlacement, playerIsInsideBuilding);
+                            DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: viewportZoom, activePlayer.TilePlacement, playerIsInsideBuilding);
                         }
                         xDraw += zoomedTileSize;
                     }
@@ -256,7 +254,7 @@ class Renderer
         }
     }
 
-    private void DrawChunk(SpriteBatch spriteBatch, Chunk chunk, float xDraw, float yDraw)
+    private void DrawChunk(SpriteBatch spriteBatch, Chunk chunk, float xDraw, float yDraw, float scale)
     {
         // some off screen chunks (rendering beyond screen boarder to try reduce chance of blank sections being shown when scrolling)
         // won't be generated but this is fine as they are off screen and they will eventually be populated
@@ -269,7 +267,7 @@ class Renderer
                 color: Color.White,
                 rotation: 0f,
                 origin: Vector2.Zero,
-                scale: _viewportManager.Zoom * ChunkLODFloat,
+                scale: scale * ChunkLODFloat,
                 effects: SpriteEffects.None,
                 layerDepth: 0f);
         }
@@ -459,7 +457,7 @@ class Renderer
         bool applyOutlineEffect = false;
         if (animation is IEntityAnimation entityAnimation)
         {
-            if (entityAnimation.Entity is IHasHeight entityHasHeight)
+            if (entityAnimation.Entity is IHasElevation entityHasHeight)
             {
                 heightOffset = -entityHasHeight.HeightOffGroundInt;
             }
@@ -514,9 +512,8 @@ class Renderer
         }
     }
 
-    private void DrawPartialBuilding(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, ITilePlacement tilePlacement, bool playerIsInsideBuilding)
+    private void DrawPartialBuilding(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, float scale, ITilePlacement tilePlacement, bool playerIsInsideBuilding)
     {
-        var scale = _viewportManager.Zoom;
         var tileIsBuildable = tilePlacement.AllTilesBuildable
             || BuildingExtensions.YieldTilesets(tile)
                 .All(key => GlobalState.ConsolidatedZoningData[key].IsBuildable(tilePlacement.Buildable));

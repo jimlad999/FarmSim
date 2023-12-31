@@ -1,6 +1,12 @@
 {
   "UIElements": [
     {
+      "$type": "FarmSim.UI.EntityContextMenu, FarmSim",
+      "id": "entity-context-menu",
+      "texture": "hud-context-menu-panel",
+      "padding": 1
+    },
+    {
       "$type": "FarmSim.UI.ActionBarLayout, FarmSim",
       "padding": 5,
       "texture": "hud-main-panel",

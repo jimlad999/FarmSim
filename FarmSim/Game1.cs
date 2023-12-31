@@ -31,12 +31,12 @@ public class Game1 : Game
 
     private GraphicsDeviceManager _graphics;
     private ControllerManager _controllerManager;
-    private ViewportManager _viewportManager;
     private UIOverlay _uiOverlay;
     private SpriteBatch _spriteBatch;
     private Renderer _renderer;
     private TextInput _commandInput;
     private ActionBar _actionBar;
+    private EntityContextMenu _contextMenu;
     private bool _debugArcRange;
     private Effect _debugArcRangeEffect;
     private RenderTarget2D _entireScreen;
@@ -54,7 +54,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         _controllerManager = new ControllerManager();
-        _viewportManager = ViewportManager.CenteredOnZeroZero(_controllerManager, _graphics);
+        GlobalState.ViewportManager = ViewportManager.CenteredOnZeroZero(_controllerManager, _graphics);
         _graphics.SynchronizeWithVerticalRetrace = false;
 
         base.Initialize();
@@ -66,6 +66,7 @@ public class Game1 : Game
 
         Text.Normal = Content.Load<SpriteFont>("fonts/GameFont");
         Text.Bold = Content.Load<SpriteFont>("fonts/GameFontBold");
+        Text.Small = Content.Load<SpriteFont>("fonts/GameFontSmall");
         _mousePointer = new CustomMouseCursor(
             bucket: Content.Load<Texture2D>("ui/pointers/pointer-bucket"),
             chop: Content.Load<Texture2D>("ui/pointers/pointer-chop"),
@@ -85,7 +86,7 @@ public class Game1 : Game
             height: _spriteBatch.GraphicsDevice.Viewport.Height);
         var pixel = ColoredPanel.Pixel = Content.Load<Texture2D>("pixel");
 
-        GlobalState.AnimationManager = new AnimationManager(_viewportManager);
+        GlobalState.AnimationManager = new AnimationManager();
 
         var resourceData = JsonConvert.DeserializeObject<Dictionary<string, ResourceData>>(File.ReadAllText("Content/entities/items/resources.json"));
         var itemData = JsonConvert.DeserializeObject<ItemData[]>(File.ReadAllText("Content/entities/items/items.json"))
@@ -143,17 +144,15 @@ public class Game1 : Game
             // TODO: Pull this from save state (once saving has been implemented)
             new Inventory(new()),
             _controllerManager,
-            _viewportManager,
             _uiOverlay);
         GlobalState.PlayerManager.AddPlayer(GlobalState.PlayerManager.ActivePlayer);
-        _viewportManager.Tracking = player;
-        _viewportManager.UIOverlay = _uiOverlay;
+        GlobalState.ViewportManager.Tracking = player;
+        GlobalState.ViewportManager.UIOverlay = _uiOverlay;
 #if DEBUG
         Renderer.RenderFogOfWar = false;
         Renderer.RenderTelescopedPlayerAction = true;
 #endif
         _renderer = new Renderer(
-            _viewportManager,
             tileset,
             entitySpriteSheet,
             fogOfWarEffect,
@@ -163,6 +162,62 @@ public class Game1 : Game
             pixel);
 
         // TODO: find a better place for UI interactions to sit (should sit within the Game, i.e. not the library)
+        if (_uiOverlay.TryGetById("entity-context-menu", out _contextMenu))
+        {
+            player.ContextMenu = _contextMenu;
+            EntityContextMenu.Follow.EventHandler += (Button sender, ButtonState state, ButtonState previousState) =>
+            {
+                if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
+                {
+                    if (_contextMenu.TrackingEntity is Mob mob)
+                    {
+                        // TODO: Add more behaviours (e.g. attack nearby aggressive mobs)
+                        mob.AddBehaviours(player, new FollowActivePlayerBehaviour());
+                    }
+                    _uiOverlay.NextRefresh(() => _contextMenu.Clear());
+                }
+            };
+            EntityContextMenu.StopFollowing.EventHandler += (Button sender, ButtonState state, ButtonState previousState) =>
+            {
+                if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
+                {
+                    if (_contextMenu.TrackingEntity is Mob mob)
+                    {
+                        // Should match EntityContextMenu.Follow
+                        mob.RemoveBehaviours<FollowActivePlayerBehaviour>(player);
+                    }
+                    _uiOverlay.NextRefresh(() => _contextMenu.Clear());
+                }
+            };
+            EntityContextMenu.Feed.EventHandler += (Button sender, ButtonState state, ButtonState previousState) =>
+            {
+                if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
+                {
+                    if (_contextMenu.TrackingEntity is Mob mob)
+                    {
+                        // TODO: update to better UX allowing user to select which food to give.
+                        // Then move this to the commit action of that UI instead. Here would simply enable showing the new UI mentioned above.
+                        var itemToFeed = player.Inventory.FirstOrDefault();
+                        if (itemToFeed != null)
+                        {
+                            player.Inventory.RemoveItem(itemToFeed);
+                            if (mob.Feed(player, itemToFeed))
+                            {
+                                GlobalState.MobManager.Tame(mob, player);
+                            }
+                        }
+                    }
+                    _uiOverlay.NextRefresh(() => _contextMenu.Clear());
+                }
+            };
+            EntityContextMenu.Work.EventHandler += (Button sender, ButtonState state, ButtonState previousState) =>
+            {
+                if (previousState != ButtonState.Pressed && state == ButtonState.Pressed)
+                {
+                    _uiOverlay.NextRefresh(() => _contextMenu.Clear());
+                }
+            };
+        }
         if (_uiOverlay.TryGetById("build-button", out Button buildButton))
         {
             buildButton.EventHandler += (Button sender, ButtonState state, ButtonState previousState) =>
@@ -312,6 +367,10 @@ public class Game1 : Game
             {
                 GlobalState.PlayerManager.ActivePlayer.BuildingKey = null;
             }
+            else if (_contextMenu.TrackingEntity != null)
+            {
+                _contextMenu.Clear();
+            }
             else
             {
                 Exit();
@@ -343,11 +402,11 @@ public class Game1 : Game
             {
                 if (scrollResult.ScrollDirection == ControllerManager.ScrollDirection.Up)
                 {
-                    _viewportManager.ZoomOut();
+                    GlobalState.ViewportManager.ZoomOut();
                 }
                 else if (scrollResult.ScrollDirection == ControllerManager.ScrollDirection.Down)
                 {
-                    _viewportManager.ZoomIn();
+                    GlobalState.ViewportManager.ZoomIn();
                 }
             }
             else if (scrollResult.ScrollDirection == ControllerManager.ScrollDirection.Up)
@@ -368,7 +427,7 @@ public class Game1 : Game
         }
 
         _uiOverlay.Update(gameTime, _screensToDraw);
-        _viewportManager.Update(gameTime);
+        GlobalState.ViewportManager.Update(gameTime);
         EntityManager.Update(gameTime);
         GlobalState.AnimationManager.Update(gameTime);
         _mousePointer.Update(_uiOverlay);
@@ -392,16 +451,16 @@ public class Game1 : Game
             var weaponRange = GlobalState.PlayerManager.ActivePlayer.GetWeaponRange(out var xOffset, out var yOffset);
             _debugArcRangeEffect.Parameters["HalfScreenWidth"].SetValue(halfScreenWidth);
             _debugArcRangeEffect.Parameters["HalfScreenHeight"].SetValue(halfScreenHeight);
-            _debugArcRangeEffect.Parameters["Scale"].SetValue(_viewportManager.Zoom);
-            _debugArcRangeEffect.Parameters["XOffset"].SetValue((xOffset + (int)(weaponRange.FacingDirection.X * 30)) * _viewportManager.Zoom);
-            _debugArcRangeEffect.Parameters["YOffset"].SetValue((yOffset - (int)(weaponRange.FacingDirection.Y * 30)) * _viewportManager.Zoom);
-            _debugArcRangeEffect.Parameters["ReachPow2"].SetValue(weaponRange.ReachPow2 * _viewportManager.Zoom);
+            _debugArcRangeEffect.Parameters["Scale"].SetValue(GlobalState.ViewportManager.Zoom);
+            _debugArcRangeEffect.Parameters["XOffset"].SetValue((xOffset + (int)(weaponRange.FacingDirection.X * 30)) * GlobalState.ViewportManager.Zoom);
+            _debugArcRangeEffect.Parameters["YOffset"].SetValue((yOffset - (int)(weaponRange.FacingDirection.Y * 30)) * GlobalState.ViewportManager.Zoom);
+            _debugArcRangeEffect.Parameters["ReachPow2"].SetValue(weaponRange.ReachPow2 * GlobalState.ViewportManager.Zoom);
             _debugArcRangeEffect.Parameters["ArcCrosses0"].SetValue(weaponRange.ArcCrosses0);
             _debugArcRangeEffect.Parameters["FacingDirectionRadiansMin"].SetValue((float)weaponRange.FacingDirectionRadiansMin);
             _debugArcRangeEffect.Parameters["FacingDirectionRadiansMax"].SetValue((float)weaponRange.FacingDirectionRadiansMax);
             var mouseDirection = new Vector2(
-                x: _controllerManager.CurrentMouseState.X - halfScreenWidth + xOffset * _viewportManager.Zoom,
-                y: _controllerManager.CurrentMouseState.Y - halfScreenHeight - yOffset * _viewportManager.Zoom);
+                x: _controllerManager.CurrentMouseState.X - halfScreenWidth + xOffset * GlobalState.ViewportManager.Zoom,
+                y: _controllerManager.CurrentMouseState.Y - halfScreenHeight - yOffset * GlobalState.ViewportManager.Zoom);
             mouseDirection.Normalize();
             _spriteBatch.Begin(blendState: BlendState.AlphaBlend, effect: _debugArcRangeEffect);
             _spriteBatch.Draw(_entireScreen, _entireScreen.Bounds, Color.White);
