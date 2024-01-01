@@ -43,8 +43,9 @@ class MultiTool
     public ArcRange WeaponRange(Entity entity, int xOffset, int yOffset, Vector2 facingDirection)
     {
         return new ArcRange(
-            x: entity.XInt + xOffset - (int)(facingDirection.X * 30),
-            y: entity.YInt + yOffset - (int)(facingDirection.Y * 30),
+            entity,
+            xOffset: xOffset - (int)(facingDirection.X * 30),
+            yOffset: yOffset - (int)(facingDirection.Y * 30),
             facingDirection: facingDirection,
             arcHalfRadians: ArcHalfRadians,
             reachPow2: WeaponReachPow2);

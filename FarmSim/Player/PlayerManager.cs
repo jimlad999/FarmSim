@@ -63,7 +63,7 @@ class PlayerManager : EntityManager<Player>
                 projectile.Effect.Apply(player, projectile.NormalizedDirection);
                 if (projectile.Effect.AnimationKey != null)
                 {
-                    GlobalState.AnimationManager.Generate(entity: player, animationKey: projectile.Effect.AnimationKey, durationMilliseconds: projectile.Effect.DurationMilliseconds, direction: Vector2.UnitY);
+                    GlobalState.AnimationManager.Generate(entity: player, animationKey: projectile.Effect.AnimationKey, durationMilliseconds: projectile.Effect.DurationMilliseconds, playOnceOnly: false, direction: Vector2.UnitY);
                 }
             }
             return true;

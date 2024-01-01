@@ -36,7 +36,7 @@ class AnimationManager
 
     public Animation PlayForDuration(Entity entity, string animationKey, double durationMilliseconds)
     {
-        return SwapEntityAnimations(entity, new EntityDurableAnimation(entity, animationKey, durationMilliseconds));
+        return SwapEntityAnimations(entity, new EntityDurableAnimation(entity, animationKey, durationMilliseconds, playOnceOnly: false));
     }
 
     private Animation SwapEntityAnimations(Entity entity, Animation newAnimation)
@@ -89,9 +89,13 @@ class AnimationManager
         return newAnimation;
     }
 
-    public Animation Generate(Entity entity, string animationKey, double durationMilliseconds, Vector2 direction)
+    public Animation Generate(Entity entity, string animationKey, double durationMilliseconds, bool playOnceOnly, Vector2 direction, int xOffset = 0, int yOffset = 0)
     {
-        var newAnimation = new EntityEffectAnimation(entity, animationKey, durationMilliseconds, direction);
+        var newAnimation = new EntityEffectAnimation(entity, animationKey, durationMilliseconds, playOnceOnly, direction)
+        {
+            XOffset = xOffset,
+            YOffset = yOffset
+        };
         MovingAnimations.Add(newAnimation);
         return newAnimation;
     }

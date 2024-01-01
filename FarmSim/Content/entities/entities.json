@@ -134,6 +134,140 @@
               }
             ]
           }
+        },
+        "slash": {
+          "origin": {
+            "x": 64,
+            "y": 0
+          },
+          "frameWidth": 128,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Up": [
+              {
+                "x": 192,
+                "y": 0,
+                "Duration": 50
+              },
+              {
+                "x": 192,
+                "y": 64,
+                "Duration": 80,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 128,
+                "Duration": 100,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 192,
+                "Duration": 80,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 256,
+                "Duration": 50,
+                "keyFrame": true
+              }
+            ],
+            "Down": [
+              {
+                "x": 192,
+                "y": 0,
+                "Duration": 50
+              },
+              {
+                "x": 192,
+                "y": 64,
+                "Duration": 80,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 128,
+                "Duration": 100,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 192,
+                "Duration": 80,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 256,
+                "Duration": 50,
+                "keyFrame": true
+              }
+            ],
+            "Left": [
+              {
+                "x": 192,
+                "y": 0,
+                "Duration": 50
+              },
+              {
+                "x": 192,
+                "y": 64,
+                "Duration": 80,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 128,
+                "Duration": 100,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 192,
+                "Duration": 80,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 256,
+                "Duration": 50,
+                "keyFrame": true
+              }
+            ],
+            "Right": [
+              {
+                "x": 192,
+                "y": 0,
+                "Duration": 50
+              },
+              {
+                "x": 192,
+                "y": 64,
+                "Duration": 80,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 128,
+                "Duration": 100,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 192,
+                "Duration": 80,
+                "keyFrame": true
+              },
+              {
+                "x": 192,
+                "y": 256,
+                "Duration": 50,
+                "keyFrame": true
+              }
+            ]
+          }
         }
       }
     },

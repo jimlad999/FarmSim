@@ -85,7 +85,7 @@ class MobManager : EntityManager<Mob>
                 projectile.Effect.Apply(mob, projectile.NormalizedDirection);
                 if (projectile.Effect.AnimationKey != null)
                 {
-                    GlobalState.AnimationManager.Generate(entity: mob, animationKey: projectile.Effect.AnimationKey, durationMilliseconds: projectile.Effect.DurationMilliseconds, direction: Vector2.UnitY);
+                    GlobalState.AnimationManager.Generate(entity: mob, animationKey: projectile.Effect.AnimationKey, durationMilliseconds: projectile.Effect.DurationMilliseconds, playOnceOnly: false, direction: Vector2.UnitY);
                 }
             }
             return true;
@@ -105,7 +105,7 @@ class MobManager : EntityManager<Mob>
                 multiTool.Effect.Apply(mob, normalizedDirection);
                 if (multiTool.Effect.AnimationKey != null)
                 {
-                    GlobalState.AnimationManager.Generate(entity: mob, animationKey: multiTool.Effect.AnimationKey, durationMilliseconds: multiTool.Effect.DurationMilliseconds, direction: Vector2.UnitY);
+                    GlobalState.AnimationManager.Generate(entity: mob, animationKey: multiTool.Effect.AnimationKey, durationMilliseconds: multiTool.Effect.DurationMilliseconds, playOnceOnly: false, direction: Vector2.UnitY);
                 }
             }
         }
@@ -147,7 +147,7 @@ class MobManager : EntityManager<Mob>
                 if (mob.HP <= 0)
                 {
                     var hitAnimation = GlobalState.AnimationManager.PlayForDuration(mob, "unconscious", durationMilliseconds: UnconsciousTimeMilliseconds);
-                    var unconsciousAnimation = GlobalState.AnimationManager.Generate(entity: mob, animationKey: "unconscious", durationMilliseconds: UnconsciousTimeMilliseconds, direction: Vector2.UnitY);
+                    var unconsciousAnimation = GlobalState.AnimationManager.Generate(entity: mob, animationKey: "unconscious", durationMilliseconds: UnconsciousTimeMilliseconds, playOnceOnly: false, direction: Vector2.UnitY);
                     unconsciousAnimation.After(() =>
                     {
                         if (!mob.FlagForDespawning)

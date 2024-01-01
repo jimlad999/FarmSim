@@ -204,6 +204,7 @@ class Renderer
                 xDraw = (int)xDrawOffset;
                 var animations = spriteAnimationLookupByTile[tileY];
                 var leftXPoint = xTileStart * TileSize;
+                // Y here and YInt in draw because HACKs in EntityAnimation
                 var animationsToRenderThisTile = animations.OrderBy(e => e.Y).ToArray();
                 foreach (var animation in animationsToRenderThisTile)
                 {
@@ -558,6 +559,7 @@ class Renderer
                 entitySpriteSheet,
                 xDraw: xDraw,
                 yDraw: yDraw,
+                rotation: animation.Rotation,
                 scale: new Vector2(x: zoomedEntityScale.X, zoomedEntityScale.Y / 2),
                 color: ItemShadow);
         }
@@ -572,6 +574,7 @@ class Renderer
                 entitySpriteSheet,
                 xDraw: xDraw,
                 yDraw: yDraw + heightOffset,
+                rotation: animation.Rotation,
                 scale: zoomedEntityScale,
                 color: animation.Color);
             spriteBatch.End();
@@ -584,6 +587,7 @@ class Renderer
                 entitySpriteSheet,
                 xDraw: xDraw,
                 yDraw: yDraw + heightOffset,
+                rotation: animation.Rotation,
                 scale: zoomedEntityScale,
                 color: animation.Color);
         }
@@ -723,6 +727,7 @@ class Renderer
         ProcessedSpriteData entity,
         float xDraw,
         float yDraw,
+        float rotation,
         Vector2 scale,
         Color color)
     {
@@ -731,7 +736,7 @@ class Renderer
             position: new Vector2(xDraw, yDraw),
             sourceRectangle: entity.SourceRectangle,
             color: color,
-            rotation: 0f,
+            rotation: rotation,
             origin: entity.Origin,
             scale: scale,
             effects: SpriteEffects.None,

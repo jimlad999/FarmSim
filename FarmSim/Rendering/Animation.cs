@@ -20,7 +20,8 @@ abstract class Animation : IPositionable, IDespawnble
     public virtual FacingDirection FacingDirection { get => FacingDirection.Down; }
     public int ActiveFrameIndex = 0;
     public List<Action> AfterActions = new();
-    public List<Action> KeyFrameActions = new();
+    public IReadOnlyCollection<Action> KeyFrameActions => KeyFrameActionsByFrame.TryGetValue(ActiveFrameIndex, out var actions) ? actions : null;
+    private Dictionary<int, List<Action>> KeyFrameActionsByFrame = new();
 
     public virtual double X { get; set; }
     public virtual double Y { get; set; }
@@ -42,7 +43,20 @@ abstract class Animation : IPositionable, IDespawnble
         // Will throw null ref here if Clear() has been called.
         // Don't accept actions after it has been executed.
         // Caller should know better.
-        KeyFrameActions.Add(action);
+        var frames = GetFrames();
+        var frameIndex = 0;
+        foreach (var frame in frames)
+        {
+            if (frame.KeyFrame)
+            {
+                if (!KeyFrameActionsByFrame.TryGetValue(frameIndex, out var actions))
+                {
+                    KeyFrameActionsByFrame[frameIndex] = actions = new();
+                }
+                actions.Add(action);
+            }
+            ++frameIndex;
+        }
     }
 
     public void After(Action action)
@@ -55,8 +69,11 @@ abstract class Animation : IPositionable, IDespawnble
 
     public void ClearKeyFrame()
     {
-        KeyFrameActions.Clear();
-        KeyFrameActions = null;
+        if (KeyFrameActionsByFrame.TryGetValue(ActiveFrameIndex, out var onceActions))
+        {
+            onceActions.Clear();
+            KeyFrameActionsByFrame.Remove(ActiveFrameIndex);
+        }
     }
 
     public void ClearAfter()
@@ -67,9 +84,13 @@ abstract class Animation : IPositionable, IDespawnble
 
     public void Clear()
     {
-        if (KeyFrameActions != null)
+        if (KeyFrameActionsByFrame != null)
         {
-            ClearKeyFrame();
+            foreach (var (_, actions) in KeyFrameActionsByFrame)
+            {
+                actions.Clear();
+            }
+            KeyFrameActionsByFrame = null;
         }
         if (AfterActions != null)
         {

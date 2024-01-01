@@ -113,16 +113,21 @@ class MultiToolAction : IAction
         {
             return TelescopeResult.Slash(hitMobs, () =>
             {
-                var animation = GlobalState.AnimationManager.PlayOnce(entity, "slash");
+                var alreadyProcessed = new List<Mob>();
+                GlobalState.AnimationManager.PlayOnce(entity, "slash");
+                var animation = GlobalState.AnimationManager.Generate(entity, "slash", 0, playOnceOnly: true, facingDirection, xOffset: xOffset, yOffset: yOffset);
                 animation.OnKeyFrame(() =>
                 {
                     // Allow for more mobs entering the attack animation after the attack has happened.
                     // e.g. the playe is walking towards an enemy and attacks slightly too early.
                     GlobalState.MobManager.TryFindEntityWithinRangeOrCloseEnoughToBeEnagedInCombat(weaponRange, out var extraMobs);
+                    extraMobs.RemoveAll(alreadyProcessed.Contains);
                     hitMobs.AddRange(extraMobs);
                     if (hitMobs.Count > 0)
                     {
+                        alreadyProcessed.AddRange(hitMobs);
                         GlobalState.MobManager.Damage(hitMobs.Distinct(), entityWithMultiTool.MultiTool, entity.XInt, entity.YInt);
+                        hitMobs.Clear();
                     }
                 });
             });
@@ -131,15 +136,20 @@ class MultiToolAction : IAction
         {
             return TelescopeResult.Slash(hitPlayers, () =>
             {
-                var animation = GlobalState.AnimationManager.PlayOnce(entity, "slash");
+                var alreadyProcessed = new List<Player>();
+                GlobalState.AnimationManager.PlayOnce(entity, "slash");
+                var animation = GlobalState.AnimationManager.Generate(entity, "slash", 0, playOnceOnly: true, facingDirection, xOffset: xOffset, yOffset: yOffset);
                 animation.OnKeyFrame(() =>
                 {
                     // Player walks into an attack
                     GlobalState.PlayerManager.TryFindEntityWithinRangeOrCloseEnoughToBeEnagedInCombat(weaponRange, out var extraPlayers);
+                    extraPlayers.RemoveAll(alreadyProcessed.Contains);
                     hitPlayers.AddRange(extraPlayers);
                     if (hitPlayers.Count > 0)
                     {
+                        alreadyProcessed.AddRange(hitPlayers);
                         GlobalState.PlayerManager.Damage(hitPlayers.Distinct(), entityWithMultiTool.MultiTool.Damage);
+                        hitPlayers.Clear();
                     }
                 });
             });
@@ -211,6 +221,7 @@ class MultiToolAction : IAction
         {
             // hit nothing but play default animation anyway
             GlobalState.AnimationManager.PlayOnce(entity, "slash");
+            GlobalState.AnimationManager.Generate(entity, "slash", 0, playOnceOnly: true, facingDirection, xOffset: -xOffset, yOffset: yOffset);
         });
     }
 
