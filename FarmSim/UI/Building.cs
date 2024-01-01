@@ -20,6 +20,10 @@ class Building
     public string InteriorWall;
     [DataMember]
     public string Floor;
+    [DataMember]
+    public string Doormat;
+    [DataMember]
+    public string DoormatSide;
     // SPEED HACK to determine rendering/not rendering the backwall
     [DataMember]
     public bool HasTransparency;
@@ -38,6 +42,10 @@ class Building
     public Animation InteriorWallAnimation;
     [IgnoreDataMember]
     public Animation FloorAnimation;
+    [IgnoreDataMember]
+    public Animation DoormatAnimation;
+    [IgnoreDataMember]
+    public Animation DoormatSideAnimation;
 
     public void InitAnimations(TilesetData tilesetData)
     {
@@ -56,6 +64,14 @@ class Building
         if (Floor != null)
         {
             FloorAnimation = GenerateGlobalRepeatingAnimation(Floor, tilesetData);
+        }
+        if (Doormat != null)
+        {
+            DoormatAnimation = GenerateGlobalRepeatingAnimation(Doormat, tilesetData);
+        }
+        if (DoormatSide != null)
+        {
+            DoormatSideAnimation = GenerateGlobalRepeatingAnimation(DoormatSide, tilesetData);
         }
     }
 

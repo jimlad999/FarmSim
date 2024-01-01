@@ -314,6 +314,50 @@
         }
       }
     },
+    "wood-doormat": {
+      "source": "buildings/wood-doormat.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 0,
+            "y": 0
+          },
+          "frameWidth": 64,
+          "frameHeight": 16,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
+    },
+    "wood-doormat-side": {
+      "source": "buildings/wood-doormat-side.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 0,
+            "y": 0
+          },
+          "frameWidth": 16,
+          "frameHeight": 64,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
+    },
     "wood-roof": {
       "source": "buildings/wood-roof.png",
       "defaultAnimationKey": "idle",

@@ -312,6 +312,30 @@ class Renderer
             var tileAbove = GlobalState.TerrainManager.GetTile(tileX: tile.X, tileY: tile.Y - 1);
             tileAboveFloorBuildingKey = tileAbove.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
         }
+        string tileBelowFloorBuildingKey;
+        var tileBelowInRangeOfPlacement = tilePlacementHasFloor && tilePlacement.TileInRange(tileX: tile.X, tileY: tile.Y + 1);
+        if (tileBelowInRangeOfPlacement)
+        {
+            tileBelowFloorBuildingKey = tilePlacement.BuildingKey;
+        }
+        else
+        {
+            var tileBelow = GlobalState.TerrainManager.GetTile(tileX: tile.X, tileY: tile.Y + 1);
+            tileBelowFloorBuildingKey = tileBelow.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
+        }
+        string tile2BelowFloorBuildingKey;
+        var tile2BelowInRangeOfPlacement = tilePlacementHasFloor && tilePlacement.TileInRange(tileX: tile.X, tileY: tile.Y + 2);
+        if (tile2BelowInRangeOfPlacement)
+        {
+            tile2BelowFloorBuildingKey = tilePlacement.BuildingKey;
+        }
+        else
+        {
+            var tile2Below = GlobalState.TerrainManager.GetTile(tileX: tile.X, tileY: tile.Y + 2);
+            tile2BelowFloorBuildingKey = tile2Below.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
+        }
+        var tileLeft = GlobalState.TerrainManager.GetTile(tileX: tile.X - 1, tileY: tile.Y);
+        var tileLeftFloorBuildingKey = tileLeft.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
         string thisTileFloor;
         var thisTileInRangeOfPlacement = tilePlacementHasFloor && tilePlacement.TileInRange(tileX: tile.X, tileY: tile.Y);
         var defaultColor = Color.White;
@@ -338,23 +362,14 @@ class Renderer
             foreach (var buildingKey in tile.Buildings)
             {
                 var building = GlobalState.BuildingData.Buildings[buildingKey];
-                Animation buildingAnimation = null;
-                var color = defaultColor;
-                if (building.Floor != null && !thisTileInRangeOfPlacement)
+                if (building.FloorAnimation != null && !thisTileInRangeOfPlacement)
                 {
-                    buildingAnimation = building.FloorAnimation;
+                    var color = defaultColor;
+                    var buildingAnimation = building.FloorAnimation;
                     if (!playerIsInsideBuilding)
                     {
                         color = IndoorWhilePlayerIsOutsideColor;
                     }
-                }
-                // TODO: build stations
-                //else
-                //{
-                //    get station tileset key
-                //}
-                if (buildingAnimation != null)
-                {
                     DrawSprite(
                         spriteBatch,
                         _tileset[buildingAnimation],
@@ -363,23 +378,41 @@ class Renderer
                         scale: scale,
                         color: color);
                 }
+                // draw doormats on the left side walls
+                if (building.DoormatSideAnimation != null && tileLeftFloorBuildingKey == null)
+                {
+                    var doormatSideAnimation = _tileset[building.DoormatSideAnimation];
+                    DrawSprite(
+                        spriteBatch,
+                        doormatSideAnimation,
+                        // offset it so it draws on the tile just before this
+                        xDraw: xDraw - doormatSideAnimation.SourceRectangle.Width * scale,
+                        yDraw: yDraw,
+                        scale: scale,
+                        color: defaultColor);
+                }
+                // TODO: build stations
+                //else
+                //{
+                //    get station tileset key
+                //}
             }
             if (thisTileFloor != null)
             {
-                string tileBelowFloorBuildingKey;
-                var tileBelowInRangeOfPlacement = tilePlacementHasFloor && tilePlacement.TileInRange(tileX: tile.X, tileY: tile.Y + 1);
-                if (tileBelowInRangeOfPlacement)
-                {
-                    tileBelowFloorBuildingKey = tilePlacement.BuildingKey;
-                }
-                else
-                {
-                    var tileBelow = GlobalState.TerrainManager.GetTile(tileX: tile.X, tileY: tile.Y + 1);
-                    tileBelowFloorBuildingKey = tileBelow.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
-                }
                 var building = GlobalState.BuildingData.Buildings[thisTileFloor];
                 if ((playerIsInsideBuilding || (building.HasTransparency && tileBelowFloorBuildingKey == null)) && tileAboveFloorBuildingKey == null)
                 {
+                    if (building.DoormatAnimation != null)
+                    {
+                        var doormatAnimation = _tileset[building.DoormatAnimation];
+                        DrawSprite(
+                            spriteBatch,
+                            doormatAnimation,
+                            xDraw: xDraw,
+                            yDraw: yDraw - doormatAnimation.SourceRectangle.Height * scale,
+                            scale: scale,
+                            color: defaultColor);
+                    }
                     if (building.InteriorWallAnimation != null)
                     {
                         DrawSprite(
@@ -393,21 +426,55 @@ class Renderer
                                 : IndoorWhilePlayerIsOutsideColor);
                     }
                 }
-                else if (!playerIsInsideBuilding && tileBelowFloorBuildingKey != null)
+                else if (!playerIsInsideBuilding)
                 {
-                    // defer the roof tile for exterior wall until the exterior wall is drawn
-                    var buildingBelow = GlobalState.BuildingData.Buildings[tileBelowFloorBuildingKey];
-                    if (buildingBelow.RoofAnimation != null)
+                    if (tileBelowFloorBuildingKey != null)
                     {
-                        DrawSprite(
-                            spriteBatch,
-                            _tileset[buildingBelow.RoofAnimation],
-                            xDraw: xDraw,
-                            yDraw: yDraw - WallHeightFloat * scale,
-                            scale: scale,
-                            color: defaultColor);
+                        // defer the roof tile for exterior wall until the exterior wall is drawn
+                        var buildingBelow = GlobalState.BuildingData.Buildings[tileBelowFloorBuildingKey];
+                        if (buildingBelow.RoofAnimation != null)
+                        {
+                            DrawSprite(
+                                spriteBatch,
+                                _tileset[buildingBelow.RoofAnimation],
+                                xDraw: xDraw,
+                                yDraw: yDraw - WallHeightFloat * scale,
+                                scale: scale,
+                                color: defaultColor);
+                        }
                     }
                 }
+            }
+        }
+        if (!playerIsInsideBuilding && thisTileFloor == null && tileBelowFloorBuildingKey == null && tile2BelowFloorBuildingKey != null)
+        {
+            var building2Below = GlobalState.BuildingData.Buildings[tile2BelowFloorBuildingKey];
+            if (building2Below.DoormatAnimation != null)
+            {
+                var doormatAnimation = _tileset[building2Below.DoormatAnimation];
+                DrawSprite(
+                    spriteBatch,
+                    doormatAnimation,
+                    xDraw: xDraw,
+                    yDraw: yDraw + (TileSizeHalf - doormatAnimation.SourceRectangle.Height) * scale,
+                    scale: scale,
+                    color: defaultColor);
+            }
+        }
+        // defer drawing right side wall doormats (i.e. we are rendering the tile to the left of the current tile)
+        // so that the doormat is rendered over the terrain
+        if (thisTileFloor == null && tileLeftFloorBuildingKey != null)
+        {
+            var buildingToLeft = GlobalState.BuildingData.Buildings[tileLeftFloorBuildingKey];
+            if (buildingToLeft.DoormatSideAnimation != null)
+            {
+                DrawSprite(
+                    spriteBatch,
+                    _tileset[buildingToLeft.DoormatSideAnimation],
+                    xDraw: xDraw,
+                    yDraw: yDraw,
+                    scale: scale,
+                    color: defaultColor);
             }
         }
         // defer drawing exterior walls so that they are always rendered over any entities inside
@@ -426,9 +493,19 @@ class Renderer
                         ? ExteriorWallTransparency
                         : defaultColor);
             }
+            if (buildingAbove.DoormatAnimation != null)
+            {
+                DrawSprite(
+                    spriteBatch,
+                    _tileset[buildingAbove.DoormatAnimation],
+                    xDraw: xDraw,
+                    yDraw: yDraw,
+                    scale: scale,
+                    color: defaultColor);
+            }
             if (!playerIsInsideBuilding)
             {
-                if (buildingAbove.Roof != null)
+                if (buildingAbove.RoofAnimation != null)
                 {
                     DrawSprite(
                         spriteBatch,

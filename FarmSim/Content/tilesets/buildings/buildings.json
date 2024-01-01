@@ -37,6 +37,8 @@
       "exteriorWall": "wood-exterior-door",
       "interiorWall": "wood-interior-door",
       "floor": "wood-floor",
+      "doormat": "wood-doormat",
+      "doormatSide": "wood-doormat-side",
       "hasTransparency": true,
       "buildable": [ "Normal" ],
       "cost": {
