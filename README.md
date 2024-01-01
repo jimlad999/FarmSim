@@ -1,11 +1,17 @@
 # Experimental Farm Simulation Game
 Experimenting with procedural terrain generation in form of a farm simulator
 
+## Getting started
+* Restore nuget packages
+* Run the symlink command `Packages/CreateSymlink.MonoGame.Extended.Content.Pipeline.cmd` to create the symlink to the `MonoGame.Extended.Content.Pipeline` NuGet package cache. This is required for the content pipeline, `Content.mgcb`, to work with `BitmapFont`
+
 ## Controls
-* Arrow keys to pan viewport
-* Mouse scroll wheel to zoom
+* WASD to move player
+* Ctrl + mouse scroll wheel to zoom
+* Mouse wheel to cycle through avilable player actions
 * F12 to regenerate with new random seed
-* Left mouse click to see debug information for hovered tile in debug window (partially working)
+* Left mouse click to use selected player action
+* Right mouse click to open context menu for entities
 
 ## Possible features?
 * Random creature generation
