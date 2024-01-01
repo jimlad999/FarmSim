@@ -385,6 +385,15 @@ public class Game1 : Game
             }
             // else (see) Player.InvokeSecondaryAction
         }
+        else if (_controllerManager.IsLeftMouseInitialPressed())
+        {
+            // player left click outside any UI element then they are probably not interacting with the context menu and it should be closed
+            if (_contextMenu.TrackingEntity != null && !_uiOverlay.State.IsMouseOverElement)
+            {
+                _contextMenu.Clear();
+            }
+            // else (see) Player.InvokeAction
+        }
         else if ((_controllerManager.IsKeyInitialPressed(Keys.OemTilde) || _controllerManager.IsKeyInitialPressed(Keys.OemQuestion)) && !_screensToDraw.Contains("command-console"))
         {
             _uiOverlay.NextRefresh(() =>

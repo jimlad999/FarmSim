@@ -13,8 +13,8 @@ namespace FarmSim.UI;
 class EntityContextMenu : Panel
 {
     public const string MenuItemHeight = "24";
-    public const int MenuItemWidthInt = 110;
-    public const string MenuItemWidth = "110";
+    public const int MenuItemWidthInt = 120;
+    public const string MenuItemWidth = "120";
 
     // Default available context buttons. Static so the event handlers can be attached once and the each menu item can be set as desired (based on the context)
     // Should this not be static here but instead store the static menu items in Game? This would allow customisations to be set on this element within the json file.
