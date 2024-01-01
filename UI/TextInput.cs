@@ -14,12 +14,15 @@ public delegate void TextInputEventHandler(TextInput sender, string value);
 [DataContract]
 public class TextInput : UIElement
 {
-    private const int NormalAlpha = 255;
-    private const int PlaceholderAlpha = 180;
     private const double CaretFlashTimeMax = 1.0;//second
 
+    // default font weight
+    [DataMember]
+    public Text.FontWeight Weight = Text.FontWeight.Normal;
     [DataMember]
     public string Color;
+    [DataMember]
+    public string PlaceholderColor;
     [DataMember]
     public string Placeholder;
     // Can be set by the screen on initialization, but also updated by the user by clicking in/out of the input area while this element is active
@@ -55,8 +58,7 @@ public class TextInput : UIElement
         HistoryIndex = 0;
         CursorIndex = 0;
         Value.Clear();
-        Text.UpdateValue($"<{Color}>{Placeholder}");
-        Text.AlphaModifier = PlaceholderAlpha;
+        Text.UpdateValue($"<{PlaceholderColor}>{Placeholder}");
     }
 
     public override void Update(GameTime gameTime, UIState state, UISpriteSheet uiSpriteSheet, ControllerManager controllerManager)
@@ -80,8 +82,8 @@ public class TextInput : UIElement
                 VerticalAlignment = VerticalAlignment,
                 Hidden = Hidden,
                 Margin = Margin,
-                Value = $"<{Color}>{Placeholder}",
-                AlphaModifier = PlaceholderAlpha,
+                Value = $"<{PlaceholderColor}>{Placeholder}",
+                Weight = Weight,
             };
             Children.Add(Text);
         }
@@ -111,13 +113,11 @@ public class TextInput : UIElement
                 Value = Value.Remove(--CursorIndex, 1);
                 if (Value.Length == 0)
                 {
-                    Text.UpdateValue($"<{Color}>{Placeholder}");
-                    Text.AlphaModifier = PlaceholderAlpha;
+                    Text.UpdateValue($"<{PlaceholderColor}>{Placeholder}");
                 }
                 else
                 {
                     Text.UpdateValue($"<{Color}>{Value}");
-                    Text.AlphaModifier = NormalAlpha;
                 }
             }
         }
@@ -128,13 +128,11 @@ public class TextInput : UIElement
                 Value = Value.Remove(CursorIndex, 1);
                 if (Value.Length == 0)
                 {
-                    Text.UpdateValue($"<{Color}>{Placeholder}");
-                    Text.AlphaModifier = PlaceholderAlpha;
+                    Text.UpdateValue($"<{PlaceholderColor}>{Placeholder}");
                 }
                 else
                 {
                     Text.UpdateValue($"<{Color}>{Value}");
-                    Text.AlphaModifier = NormalAlpha;
                 }
             }
         }
@@ -161,7 +159,6 @@ public class TextInput : UIElement
                 Value.Append(value);
                 CursorIndex = value.Length;
                 Text.UpdateValue($"<{Color}>{Value}");
-                Text.AlphaModifier = NormalAlpha;
             }
         }
         else if (controllerManager.IsKeyPressedWithRepeat(Keys.Down))
@@ -173,15 +170,13 @@ public class TextInput : UIElement
                 Value.Append(value);
                 CursorIndex = value.Length;
                 Text.UpdateValue($"<{Color}>{Value}");
-                Text.AlphaModifier = NormalAlpha;
             }
             else if (HistoryIndex == 1)
             {
                 HistoryIndex = 0;
                 CursorIndex = 0;
                 Value.Clear();
-                Text.UpdateValue($"<{Color}>{Placeholder}");
-                Text.AlphaModifier = PlaceholderAlpha;
+                Text.UpdateValue($"<{PlaceholderColor}>{Placeholder}");
             }
         }
         else
@@ -211,7 +206,6 @@ public class TextInput : UIElement
             if (previousValueLength != Value.Length)
             {
                 Text.UpdateValue($"<{Color}>{Value}");
-                Text.AlphaModifier = NormalAlpha;
                 ShowCaret = true;
                 CaretFlashTime = CaretFlashTimeMax;
             }

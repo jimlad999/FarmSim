@@ -33,12 +33,12 @@ public class Text : UIElement
 
     [DataMember]
     public string Value;
+    // default font weight
+    [DataMember]
+    public FontWeight Weight = FontWeight.Normal;
 
     [IgnoreDataMember]
     private ProcessedData[] ParsedValue;
-
-    // For use with TextInput
-    public int AlphaModifier = 255;
 
     // For use with TextInput
     public void UpdateValue(string newValue)
@@ -107,7 +107,7 @@ public class Text : UIElement
 
     private void ParseValue()
     {
-        var weight = FontWeight.Normal;
+        var weight = Weight;
         var color = ColorPalette.Black;
         var processed = 0;
         var remainingValue = Value;
@@ -137,11 +137,14 @@ public class Text : UIElement
                 processed += toSkip;
                 switch (tag)
                 {
+                    case "normal":
+                        weight = weight == Weight ? FontWeight.Normal : Weight;
+                        break;
                     case "b":
-                        weight = weight == FontWeight.Normal ? FontWeight.Bold : FontWeight.Normal;
+                        weight = weight == Weight ? FontWeight.Bold : Weight;
                         break;
                     case "small":
-                        weight = weight == FontWeight.Normal ? FontWeight.Small : FontWeight.Normal;
+                        weight = weight == Weight ? FontWeight.Small : Weight;
                         break;
                     default:
                         var newColor = ColorPalette.Parse(tag);
@@ -180,14 +183,7 @@ public class Text : UIElement
             var font = GetFont(value.Weight);
             var measurement = font.MeasureString(value.Value);
             var yDiff = DestinationCache.Height - measurement.Height;
-            if (AlphaModifier != 255)
-            {
-                spriteBatch.DrawString(font, value.Value, new Vector2(x: x, y: y + yDiff), new Color(value.Color, AlphaModifier));
-            }
-            else
-            {
-                spriteBatch.DrawString(font, value.Value, new Vector2(x: x, y: y + yDiff), value.Color);
-            }
+            spriteBatch.DrawString(font, value.Value, new Vector2(x: x, y: y + yDiff), value.Color);
             x += measurement.Width;
         }
     }

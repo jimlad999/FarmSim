@@ -14,6 +14,9 @@ public class Log : UIElement
         Debug,
     }
 
+    // default font weight
+    [DataMember]
+    public Text.FontWeight Weight = Text.FontWeight.Normal;
     [DataMember]
     public string InfoColor = "white";
     [DataMember]
@@ -38,6 +41,7 @@ public class Log : UIElement
             {
                 Top = (yOffset + 1).ToString(),
                 Left = "0",
+                Weight = Weight,
             };
             newText.UpdateValue($"<{color}>{newValue}");
             var childDestination = newText.PreComputeDestinationCache(DestinationCache, Point.Zero);

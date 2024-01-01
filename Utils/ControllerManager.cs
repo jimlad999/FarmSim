@@ -7,7 +7,7 @@ namespace Utils;
 public class ControllerManager
 {
     private const double InitialDebounce = 0.7;//seconds
-    private const double RepeatDebounce = 0.2;//seconds
+    private const double RepeatDebounce = 0.1;//seconds
     private readonly Dictionary<Keys, (double Time, bool Repeated)> HeldKeys = new();
     public MouseState PreviousMouseState;
     public MouseState CurrentMouseState;

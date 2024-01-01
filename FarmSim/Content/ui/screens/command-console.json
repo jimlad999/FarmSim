@@ -19,7 +19,8 @@
           "Children": [
             {
               "$type": "UI.Log, UI",
-              "id": "command-log"
+              "id": "command-log",
+              "weight": "Small"
             }
           ]
         },
@@ -34,7 +35,9 @@
           "$type": "UI.TextInput, UI",
           "id": "command-input",
           "color": "white",
+          "weight": "Small",
           "placeholder": "Enter command. Type \"/?\" for help...",
+          "placeholdercolor": "gray",
           "width": "100%",
           "bottom": 0,
           "margin": 10
