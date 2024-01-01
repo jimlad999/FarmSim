@@ -1,6 +1,6 @@
 ﻿namespace FarmSim.Utils;
 
-class ProjectileEffectData : IClassData
+class EffectData : IClassData
 {
     // with assembly: "namespace.class, assembly"
     public string Class { get; set; }

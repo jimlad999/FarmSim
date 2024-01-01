@@ -60,7 +60,7 @@ class PlayerManager : EntityManager<Player>
             Damage(player, 0);
             if (projectile.Effect != null)// && player.HP > 0)
             {
-                projectile.Effect.Apply(player, projectile);
+                projectile.Effect.Apply(player, projectile.NormalizedDirection);
                 if (projectile.Effect.AnimationKey != null)
                 {
                     GlobalState.AnimationManager.Generate(entity: player, animationKey: projectile.Effect.AnimationKey, durationMilliseconds: projectile.Effect.DurationMilliseconds, direction: Vector2.UnitY);

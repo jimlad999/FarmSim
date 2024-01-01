@@ -1,4 +1,5 @@
-﻿using FarmSim.Entities;
+﻿using FarmSim.Effects;
+using FarmSim.Entities;
 using Microsoft.Xna.Framework;
 
 namespace FarmSim.Projectiles;
@@ -10,7 +11,7 @@ abstract class Projectile : Entity, IDespawnble
 
     public Vector2 NormalizedDirection;
     public double Speed;
-    public ProjectileEffect Effect;
+    public Effect Effect;
     public string DespawnAnimationKey;
 
     public virtual void Update(GameTime gameTime)

@@ -1,4 +1,5 @@
-﻿using FarmSim.Entities;
+﻿using FarmSim.Effects;
+using FarmSim.Entities;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using System;
@@ -10,7 +11,7 @@ namespace FarmSim.Projectiles;
 class ProjectileManager : EntityManager<Projectile>
 {
     private readonly EntityFactory<Projectile, ProjectileData> _projectileFactory;
-    private readonly EntityFactory<ProjectileEffect, ProjectileEffectData> _projectileEffectFactory;
+    private readonly EntityFactory<Effect, EffectData> _effectFactory;
     private readonly Dictionary<string, EntityData> _entityData;
 
     public ProjectileManager(
@@ -21,7 +22,7 @@ class ProjectileManager : EntityManager<Projectile>
             Player.FireProjectileAction.Test
         };
         _projectileFactory = new EntityFactory<Projectile, ProjectileData>(data);
-        _projectileEffectFactory = new EntityFactory<ProjectileEffect, ProjectileEffectData>(data.Select(d => d.Effect).Where(e => e != null).ToArray());
+        _effectFactory = new EntityFactory<Effect, EffectData>(data.Select(d => d.Effect).Where(e => e != null).ToArray());
         _entityData = entityData;
     }
 
@@ -49,7 +50,7 @@ class ProjectileManager : EntityManager<Projectile>
         int originY,
         Vector2 normalizedDirection)
     {
-        var newProjectileEffect = _projectileEffectFactory.Create(metadata.Effect.Class);
+        var newProjectileEffect = _effectFactory.Create(metadata.Effect.Class);
         var newProjectile = _projectileFactory.Create(metadata.Class);
         newProjectile.Owner = owner;
         newProjectile.Effect = newProjectileEffect;

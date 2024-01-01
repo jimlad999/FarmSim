@@ -71,7 +71,7 @@ readonly struct TelescopeResult
 
 class FireProjectileAction : IAction
 {
-    public static ProjectileData Test = new() { Class = "FarmSim.Projectiles.LinearProjectile, FarmSim", Effect = new() { Class = "FarmSim.Projectiles.SmallKnockback, FarmSim" }, EntitySpriteKey = "magic-missile", Speed = 600, HitRadius = 10 };
+    public static ProjectileData Test = new() { Class = "FarmSim.Projectiles.LinearProjectile, FarmSim", Effect = new() { Class = "FarmSim.Effects.SmallKnockback, FarmSim" }, EntitySpriteKey = "magic-missile", Speed = 600, HitRadius = 10 };
     public ProjectileData Metadata = Test;
 
     public bool CreatesProjectile => true;
@@ -122,7 +122,7 @@ class MultiToolAction : IAction
                     hitMobs.AddRange(extraMobs);
                     if (hitMobs.Count > 0)
                     {
-                        GlobalState.MobManager.Damage(hitMobs.Distinct(), entityWithMultiTool.MultiTool.Damage);
+                        GlobalState.MobManager.Damage(hitMobs.Distinct(), entityWithMultiTool.MultiTool, entity.XInt, entity.YInt);
                     }
                 });
             });

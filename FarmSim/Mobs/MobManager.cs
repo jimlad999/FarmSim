@@ -1,4 +1,5 @@
-﻿using FarmSim.Entities;
+﻿using FarmSim.Effects;
+using FarmSim.Entities;
 using FarmSim.Projectiles;
 using FarmSim.Rendering;
 using FarmSim.Utils;
@@ -81,7 +82,7 @@ class MobManager : EntityManager<Mob>
             Damage(mob, mob.HP);
             if (projectile.Effect != null)
             {
-                projectile.Effect.Apply(mob, projectile);
+                projectile.Effect.Apply(mob, projectile.NormalizedDirection);
                 if (projectile.Effect.AnimationKey != null)
                 {
                     GlobalState.AnimationManager.Generate(entity: mob, animationKey: projectile.Effect.AnimationKey, durationMilliseconds: projectile.Effect.DurationMilliseconds, direction: Vector2.UnitY);
@@ -92,11 +93,21 @@ class MobManager : EntityManager<Mob>
         return false;
     }
 
-    public void Damage(IEnumerable<Mob> mobs, int damage)
+    public void Damage(IEnumerable<Mob> mobs, MultiTool multiTool, int originX, int originY)
     {
         foreach (var mob in mobs)
         {
-            Damage(mob, damage);
+            Damage(mob, multiTool.Damage);
+            if (multiTool.Effect != null)
+            {
+                var normalizedDirection = new Vector2(x: mob.XInt - originX, y: mob.YInt - originY);
+                normalizedDirection.Normalize();
+                multiTool.Effect.Apply(mob, normalizedDirection);
+                if (multiTool.Effect.AnimationKey != null)
+                {
+                    GlobalState.AnimationManager.Generate(entity: mob, animationKey: multiTool.Effect.AnimationKey, durationMilliseconds: multiTool.Effect.DurationMilliseconds, direction: Vector2.UnitY);
+                }
+            }
         }
     }
 
