@@ -1,0 +1,1 @@
+mklink /d MonoGame.Extended.Content.Pipeline %userprofile%\.nuget\packages\monogame.extended.content.pipeline\3.8.0\tools

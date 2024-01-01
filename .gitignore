@@ -1,3 +1,5 @@
 .vs
 bin
 obj
+# symlink to global .nuget/packages cache
+Packages/MonoGame.Extended.Content.Pipeline

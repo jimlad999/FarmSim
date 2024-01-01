@@ -10,29 +10,60 @@
 
 #-------------------------------- References --------------------------------#
 
+/reference:..\..\Packages\MonoGame.Extended.Content.Pipeline\MonoGame.Extended.Content.Pipeline.dll
 
 #---------------------------------- Content ---------------------------------#
 
-#begin fonts/GameFont.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
+#begin fonts/bold-32_0.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
 /processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:fonts/GameFont.spritefont
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:fonts/bold-32_0.png
 
-#begin fonts/GameFontBold.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:fonts/GameFontBold.spritefont
+#begin fonts/bold-32.fnt
+/importer:BitmapFontImporter
+/processor:BitmapFontProcessor
+/build:fonts/bold-32.fnt
 
-#begin fonts/GameFontSmall.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
+#begin fonts/normal-18_0.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
 /processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:fonts/GameFontSmall.spritefont
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:fonts/normal-18_0.png
+
+#begin fonts/normal-18.fnt
+/importer:BitmapFontImporter
+/processor:BitmapFontProcessor
+/build:fonts/normal-18.fnt
+
+#begin fonts/normal-32_0.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:fonts/normal-32_0.png
+
+#begin fonts/normal-32.fnt
+/importer:BitmapFontImporter
+/processor:BitmapFontProcessor
+/build:fonts/normal-32.fnt
 
 #begin pixel.png
 /importer:TextureImporter

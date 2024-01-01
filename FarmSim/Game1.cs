@@ -9,6 +9,7 @@ using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extended.BitmapFonts;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -64,9 +65,9 @@ public class Game1 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        Text.Normal = Content.Load<SpriteFont>("fonts/GameFont");
-        Text.Bold = Content.Load<SpriteFont>("fonts/GameFontBold");
-        Text.Small = Content.Load<SpriteFont>("fonts/GameFontSmall");
+        Text.Normal = Content.Load<BitmapFont>("fonts/normal-32");
+        Text.Bold = Content.Load<BitmapFont>("fonts/bold-32");
+        Text.Small = Content.Load<BitmapFont>("fonts/normal-18");
         _mousePointer = new CustomMouseCursor(
             bucket: Content.Load<Texture2D>("ui/pointers/pointer-bucket"),
             chop: Content.Load<Texture2D>("ui/pointers/pointer-chop"),

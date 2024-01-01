@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended.BitmapFonts;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
@@ -25,9 +26,9 @@ public class Text : UIElement
     private static readonly Regex TagRegex = new Regex(@"<(\w*)>");
     // should be set in Game.LoadContent()
 #pragma warning disable CA2211 // Non-constant fields should not be visible
-    public static SpriteFont Normal;
-    public static SpriteFont Bold;
-    public static SpriteFont Small;
+    public static BitmapFont Normal;
+    public static BitmapFont Bold;
+    public static BitmapFont Small;
 #pragma warning restore CA2211 // Non-constant fields should not be visible
 
     [DataMember]
@@ -62,12 +63,12 @@ public class Text : UIElement
             if (index < sumLength)
             {
                 var measurement = GetFont(value.Weight).MeasureString(stringValue.Substring(0, (int)(stringValue.Length - (sumLength - index))));
-                return (int)(sumWidth + measurement.X);
+                return (int)(sumWidth + measurement.Width);
             }
             else
             {
                 var measurement = GetFont(value.Weight).MeasureString(stringValue);
-                sumWidth += measurement.X;
+                sumWidth += measurement.Width;
             }
         }
         return (int)sumWidth;
@@ -81,11 +82,11 @@ public class Text : UIElement
         foreach (var value in ParsedValue)
         {
             var measurement = GetFont(value.Weight).MeasureString(value.Value);
-            if (measurement.Y > maxHeight)
+            if (measurement.Height > maxHeight)
             {
-                maxHeight = measurement.Y;
+                maxHeight = measurement.Height;
             }
-            sumWidth += measurement.X;
+            sumWidth += measurement.Width;
         }
         var height = Ceiling(maxHeight);
         var width = Ceiling(sumWidth);
@@ -178,7 +179,7 @@ public class Text : UIElement
         {
             var font = GetFont(value.Weight);
             var measurement = font.MeasureString(value.Value);
-            var yDiff = DestinationCache.Height - measurement.Y;
+            var yDiff = DestinationCache.Height - measurement.Height;
             if (AlphaModifier != 255)
             {
                 spriteBatch.DrawString(font, value.Value, new Vector2(x: x, y: y + yDiff), new Color(value.Color, AlphaModifier));
@@ -187,7 +188,7 @@ public class Text : UIElement
             {
                 spriteBatch.DrawString(font, value.Value, new Vector2(x: x, y: y + yDiff), value.Color);
             }
-            x += measurement.X;
+            x += measurement.Width;
         }
     }
 
@@ -197,7 +198,7 @@ public class Text : UIElement
         return value == truncate ? truncate : (int)(value + 1);
     }
 
-    private static SpriteFont GetFont(FontWeight weight)
+    private static BitmapFont GetFont(FontWeight weight)
     {
         return weight == FontWeight.Normal ? Normal : weight == FontWeight.Small ? Small : Bold;
     }
