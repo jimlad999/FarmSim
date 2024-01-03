@@ -28,6 +28,9 @@
     "building-panel-selected": {
       "source": "building-panel-selected.png"
     },
+    "item-panel": {
+      "source": "item-panel.png"
+    },
     "hud-main-panel": {
       "source": "hud-main-panel.png"
     },

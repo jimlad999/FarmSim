@@ -14,6 +14,7 @@ class AnimationManager
     public List<Animation> MovingAnimations = new();
     public ChunkPartitionedCollection<Animation> StationaryAnimations = new();
     public Dictionary<string, GlobalRepeatingAnimation> TilesetAnimations = new();
+    public Dictionary<string, GlobalRepeatingAnimation> EntityAnimations = new();
 
     public IEnumerable<Animation> GetAnimationsInRange(int xTileStart, int xTileEnd, int yTileStart, int yTileEnd)
     {
@@ -106,9 +107,20 @@ class AnimationManager
         {
             return existingAnimation;
         }
-        var newAnimation = TilesetAnimations[tileDataKey] = new GlobalRepeatingAnimation(tileDataKey, tileData.DefaultAnimationKey);
         // Tileset animations are not registered in the Animations collection because these will be repeated based on the tile data of the terrain
         // Animations collections is for individual instances of animations representing the other game objects in the world
+        var newAnimation = TilesetAnimations[tileDataKey] = new GlobalRepeatingAnimation(tileDataKey, tileData.DefaultAnimationKey);
+        return newAnimation;
+    }
+
+    public Animation GenerateGlobalEntityAnimation(string spriteSheetKey, EntityData entityData)
+    {
+        if (EntityAnimations.TryGetValue(spriteSheetKey, out var existingAnimation))
+        {
+            return existingAnimation;
+        }
+        // Global entity animations are used only for rendering when presenting the inventory
+        var newAnimation = EntityAnimations[spriteSheetKey] = new GlobalRepeatingAnimation(spriteSheetKey, entityData.DefaultAnimationKey);
         return newAnimation;
     }
 
@@ -124,6 +136,7 @@ class AnimationManager
             animation.Clear();
         }
         StationaryAnimations.Clear();
+        // don't clear global animations
     }
 
     public void Update(GameTime gameTime)

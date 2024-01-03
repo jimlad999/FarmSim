@@ -26,7 +26,8 @@
                 "$type": "UI.Text, UI",
                 "verticalAlignment": "Center",
                 "horizontalAlignment": "Center",
-                "value": "<white>Building<white>"
+                "weight": "medium",
+                "value": "<white>Building"
               }
             ],
             "tabContent": [
@@ -68,7 +69,8 @@
                 "$type": "UI.Text, UI",
                 "verticalAlignment": "Center",
                 "horizontalAlignment": "Center",
-                "value": "<white>Station<white>"
+                "weight": "medium",
+                "value": "<white>Station"
               }
             ]
           }

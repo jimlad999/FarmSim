@@ -1,0 +1,21 @@
+{
+  "UIElements": [
+    {
+      "$type": "UI.TabContainer, UI",
+      "id": "inventory",
+      "tabContentPanel": {
+        "$type": "UI.Panel, UI",
+        "left": 32,
+        "width": "34%",
+        "height": "80%",
+        "verticalAlignment": "Center",
+        "texture": "panel"
+      },
+      "tabs": {
+        "top": 32,
+        "left": 32
+        // children set by the game based on what the player is interacting with
+      }
+    }
+  ]
+}

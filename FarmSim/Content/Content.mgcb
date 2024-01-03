@@ -48,6 +48,23 @@
 /processor:BitmapFontProcessor
 /build:fonts/normal-18.fnt
 
+#begin fonts/normal-24_0.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:fonts/normal-24_0.png
+
+#begin fonts/normal-24.fnt
+/importer:BitmapFontImporter
+/processor:BitmapFontProcessor
+/build:fonts/normal-24.fnt
+
 #begin fonts/normal-32_0.png
 /importer:TextureImporter
 /processor:TextureProcessor

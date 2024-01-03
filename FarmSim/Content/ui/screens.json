@@ -1,17 +1,21 @@
 {
-  "baseFolder": "Content/ui",
+  "baseFolder": "Content/ui/screens",
   "screens": [
     {
       "screenName": "buildscreen",
-      "screenFilename": "screens/buildscreen.json"
+      "screenFilename": "buildscreen.json"
     },
     {
       "screenName": "hud",
-      "screenFilename": "screens/hud.json"
+      "screenFilename": "hud.json"
     },
     {
       "screenName": "command-console",
-      "screenFilename": "screens/command-console.json"
+      "screenFilename": "command-console.json"
+    },
+    {
+      "screenName": "inventory",
+      "screenFilename": "inventory.json"
     }
   ]
 }

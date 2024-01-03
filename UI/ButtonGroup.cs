@@ -31,6 +31,20 @@ public class ButtonGroup : UIElement
             offset);
     }
 
+    public void SetButtons(params ToggleButton[] buttons)
+    {
+        if (AttachedButtonEventListeners)
+        {
+            foreach (var button in Children.OfType<ToggleButton>())
+            {
+                button.EventHandler -= ListenForButtonEvent;
+            }
+            AttachedButtonEventListeners = false;
+        }
+        Children.Clear();
+        Children.AddRange(buttons);
+    }
+
     public override void Update(
         GameTime gameTime,
         UIState state,

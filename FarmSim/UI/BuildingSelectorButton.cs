@@ -22,12 +22,11 @@ class BuildingSelectorButton : Button
         Metadata = metadata;
         ReleasedTexture = PressedTexture = Texture = "building-panel";
         SelectedTexture = "building-panel-selected";
-        var children = new List<UIElement>();
         var hasExteriorWall = metadata.ExteriorWall != null;
         var hasInteriorWall = metadata.InteriorWall != null;
         if (!hasExteriorWall && !hasInteriorWall && metadata.Floor != null)
         {
-            children.Add(
+            Children.Add(
                 new TileUIElement(
                     roof: null,
                     exteriorWall: null,
@@ -44,7 +43,7 @@ class BuildingSelectorButton : Button
         {
             if (hasExteriorWall)
             {
-                children.Add(
+                Children.Add(
                     new TileUIElement(
                         roof: metadata.RoofAnimation,
                         exteriorWall: metadata.ExteriorWallAnimation,
@@ -60,7 +59,7 @@ class BuildingSelectorButton : Button
             }
             if (hasInteriorWall)
             {
-                children.Add(
+                Children.Add(
                     new TileUIElement(
                         roof: null,
                         exteriorWall: null,
@@ -75,6 +74,5 @@ class BuildingSelectorButton : Button
                     });
             }
         }
-        Children = children;
     }
 }

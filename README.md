@@ -12,6 +12,7 @@ Experimenting with procedural terrain generation in form of a farm simulator
 * F12 to regenerate with new random seed
 * Left mouse click to use selected player action
 * Right mouse click to open context menu for entities
+* I to open player Inventory
 
 ## Possible features?
 * Random creature generation

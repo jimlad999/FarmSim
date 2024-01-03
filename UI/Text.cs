@@ -17,6 +17,7 @@ public class Text : UIElement
         Bold,
         // HACK: quick and dirty. Not technically "weight"
         Small,
+        Medium,
     }
 
     // To avoid text clashing with TagRegex
@@ -29,6 +30,7 @@ public class Text : UIElement
     public static BitmapFont Normal;
     public static BitmapFont Bold;
     public static BitmapFont Small;
+    public static BitmapFont Medium;
 #pragma warning restore CA2211 // Non-constant fields should not be visible
 
     [DataMember]
@@ -146,6 +148,9 @@ public class Text : UIElement
                     case "small":
                         weight = weight == Weight ? FontWeight.Small : Weight;
                         break;
+                    case "medium":
+                        weight = weight == Weight ? FontWeight.Medium : Weight;
+                        break;
                     default:
                         var newColor = ColorPalette.Parse(tag);
                         color = color == newColor ? ColorPalette.Black : newColor;
@@ -196,7 +201,7 @@ public class Text : UIElement
 
     private static BitmapFont GetFont(FontWeight weight)
     {
-        return weight == FontWeight.Normal ? Normal : weight == FontWeight.Small ? Small : Bold;
+        return weight == FontWeight.Normal ? Normal : weight == FontWeight.Small ? Small : weight == FontWeight.Medium ? Medium : Bold;
     }
 
     public struct ProcessedData

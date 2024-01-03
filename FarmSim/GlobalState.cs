@@ -15,6 +15,7 @@ static class GlobalState
     public static Dictionary<string, IBuildableData> ConsolidatedZoningData;
     public static BuildingData BuildingData;
     public static EntitiesData EntitiesData;
+    public static Dictionary<string, ItemData> ItemData;
     public static Tileset Tileset;
     public static TerrainManager TerrainManager;
     public static PlayerManager PlayerManager;
@@ -23,4 +24,5 @@ static class GlobalState
     public static ItemManager ItemManager;
     public static AnimationManager AnimationManager;
     public static ViewportManager ViewportManager;
+    public static EntitySpriteSheet EntitySpriteSheet;
 }

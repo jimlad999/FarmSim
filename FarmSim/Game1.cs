@@ -38,6 +38,8 @@ public class Game1 : Game
     private TextInput _commandInput;
     private ActionBar _actionBar;
     private EntityContextMenu _contextMenu;
+    private TabContainer _inventory;
+    private InventoryTab _allInventoryTab;
     private bool _debugArcRange;
     private Effect _debugArcRangeEffect;
     private RenderTarget2D _entireScreen;
@@ -68,6 +70,7 @@ public class Game1 : Game
         Text.Normal = Content.Load<BitmapFont>("fonts/normal-32");
         Text.Bold = Content.Load<BitmapFont>("fonts/bold-32");
         Text.Small = Content.Load<BitmapFont>("fonts/normal-18");
+        Text.Medium = Content.Load<BitmapFont>("fonts/normal-24");
         _mousePointer = new CustomMouseCursor(
             bucket: Content.Load<Texture2D>("ui/pointers/pointer-bucket"),
             chop: Content.Load<Texture2D>("ui/pointers/pointer-chop"),
@@ -90,7 +93,7 @@ public class Game1 : Game
         GlobalState.AnimationManager = new AnimationManager();
 
         var resourceData = JsonConvert.DeserializeObject<Dictionary<string, ResourceData>>(File.ReadAllText("Content/entities/items/resources.json"));
-        var itemData = JsonConvert.DeserializeObject<ItemData[]>(File.ReadAllText("Content/entities/items/items.json"))
+        var itemData = GlobalState.ItemData = JsonConvert.DeserializeObject<ItemData[]>(File.ReadAllText("Content/entities/items/items.json"))
             .ToDictionary(i => i.Id);
         var mobData = JsonConvert.DeserializeObject<MobData[]>(File.ReadAllText("Content/entities/mobs/mobs.json"));
         var tilesetData = JsonConvert.DeserializeObject<TilesetData>(File.ReadAllText("Content/tilesets/tilesets.json"));
@@ -100,8 +103,11 @@ public class Game1 : Game
             GlobalState.AnimationManager.GenerateTilesetAnimation(value.Key, value.Value);
         }
         var entitiesData = GlobalState.EntitiesData = JsonConvert.DeserializeObject<EntitiesData>(File.ReadAllText("Content/entities/entities.json"));
-        var entitySpriteSheet = new EntitySpriteSheet(_spriteBatch, entitiesData);
-
+        var entitySpriteSheet = GlobalState.EntitySpriteSheet = new EntitySpriteSheet(_spriteBatch, entitiesData);
+        foreach (var value in entitiesData.Data)
+        {
+            GlobalState.AnimationManager.GenerateGlobalEntityAnimation(value.Key, value.Value);
+        }
         GlobalState.BuildingData = JsonConvert.DeserializeObject<BuildingData>(File.ReadAllText("Content/tilesets/buildings/buildings.json"));
         // Must be initialized before UI is created. Dependency is UI on building animations being set up (see BuildingSelectorButton).
         foreach (var building in GlobalState.BuildingData.Buildings.Values)
@@ -163,6 +169,8 @@ public class Game1 : Game
             pixel);
 
         // TODO: find a better place for UI interactions to sit (should sit within the Game, i.e. not the library)
+        _allInventoryTab = new InventoryTab(GlobalState.PlayerManager.ActivePlayer.Inventory, Array.Empty<Tags>(), text: "All");
+        _uiOverlay.TryGetById("inventory", out _inventory);
         if (_uiOverlay.TryGetById("entity-context-menu", out _contextMenu))
         {
             player.ContextMenu = _contextMenu;
@@ -394,17 +402,20 @@ public class Game1 : Game
             }
             // else (see) Player.InvokeAction
         }
+        else if (_controllerManager.IsKeyInitialPressed(Keys.I))
+        {
+            _allInventoryTab.RefreshInventory();
+            _inventory.Tabs.SetButtons(_allInventoryTab);
+            _screensToDraw.Add("inventory");
+        }
         else if ((_controllerManager.IsKeyInitialPressed(Keys.OemTilde) || _controllerManager.IsKeyInitialPressed(Keys.OemQuestion)) && !_screensToDraw.Contains("command-console"))
         {
-            _uiOverlay.NextRefresh(() =>
+            _screensToDraw.Add("command-console");
+            // let '/' registery as a key press for the command console
+            if (_controllerManager.IsKeyInitialPressed(Keys.OemTilde))
             {
-                _screensToDraw.Add("command-console");
-                // let '/' registery as a key press for the command console
-                if (_controllerManager.IsKeyInitialPressed(Keys.OemTilde))
-                {
-                    _commandInput.IgnoreLastKeyPress();
-                }
-            });
+                _commandInput.IgnoreLastKeyPress();
+            }
         }
         else if (_controllerManager.IsScrolling(out var scrollResult))
         {

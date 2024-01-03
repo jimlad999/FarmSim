@@ -77,15 +77,7 @@ class ItemManager : EntityManager<Item>
         newItem.Metadata = metadata;
         newItem.InstanceInfo = instanceInfo;
         newItem.NormalizedDirection = normalizedDirection;
-        newItem.Color = instanceInfo.Tags.Match(new()
-        {
-            { Tags.White, () => Color.White },
-            { Tags.Black, () => Color.Black },
-            { Tags.Red, () => Color.Red },
-            { Tags.Green, () => Color.Green },
-            { Tags.Blue, () => ItemBlue },
-            { Tags.Yellow, () => Color.Yellow },
-        }, defaultValue: Color.White);
+        newItem.Color = PickColor(instanceInfo);
         newItem.EntitySpriteKey = metadata.EntitySpriteKey;
         newItem.DefaultAnimationKey = _entityData[metadata.EntitySpriteKey].DefaultAnimationKey;
         newItem.PickUpDelayTimeMilliseconds = PickUpDelayTimeMilliseconds;
@@ -96,6 +88,19 @@ class ItemManager : EntityManager<Item>
         newItem.UpdateTileIndex();
         newItem.InitDefaultAnimation();
         Entities.Add(newItem);
+    }
+
+    public static Color PickColor(ItemInfo instanceInfo)
+    {
+        return instanceInfo.Tags.Match(new()
+        {
+            { Tags.White, () => Color.White },
+            { Tags.Black, () => Color.Black },
+            { Tags.Red, () => Color.Red },
+            { Tags.Green, () => Color.Green },
+            { Tags.Blue, () => ItemBlue },
+            { Tags.Yellow, () => Color.Yellow },
+        }, defaultValue: Color.White);
     }
 
     private static ItemInfo CreateInstance(ItemData metadata)
