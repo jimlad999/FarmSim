@@ -76,5 +76,82 @@
         "chance": 500 //i.e. 1 in 500 (i.e. 0.2%)
       }
     ]
+  },
+  {
+    "class": "FarmSim.Mobs.TreeSpirit",
+    "entitySpriteKey": "tree-pine-spirit",
+    "minSpawned": 2,
+    "maxSpawned": 5,
+    "hp": 10,
+    "xp": 1,
+    "speed": 80,
+    "spawnable": [ "grass" ],
+    "identifiable": [
+      "Leafy",
+      "Wings",
+      "Aerial",
+      "Plant"
+    ],
+    "eats": [
+      "Plant",
+      "Wood",
+      "Drink"
+    ],
+    "hunger": {
+      "min": 1,
+      "max": 1
+    },
+    "tags": [
+      {
+        "Leafy": 1
+      },
+      {
+        "Wings": 1
+      },
+      {
+        "Aerial": 1
+      },
+      {
+        "Plant": 1
+      },
+      {
+        "Nutritious": 1
+      },
+      {
+        "Disgusting": 10,
+        "Tasteless": 1
+      },
+      {
+        "Aromatic": 1
+      },
+      {
+        "Small": 10,
+        "Medium": 1
+      },
+      {
+        "Placid": 1,
+        "Friendly": 1,
+        "Cowardly": 1
+      }
+    ],
+    "drops": [
+      {
+        "id": "wheat-seed",
+        "count": 3,
+        // 1 in [chance]
+        "chance": 2 //i.e. 1 in 2 (i.e. 50%)
+      },
+      {
+        "id": "tree-pine-sappling",
+        "count": 1,
+        "chance": 4 //i.e. 1 in 4 (i.e. 25%)
+      },
+      {
+        "id": "red-berry",
+        "count": 1,
+        // 1 in [chance]
+        "chance": 10 //i.e. 1 in 10 (i.e. 10%)
+      }
+    ]
   }
 ]

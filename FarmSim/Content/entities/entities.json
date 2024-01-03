@@ -385,22 +385,22 @@
               {
                 "x": 256,
                 "y": 0,
-                "duration": 200
+                "duration": 50
               },
               {
                 "x": 320,
                 "y": 0,
-                "duration": 200
+                "duration": 80
               },
               {
                 "x": 384,
                 "y": 0,
-                "duration": 200
+                "duration": 80
               },
               {
                 "x": 448,
                 "y": 0,
-                "duration": 200,
+                "duration": 100,
                 "keyFrame": true
               }
             ],
@@ -1319,6 +1319,280 @@
         }
       }
     },
+    "tree-pine-spirit": {
+      "source": "mobs/tree-pine-spirit.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 32,
+            "y": 80
+          },
+          "frameWidth": 64,
+          "frameHeight": 96,
+          "directionFrames": {
+            "Up": [
+              {
+                "x": 0,
+                "y": 0,
+                "duration": 100
+              },
+              {
+                "x": 64,
+                "y": 0,
+                "duration": 200
+              },
+              {
+                "x": 128,
+                "y": 0,
+                "duration": 200
+              },
+              {
+                "x": 64,
+                "y": 0,
+                "duration": 200
+              }
+            ],
+            "Down": [
+              {
+                "x": 0,
+                "y": 96,
+                "duration": 100
+              },
+              {
+                "x": 64,
+                "y": 96,
+                "duration": 200
+              },
+              {
+                "x": 128,
+                "y": 96,
+                "duration": 200
+              },
+              {
+                "x": 64,
+                "y": 96,
+                "duration": 200
+              }
+            ],
+            "Left": [
+              {
+                "x": 0,
+                "y": 192,
+                "duration": 100
+              },
+              {
+                "x": 64,
+                "y": 192,
+                "duration": 200
+              },
+              {
+                "x": 128,
+                "y": 192,
+                "duration": 200
+              },
+              {
+                "x": 64,
+                "y": 192,
+                "duration": 200
+              }
+            ],
+            "Right": [
+              {
+                "x": 0,
+                "y": 288,
+                "duration": 100
+              },
+              {
+                "x": 64,
+                "y": 288,
+                "duration": 200
+              },
+              {
+                "x": 128,
+                "y": 288,
+                "duration": 200
+              },
+              {
+                "x": 64,
+                "y": 288,
+                "duration": 200
+              }
+            ]
+          }
+        },
+        "happy": {
+          "origin": {
+            "x": 32,
+            "y": 80
+          },
+          "frameWidth": 64,
+          "frameHeight": 96,
+          "directionFrames": {
+            "Up": [
+              {
+                "x": 192,
+                "y": 0,
+                "duration": 100
+              },
+              {
+                "x": 256,
+                "y": 0,
+                "duration": 200
+              },
+              {
+                "x": 320,
+                "y": 0,
+                "duration": 200
+              },
+              {
+                "x": 256,
+                "y": 0,
+                "duration": 200
+              }
+            ],
+            "Down": [
+              {
+                "x": 192,
+                "y": 96,
+                "duration": 100
+              },
+              {
+                "x": 256,
+                "y": 96,
+                "duration": 200
+              },
+              {
+                "x": 320,
+                "y": 96,
+                "duration": 200
+              },
+              {
+                "x": 256,
+                "y": 96,
+                "duration": 200
+              }
+            ],
+            "Left": [
+              {
+                "x": 192,
+                "y": 192,
+                "duration": 100
+              },
+              {
+                "x": 256,
+                "y": 192,
+                "duration": 200
+              },
+              {
+                "x": 320,
+                "y": 192,
+                "duration": 200
+              },
+              {
+                "x": 256,
+                "y": 192,
+                "duration": 200
+              }
+            ],
+            "Right": [
+              {
+                "x": 192,
+                "y": 288,
+                "duration": 100
+              },
+              {
+                "x": 256,
+                "y": 288,
+                "duration": 200
+              },
+              {
+                "x": 320,
+                "y": 288,
+                "duration": 200
+              },
+              {
+                "x": 256,
+                "y": 288,
+                "duration": 200
+              }
+            ]
+          }
+        },
+        "hit": {
+          "origin": {
+            "x": 32,
+            "y": 80
+          },
+          "frameWidth": 64,
+          "frameHeight": 96,
+          "directionFrames": {
+            "Up": [
+              {
+                "x": 384,
+                "y": 0,
+                "duration": 400
+              }
+            ],
+            "Down": [
+              {
+                "x": 384,
+                "y": 96,
+                "duration": 400
+              }
+            ],
+            "Left": [
+              {
+                "x": 384,
+                "y": 192,
+                "duration": 400
+              }
+            ],
+            "Right": [
+              {
+                "x": 384,
+                "y": 288,
+                "duration": 400
+              }
+            ]
+          }
+        },
+        "unconscious": {
+          "origin": {
+            "x": 32,
+            "y": 80
+          },
+          "frameWidth": 64,
+          "frameHeight": 96,
+          "directionFrames": {
+            "Up": [
+              {
+                "x": 384,
+                "y": 0
+              }
+            ],
+            "Down": [
+              {
+                "x": 384,
+                "y": 96
+              }
+            ],
+            "Left": [
+              {
+                "x": 384,
+                "y": 192
+              }
+            ],
+            "Right": [
+              {
+                "x": 384,
+                "y": 288
+              }
+            ]
+          }
+        }
+      }
+    },
     "tree-pine": {
       "source": "objects/tree-pine.png",
       "defaultAnimationKey": "idle",
@@ -1471,6 +1745,72 @@
     },
     "item-coal": {
       "source": "items/coal.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 16,
+            "y": 30
+          },
+          "frameWidth": 32,
+          "frameHeight": 32,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
+    },
+    "item-wheat-seed": {
+      "source": "items/wheat-seed.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 16,
+            "y": 30
+          },
+          "frameWidth": 32,
+          "frameHeight": 32,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
+    },
+    "item-tree-pine-sappling": {
+      "source": "items/tree-pine-sappling.png",
+      "defaultAnimationKey": "idle",
+      "animations": {
+        "idle": {
+          "origin": {
+            "x": 16,
+            "y": 30
+          },
+          "frameWidth": 32,
+          "frameHeight": 32,
+          "directionFrames": {
+            "Down": [
+              {
+                "x": 0,
+                "y": 0
+              }
+            ]
+          }
+        }
+      }
+    },
+    "item-red-berry": {
+      "source": "items/red-berry.png",
       "defaultAnimationKey": "idle",
       "animations": {
         "idle": {

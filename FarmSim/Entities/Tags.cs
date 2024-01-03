@@ -32,7 +32,9 @@ enum Tags
 
     //category
     Meat,
+    Seed,
     Plant,
+    Plantable,
     Wood,
     Drink,
     Rock,
@@ -51,6 +53,7 @@ enum Tags
     Horns,
     Tail,
     Wings,
+    Leafy,
 
     //color
     White,

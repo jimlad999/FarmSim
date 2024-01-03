@@ -106,5 +106,74 @@
         "Fuel": 1
       }
     ]
+  },
+  {
+    "id": "wheat-seed",
+    "entitySpriteKey": "item-wheat-seed",
+    "quality": {
+      "min": 10,
+      "max": 20
+    },
+    "tags": [
+      {
+        "Seed": 1
+      },
+      {
+        "Plant": 1
+      },
+      {
+        "Plantable": 1
+      }
+    ]
+  },
+  {
+    "id": "tree-pine-sappling",
+    "entitySpriteKey": "item-tree-pine-sappling",
+    "quality": {
+      "min": 10,
+      "max": 20
+    },
+    "tags": [
+      {
+        "Wood": 1
+      },
+      {
+        "Plant": 1
+      },
+      {
+        "Plantable": 1
+      },
+      {
+        "Aromatic": 1
+      }
+    ]
+  },
+  {
+    "id": "red-berry",
+    "entitySpriteKey": "item-red-berry",
+    "quality": {
+      "min": 10,
+      "max": 20
+    },
+    "tags": [
+      {
+        "Ore": 1
+      },
+      {
+        "Fuel": 1
+      },
+      {
+        "Plantable": 1
+      },
+      {
+        "Aromatic": 1
+      },
+      {
+        "Delicious": 1
+      },
+      {
+        "Nutritious": 1
+      }
+    ]
   }
 ]
