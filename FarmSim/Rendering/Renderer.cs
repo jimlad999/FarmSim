@@ -25,7 +25,7 @@ class Renderer
     private const int ChunkLOD = 32;
     private const float ChunkLODFloat = ChunkLOD;
     private const float ChunkTerrainLODZoomLevel = 1f / 8f;
-    private const float ChunkObjectLODZoomLevel = 1f / 16f;
+    public const float ChunkObjectLODZoomLevel = 1f / 16f;
     private static readonly Color ItemShadow = new Color(0, 0, 0, 127);
     private static readonly Color ExteriorWallTransparency = new Color(15, 15, 15, 127);
     private static readonly Color IndoorWhilePlayerIsOutsideColor = new Color(127, 127, 127, 255);
@@ -118,8 +118,10 @@ class Renderer
 
         var activePlayer = GlobalState.PlayerManager.ActivePlayer;
         var playerIsInsideBuilding = GlobalState.TerrainManager.GetTile(tileX: activePlayer.TileX, tileY: activePlayer.TileY).Buildings.Any(BuildingData.BuildingIsEnclosed);
-        var spriteAnimationLookupByTile = GlobalState.AnimationManager.GetAnimationsInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
-            .ToLookup(mob => mob.TileY);
+        var spriteAnimationLookupByTile = shouldRenderEntities
+            ? GlobalState.AnimationManager.GetAnimationsInRange(xTileStart: xTileStart, xTileEnd: xTileEnd, yTileStart: yTileStart, yTileEnd: yTileEnd)
+                .ToLookup(mob => mob.TileY)
+            : null;
 
         // can set once globally?
         var halfScreenWidth = spriteBatch.GraphicsDevice.Viewport.Width / 2f;
@@ -158,7 +160,6 @@ class Renderer
             float xDraw = (int)xDrawOffset;
             var processedYSkip = true;
             var yTilesSkipped = 0;
-            var topYPoint = tileY * TileSize;
             for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
             {
                 var tile = GlobalState.TerrainManager.GetTile(tileX: tileX, tileY: tileY);
@@ -197,47 +198,25 @@ class Renderer
                 }
             }
             spriteBatch.End();
-            // render entities after the terrain has finished so we don't clip the sprite when rendering the next tile over
-            if (shouldRenderEntities)
+            // Render entities after the terrain has finished so we don't clip the sprite when rendering the next tile over.
+            // We render the entities 1 tile behind the terrain so that animations that extend past 1 tile won't be cut off by the next terrain draw.
+            // Final entity draw is outside the for (yTile) loop.
+            if (shouldRenderEntities && tileY > yTileStart)
             {
-                spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: renderFogOfWar ? _fogOfWarEffect : null);
-                xDraw = (int)xDrawOffset;
-                var animations = spriteAnimationLookupByTile[tileY];
-                var leftXPoint = xTileStart * TileSize;
-                // Y here and YInt in draw because HACKs in EntityAnimation
-                var animationsToRenderThisTile = animations.OrderBy(e => e.Y).ToArray();
-                foreach (var animation in animationsToRenderThisTile)
-                {
-                    var drawXDiff = (leftXPoint - animation.XInt) * viewportZoom;
-                    var drawYDiff = (topYPoint - animation.YInt) * viewportZoom;
-                    DrawSpriteAnimation(
-                        spriteBatch,
-                        animation,
-                        xDraw: xDraw - drawXDiff,
-                        yDraw: yDraw - drawYDiff,
-                        zoomScale: viewportZoom,
-                        telescopedPlayerAction,
-                        activePlayer.HoveredEntity,
-                        renderFogOfWar: renderFogOfWar);
-                }
-                if (activePlayer.TilePlacement != null)
-                {
-                    if (renderFogOfWar)
-                    {
-                        spriteBatch.End();
-                        spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
-                    }
-                    for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
-                    {
-                        if (activePlayer.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
-                        {
-                            var tile = GlobalState.TerrainManager.GetTile(tileX: tileX, tileY: tileY);
-                            DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: viewportZoom, activePlayer.TilePlacement, playerIsInsideBuilding);
-                        }
-                        xDraw += zoomedTileSize;
-                    }
-                }
-                spriteBatch.End();
+                DrawEntities(
+                    spriteBatch: spriteBatch,
+                    viewportZoom: viewportZoom,
+                    zoomedTileSize: zoomedTileSize,
+                    xTileStart: xTileStart,
+                    xTileEnd: xTileEnd,
+                    xDrawOffset: xDrawOffset,
+                    activePlayer: activePlayer,
+                    playerIsInsideBuilding: playerIsInsideBuilding,
+                    spriteAnimationLookupByTile: spriteAnimationLookupByTile,
+                    renderFogOfWar: renderFogOfWar,
+                    telescopedPlayerAction: telescopedPlayerAction,
+                    yDraw: yDraw - zoomedTileSize,
+                    tileY: tileY - 1);
             }
             yDraw += zoomedTileSize;
             if (yTilesSkipped != 0)
@@ -246,6 +225,23 @@ class Renderer
                 yDraw += zoomedTileSize * yTilesSkipped;
             }
         }
+        if (shouldRenderEntities)
+        {
+            DrawEntities(
+                spriteBatch: spriteBatch,
+                viewportZoom: viewportZoom,
+                zoomedTileSize: zoomedTileSize,
+                xTileStart: xTileStart,
+                xTileEnd: xTileEnd,
+                xDrawOffset: xDrawOffset,
+                activePlayer: activePlayer,
+                playerIsInsideBuilding: playerIsInsideBuilding,
+                spriteAnimationLookupByTile: spriteAnimationLookupByTile,
+                renderFogOfWar: renderFogOfWar,
+                telescopedPlayerAction: telescopedPlayerAction,
+                yDraw: yDraw - zoomedTileSize,
+                tileY: yTileEnd - 1);
+        }
         if (renderFogOfWar)
         {
             spriteBatch.Begin(effect: shouldRenderEntities ? _fogOfWarInverseEffect : null);
@@ -253,6 +249,63 @@ class Renderer
             spriteBatch.Draw(_pixel, fogOfWarOverlayDestination, color: FogOfWarColor);
             spriteBatch.End();
         }
+    }
+
+    private void DrawEntities(
+        SpriteBatch spriteBatch,
+        float viewportZoom,
+        float zoomedTileSize,
+        int xTileStart,
+        int xTileEnd,
+        float xDrawOffset,
+        Player.Player activePlayer,
+        bool playerIsInsideBuilding,
+        ILookup<int, Animation> spriteAnimationLookupByTile,
+        bool renderFogOfWar,
+        TelescopeResult telescopedPlayerAction,
+        float yDraw,
+        int tileY)
+    {
+        float xDraw;
+        var topYPoint = tileY * TileSize;
+        spriteBatch.Begin(blendState: BlendState.NonPremultiplied, effect: renderFogOfWar ? _fogOfWarEffect : null);
+        xDraw = (int)xDrawOffset;
+        var animations = spriteAnimationLookupByTile[tileY];
+        var leftXPoint = xTileStart * TileSize;
+        // Y here and YInt in draw because HACKs in EntityAnimation
+        var animationsToRenderThisTile = animations.OrderBy(e => e.Y).ToArray();
+        foreach (var animation in animationsToRenderThisTile)
+        {
+            var drawXDiff = (leftXPoint - animation.XInt) * viewportZoom;
+            var drawYDiff = (topYPoint - animation.YInt) * viewportZoom;
+            DrawSpriteAnimation(
+                spriteBatch,
+                animation,
+                xDraw: xDraw - drawXDiff,
+                yDraw: yDraw - drawYDiff,
+                zoomScale: viewportZoom,
+                telescopedPlayerAction,
+                activePlayer.HoveredEntity,
+                renderFogOfWar: renderFogOfWar);
+        }
+        if (activePlayer.TilePlacement != null)
+        {
+            if (renderFogOfWar)
+            {
+                spriteBatch.End();
+                spriteBatch.Begin(blendState: BlendState.NonPremultiplied);
+            }
+            for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
+            {
+                if (activePlayer.TilePlacement.TileInRange(tileX: tileX, tileY: tileY))
+                {
+                    var tile = GlobalState.TerrainManager.GetTile(tileX: tileX, tileY: tileY);
+                    DrawPartialBuilding(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: viewportZoom, activePlayer.TilePlacement, playerIsInsideBuilding);
+                }
+                xDraw += zoomedTileSize;
+            }
+        }
+        spriteBatch.End();
     }
 
     private void DrawChunk(SpriteBatch spriteBatch, Chunk chunk, float xDraw, float yDraw, float scale)

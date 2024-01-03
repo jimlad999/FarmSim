@@ -450,7 +450,11 @@ public class Game1 : Game
         _uiOverlay.Update(gameTime, _screensToDraw);
         GlobalState.ViewportManager.Update(gameTime);
         EntityManager.Update(gameTime);
-        GlobalState.AnimationManager.Update(gameTime);
+        if (GlobalState.ViewportManager.Zoom >= Renderer.ChunkObjectLODZoomLevel)
+        {
+            // SPEED HACK: if we are zoomed out to the point we don't need to render entities, then skip the animations update as nothing will be rendered anyway
+            GlobalState.AnimationManager.Update(gameTime);
+        }
         _mousePointer.Update(_uiOverlay);
 
         base.Update(gameTime);
