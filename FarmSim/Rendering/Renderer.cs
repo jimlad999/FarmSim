@@ -364,6 +364,7 @@ class Renderer
                 foreach (var tile in row)
                 {
                     DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: ChunkTerrainLODZoomLevel, tilePlacement: null, playerIsInsideBuilding: false);
+                    DrawBuildings(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: ChunkTerrainLODZoomLevel, tilePlacement: null, playerIsInsideBuilding: false);
                     xDraw += zoomedTileSize;
                 }
                 yDraw += zoomedTileSize;
