@@ -31,10 +31,13 @@ class ProjectileManager : EntityManager<Projectile>
         foreach (var projectile in Entities)
         {
             projectile.Update(gameTime);
-            projectile.FlagForDespawning = GlobalState.PlayerManager.OutsideDespawnRadius(projectile)
-                || projectile.Owner is Player.Player
-                    ? GlobalState.MobManager.DetectCollision(projectile)
-                    : GlobalState.PlayerManager.DetectCollision(projectile);
+            if (!projectile.FlagForDespawning)
+            {
+                projectile.FlagForDespawning = GlobalState.PlayerManager.OutsideDespawnRadius(projectile)
+                    || projectile.Owner is Player.Player
+                        ? GlobalState.MobManager.DetectCollision(projectile)
+                        : GlobalState.PlayerManager.DetectCollision(projectile);
+            }
             if (projectile.FlagForDespawning && projectile.DespawnAnimationKey != null)
             {
                 GlobalState.AnimationManager.Generate(x: projectile.XInt, y: projectile.YInt, animationKey: projectile.DespawnAnimationKey, scale: 1f);

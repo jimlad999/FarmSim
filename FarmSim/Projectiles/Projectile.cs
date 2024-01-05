@@ -17,13 +17,24 @@ abstract class Projectile : Entity, IDespawnble
     public virtual void Update(GameTime gameTime)
     {
         var distancePerFrame = gameTime.ElapsedGameTime.TotalSeconds * Speed;
-        X += NormalizedDirection.X * distancePerFrame;
-        Y += NormalizedDirection.Y * distancePerFrame;
-        UpdateForces(gameTime);
-        XInt = (int)X;
-        YInt = (int)Y;
-        this.UpdateTileIndex();
-        UpdateFacingDirection(directionX: NormalizedDirection.X, directionY: NormalizedDirection.Y);
+        var newX = X + NormalizedDirection.X * distancePerFrame;
+        var newY = Y + NormalizedDirection.Y * distancePerFrame;
+        UpdateForces(gameTime, x: ref newX, y: ref newY);
+        var newXInt = (int)newX;
+        var newYInt = (int)newY;
+        if (GlobalState.TerrainManager.ValidateMovement(oldX: XInt, oldY: YInt, newX: newXInt, newY: newYInt))
+        {
+            X = newX;
+            Y = newY;
+            XInt = newXInt;
+            YInt = newYInt;
+            this.UpdateTileIndex();
+            UpdateFacingDirection(directionX: NormalizedDirection.X, directionY: NormalizedDirection.Y);
+        }
+        else
+        {
+            FlagForDespawning = true;
+        }
     }
 
     public bool DetectCollision(Entity entity)

@@ -1,5 +1,9 @@
-﻿using FarmSim.Utils;
+﻿using FarmSim.Entities;
+using FarmSim.UI;
+using FarmSim.Utils;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FarmSim.Terrain;
 
@@ -122,5 +126,35 @@ class TerrainManager
     public void ChangeTile(Tile tile, string newTerrain)
     {
         tile.Terrain = newTerrain;
+    }
+
+    public bool ValidateMovement(int oldX, int oldY, int newX, int newY)
+    {
+        var oldTileX = oldX.ToTileIndex();
+        var oldTileY = oldY.ToTileIndex();
+        var newTileX = newX.ToTileIndex();
+        var newTileY = newY.ToTileIndex();
+        var oldTile = GetTile(tileX: oldTileX, tileY: oldTileY);
+        var newTile = GetTile(tileX: newTileX, tileY: newTileY);
+        var oldBuilding = oldTile.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
+        var newBuilding = newTile.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
+        var oldHasBuilding = oldBuilding != null;
+        var newHasBuilding = newBuilding != null;
+        if (oldHasBuilding == newHasBuilding)
+        {
+            return true;
+        }
+        else if (oldHasBuilding)
+        {
+            return GlobalState.BuildingData.Buildings[oldBuilding].CanWalkThrough;
+        }
+        else if (newHasBuilding)
+        {
+            return GlobalState.BuildingData.Buildings[newBuilding].CanWalkThrough;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

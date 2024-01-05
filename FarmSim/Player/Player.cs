@@ -108,33 +108,56 @@ class Player : Entity, IHasMultiTool, IHasInventory
 #endif
         }
         var playerHasMoved = false;
+        var newX = X;
+        var newY = Y;
         // normalise vector for diagnoal movement?
         if (_controllerManager.IsKeyDown(Keys.W))
         {
-            Y -= movementPerFrame;
+            newY -= movementPerFrame;
             playerHasMoved = true;
         }
         if (_controllerManager.IsKeyDown(Keys.S))
         {
-            Y += movementPerFrame;
+            newY += movementPerFrame;
             playerHasMoved = true;
         }
         if (_controllerManager.IsKeyDown(Keys.A))
         {
-            X -= movementPerFrame;
+            newX -= movementPerFrame;
             playerHasMoved = true;
         }
         if (_controllerManager.IsKeyDown(Keys.D))
         {
-            X += movementPerFrame;
+            newX += movementPerFrame;
             playerHasMoved = true;
         }
-        playerHasMoved |= UpdateForces(gameTime);
+        playerHasMoved |= UpdateForces(gameTime, x: ref newX, y: ref newY);
         if (playerHasMoved)
         {
-            XInt = (int)X;
-            YInt = (int)Y;
-            this.UpdateTileIndex();
+            var newXInt = (int)newX;
+            var newYInt = (int)newY;
+            if (GlobalState.TerrainManager.ValidateMovement(oldX: XInt, oldY: YInt, newX: newXInt, newY: newYInt))
+            {
+                X = newX;
+                Y = newY;
+                XInt = newXInt;
+                YInt = newYInt;
+                this.UpdateTileIndex();
+            }
+            else if (GlobalState.TerrainManager.ValidateMovement(oldX: XInt, oldY: YInt, newX: newXInt, newY: YInt))
+            {
+                // horizontal movement OK
+                X = newX;
+                XInt = newXInt;
+                this.UpdateTileIndex();
+            }
+            else if (GlobalState.TerrainManager.ValidateMovement(oldX: XInt, oldY: YInt, newX: XInt, newY: newYInt))
+            {
+                // vertical movement OK
+                Y = newY;
+                YInt = newYInt;
+                this.UpdateTileIndex();
+            }
         }
     }
 

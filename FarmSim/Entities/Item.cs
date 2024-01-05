@@ -60,35 +60,59 @@ class Item : Entity, IHasElevation, IDespawnble
     {
         if (Speed == 0)
         {
+            if (HeightOffGroundInt > 0)
+            {
+                HeightOffGround += VerticalSpeed * gameTime.ElapsedGameTime.TotalSeconds;
+                HeightOffGroundInt = (int)HeightOffGround;
+                VerticalSpeed -= Gavity * gameTime.ElapsedGameTime.TotalSeconds;
+                if (HeightOffGroundInt <= 0)
+                {
+                    HeightOffGround = 0;
+                    HeightOffGroundInt = 0;
+                    VerticalSpeed = 0;
+                    VerticalSpeedOnBounce = 0;
+                }
+            }
             return;
         }
         var distancePerFrame = Speed * gameTime.ElapsedGameTime.TotalSeconds;
-        X += NormalizedDirection.X * distancePerFrame;
-        Y += NormalizedDirection.Y * distancePerFrame;
-        XInt = (int)X;
-        YInt = (int)Y;
-        this.UpdateTileIndex();
-        HeightOffGround += VerticalSpeed * gameTime.ElapsedGameTime.TotalSeconds;
-        HeightOffGroundInt = (int)HeightOffGround;
-        VerticalSpeed -= Gavity * gameTime.ElapsedGameTime.TotalSeconds;
-        if (HeightOffGroundInt <= 0)
+        var newX = X + NormalizedDirection.X * distancePerFrame;
+        var newY = Y + NormalizedDirection.Y * distancePerFrame;
+        var newXInt = (int)newX;
+        var newYInt = (int)newY;
+        if (GlobalState.TerrainManager.ValidateMovement(oldX: XInt, oldY: YInt, newX: newXInt, newY: newYInt))
         {
-            HeightOffGround = 0;
-            HeightOffGroundInt = 0;
-            Gavity /= 1.5;
-            // ground friction (ignore air friction - may adjust later to "look right")
-            Speed /= 2;
-            if (Speed < LowestHorizontalSpeed)
+            X = newX;
+            Y = newY;
+            XInt = newXInt;
+            YInt = newYInt;
+            this.UpdateTileIndex();
+            HeightOffGround += VerticalSpeed * gameTime.ElapsedGameTime.TotalSeconds;
+            HeightOffGroundInt = (int)HeightOffGround;
+            VerticalSpeed -= Gavity * gameTime.ElapsedGameTime.TotalSeconds;
+            if (HeightOffGroundInt <= 0)
             {
-                Speed = 0;
-                VerticalSpeed = 0;
-                VerticalSpeedOnBounce = 0;
+                HeightOffGround = 0;
+                HeightOffGroundInt = 0;
+                Gavity /= 1.5;
+                // ground friction (ignore air friction - may adjust later to "look right")
+                Speed /= 2;
+                if (Speed < LowestHorizontalSpeed)
+                {
+                    Speed = 0;
+                    VerticalSpeed = 0;
+                    VerticalSpeedOnBounce = 0;
+                }
+                else
+                {
+                    VerticalSpeed = VerticalSpeedOnBounce;
+                    VerticalSpeedOnBounce = CalculateVerticalSpeedOnBounce(VerticalSpeed);
+                }
             }
-            else
-            {
-                VerticalSpeed = VerticalSpeedOnBounce;
-                VerticalSpeedOnBounce = CalculateVerticalSpeedOnBounce(VerticalSpeed);
-            }
+        }
+        else
+        {
+            Speed = 0;
         }
     }
 

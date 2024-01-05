@@ -402,11 +402,15 @@ public class Game1 : Game
             }
             // else (see) Player.InvokeAction
         }
-        else if (_controllerManager.IsKeyInitialPressed(Keys.I))
+        else if (_controllerManager.IsKeyInitialPressed(Keys.I) && !_screensToDraw.Contains("inventory"))
         {
             _allInventoryTab.RefreshInventory();
             _inventory.Tabs.SetButtons(_allInventoryTab);
             _screensToDraw.Add("inventory");
+        }
+        else if (_controllerManager.IsKeyInitialPressed(Keys.B) && !_screensToDraw.Contains("buildscreen"))
+        {
+            _screensToDraw.Add("buildscreen");
         }
         else if ((_controllerManager.IsKeyInitialPressed(Keys.OemTilde) || _controllerManager.IsKeyInitialPressed(Keys.OemQuestion)) && !_screensToDraw.Contains("command-console"))
         {

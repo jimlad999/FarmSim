@@ -18,9 +18,14 @@ static class PositionableExtentions
 {
     public static void UpdateTileIndex(this IPositionable positionable)
     {
-        positionable.TileX = positionable.XInt / Renderer.TileSize;
-        if (positionable.XInt < 0) --positionable.TileX;
-        positionable.TileY = positionable.YInt / Renderer.TileSize;
-        if (positionable.YInt < 0) --positionable.TileY;
+        positionable.TileX = positionable.XInt.ToTileIndex();
+        positionable.TileY = positionable.YInt.ToTileIndex();
+    }
+
+    public static int ToTileIndex(this int value)
+    {
+        var tileIndex = value / Renderer.TileSize;
+        if (value < 0) --tileIndex;
+        return tileIndex;
     }
 }

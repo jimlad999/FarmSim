@@ -39,6 +39,7 @@
       "floor": "wood-floor",
       "doormat": "wood-doormat",
       "doormatSide": "wood-doormat-side",
+      "canWalkThrough": true,
       "hasTransparency": true,
       "buildable": [ "Normal" ],
       "cost": {

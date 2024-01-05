@@ -80,11 +80,20 @@ abstract class Mob : Entity, IDespawnble, IHasInventory, IHasHunger
     {
         if (Hit || HP <= 0)
         {
-            if (UpdateForces(gameTime))
+            var newX = X;
+            var newY = Y;
+            if (UpdateForces(gameTime, x: ref newX, y: ref newY))
             {
-                XInt = (int)X;
-                YInt = (int)Y;
-                this.UpdateTileIndex();
+                var newXInt = (int)newX;
+                var newYInt = (int)newY;
+                if (GlobalState.TerrainManager.ValidateMovement(oldX: XInt, oldY: YInt, newX: newXInt, newY: newYInt))
+                {
+                    X = newX;
+                    Y = newY;
+                    XInt = newXInt;
+                    YInt = newYInt;
+                    this.UpdateTileIndex();
+                }
             }
             return;
         }
@@ -102,16 +111,24 @@ abstract class Mob : Entity, IDespawnble, IHasInventory, IHasHunger
         var yDirectionPositive = normalizedDirection.Y > 0;
         var newX = X + normalizedDirection.X * movementPerFrame;
         var newY = Y + normalizedDirection.Y * movementPerFrame;
-        // TODO: detect collision or unpassable terrain and return false
-        X = newX;
-        Y = newY;
-        UpdateForces(gameTime);
-        XInt = (int)X;
-        YInt = (int)Y;
-        this.UpdateTileIndex();
-        UpdateFacingDirection(directionX: normalizedDirection.X, directionY: normalizedDirection.Y);
-        return (xDirectionPositive ? XInt < targetX : XInt > targetX)
-            && (yDirectionPositive ? YInt < targetY : YInt > targetY);
+        UpdateForces(gameTime, x: ref newX, y: ref newY);
+        var newXInt = (int)newX;
+        var newYInt = (int)newY;
+        if (GlobalState.TerrainManager.ValidateMovement(oldX: XInt, oldY: YInt, newX: newXInt, newY: newYInt))
+        {
+            X = newX;
+            Y = newY;
+            XInt = newXInt;
+            YInt = newYInt;
+            this.UpdateTileIndex();
+            UpdateFacingDirection(directionX: normalizedDirection.X, directionY: normalizedDirection.Y);
+            return (xDirectionPositive ? XInt < targetX : XInt > targetX)
+                && (yDirectionPositive ? YInt < targetY : YInt > targetY);
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public IEnumerable<string> GetDrops()

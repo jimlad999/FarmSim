@@ -52,14 +52,14 @@ abstract class Entity : IPositionable
         ExternalForce = externalForce;
     }
 
-    protected bool UpdateForces(GameTime gameTime)
+    protected bool UpdateForces(GameTime gameTime, ref double x, ref double y)
     {
         if (ExternalForce == Vector2.Zero)
         {
             return false;
         }
-        X += ExternalForce.X * gameTime.ElapsedGameTime.TotalSeconds;
-        Y += ExternalForce.Y * gameTime.ElapsedGameTime.TotalSeconds;
+        x += ExternalForce.X * gameTime.ElapsedGameTime.TotalSeconds;
+        y += ExternalForce.Y * gameTime.ElapsedGameTime.TotalSeconds;
         ExternalForce *= 0.8f;
         if (ExternalForce.LengthSquared() < MinForcePow2)
         {

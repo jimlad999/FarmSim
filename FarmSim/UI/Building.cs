@@ -24,6 +24,8 @@ class Building
     public string Doormat;
     [DataMember]
     public string DoormatSide;
+    [DataMember]
+    public bool CanWalkThrough;
     // SPEED HACK to determine rendering/not rendering the backwall
     [DataMember]
     public bool HasTransparency;
