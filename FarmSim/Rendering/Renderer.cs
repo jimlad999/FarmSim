@@ -5,6 +5,7 @@ using FarmSim.UI;
 using FarmSim.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.Linq;
 using Utils.Rendering;
@@ -160,6 +161,8 @@ class Renderer
             float xDraw = (int)xDrawOffset;
             var processedYSkip = true;
             var yTilesSkipped = 0;
+            var tileYAbove = tileY - 1;
+            var yDrawAbove = yDraw - zoomedTileSize;
             for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
             {
                 var tile = GlobalState.TerrainManager.GetTile(tileX: tileX, tileY: tileY);
@@ -194,6 +197,12 @@ class Renderer
                     {
                         DrawTileTerrain(spriteBatch, tile, xDraw: xDraw, yDraw: yDraw, scale: viewportZoom, activePlayer.TilePlacement, playerIsInsideBuilding);
                     }
+                    // Render buildings inline with entities (see comment just below for reasoning)
+                    if (tileY > yTileStart)
+                    {
+                        var tileAbove = GlobalState.TerrainManager.GetTile(tileX: tileX, tileY: tileYAbove);
+                        DrawBuildings(spriteBatch, tileAbove, xDraw: xDraw, yDraw: yDrawAbove, scale: viewportZoom, activePlayer.TilePlacement, playerIsInsideBuilding);
+                    }
                     xDraw += zoomedTileSize;
                 }
             }
@@ -225,6 +234,18 @@ class Renderer
                 yDraw += zoomedTileSize * yTilesSkipped;
             }
         }
+        var lastTileY = yTileEnd - 1;
+        var lastYDraw = yDraw - zoomedTileSize;
+        if (!shouldRenderChunks)
+        {
+            float xDraw = (int)xDrawOffset;
+            for (var tileX = xTileStart; tileX < xTileEnd; ++tileX)
+            {
+                var tile = GlobalState.TerrainManager.GetTile(tileX: tileX, tileY: lastTileY);
+                DrawBuildings(spriteBatch, tile, xDraw: xDraw, yDraw: lastYDraw, scale: viewportZoom, activePlayer.TilePlacement, playerIsInsideBuilding);
+                xDraw += zoomedTileSize;
+            }
+        }
         if (shouldRenderEntities)
         {
             DrawEntities(
@@ -239,8 +260,8 @@ class Renderer
                 spriteAnimationLookupByTile: spriteAnimationLookupByTile,
                 renderFogOfWar: renderFogOfWar,
                 telescopedPlayerAction: telescopedPlayerAction,
-                yDraw: yDraw - zoomedTileSize,
-                tileY: yTileEnd - 1);
+                yDraw: lastYDraw,
+                tileY: lastTileY);
         }
         if (renderFogOfWar)
         {
@@ -354,6 +375,31 @@ class Renderer
     private void DrawTileTerrain(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, float scale, ITilePlacement tilePlacement, bool playerIsInsideBuilding)
     {
         var tilePlacementHasFloor = tilePlacement != null && BuildingData.BuildingHasFloor(tilePlacement.BuildingKey);
+        string thisTileFloor;
+        var thisTileInRangeOfPlacement = tilePlacementHasFloor && tilePlacement.TileInRange(tileX: tile.X, tileY: tile.Y);
+        if (thisTileInRangeOfPlacement)
+        {
+            thisTileFloor = tilePlacement.BuildingKey;
+        }
+        else
+        {
+            thisTileFloor = tile.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
+        }
+        if (thisTileFloor == null)
+        {
+            DrawSprite(
+                spriteBatch,
+                _tileset[GlobalState.AnimationManager.TilesetAnimations[tile.Terrain]],
+                xDraw: xDraw,
+                yDraw: yDraw,
+                scale: scale,
+                color: Color.White);
+        }
+    }
+
+    private void DrawBuildings(SpriteBatch spriteBatch, Tile tile, float xDraw, float yDraw, float scale, ITilePlacement tilePlacement, bool playerIsInsideBuilding)
+    {
+        var tilePlacementHasFloor = tilePlacement != null && BuildingData.BuildingHasFloor(tilePlacement.BuildingKey);
         string tileAboveFloorBuildingKey;
         var tileAboveInRangeOfPlacement = tilePlacementHasFloor && tilePlacement.TileInRange(tileX: tile.X, tileY: tile.Y - 1);
         // prefer rendering tile placement preview over placed tiles
@@ -400,16 +446,6 @@ class Renderer
         else
         {
             thisTileFloor = tile.Buildings.FirstOrDefault(BuildingData.BuildingHasFloor);
-        }
-        if (thisTileFloor == null)
-        {
-            DrawSprite(
-                spriteBatch,
-                _tileset[GlobalState.AnimationManager.TilesetAnimations[tile.Terrain]],
-                xDraw: xDraw,
-                yDraw: yDraw,
-                scale: scale,
-                color: defaultColor);
         }
         if (tile.Buildings.Any())
         {
